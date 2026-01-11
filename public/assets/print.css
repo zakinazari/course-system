@@ -1,0 +1,296 @@
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+    }
+	body {
+		direction: rtl;
+	}
+     a[href]:after {
+        content: none !important;
+    }
+    p#break {
+        page-break-after: always !important;
+        page-break-before: always !important;
+    }
+    #studentPhotoTd {
+        border-top-color: transparent !important;
+    }
+    .cardHeader {
+        height: 60px;
+        background: #6bbd56;
+    }
+    img.cardBg {
+        margin-right: 31%;
+        margin-bottom: -180px;
+        margin-top: -45px;
+        opacity: 0.1;
+    }
+    .en {
+        float: left;
+        text-align: left;
+        direction: rtl !important;
+    }
+    .form-with-border {
+        border: double;
+        padding: 15px;
+        margin-top: 20% !important;
+        display: inline-block;
+    }
+    #printHeader {
+        text-align: center !important;
+        margin: -5px 0px 15px;
+    }
+    .tab-content {
+        text-align: center !important;
+    }
+    #cardFront,
+    #cardBack {
+        padding: 10px 30px;
+    }
+    #cardFrontContent {
+        padding: 5px;
+    }
+    #cardBackContent {
+        padding: 5px;
+    }
+    #cardBack table.table-bordered td div.rotate {
+        transform: rotate(-30.0deg);
+        margin-top: 5%;
+    }
+    #fees-card>thead>tr>th {
+/*        padding: 4px 10px !important;*/
+        text-align: center;
+    }
+    #tdRotate {
+        border-top: 0px;
+        border-top-color: transparent !important;
+    }
+    th#th-null {
+        border-bottom: 0px;
+    }
+    .date_id {
+        margin-top: 0% !important;
+    }
+    .card-details {
+        margin-top: 0px !important;
+    }
+    /*======= Start Updates =============*/
+    .kankorKard {
+    margin-top: 130px !important;
+    }
+    .instKankorCartPhoto {
+        margin-top: 7px !important;
+    }
+    .unvKankorCardPhoto {
+        margin-top: 2px !important;
+    }
+    .card-footer>div {
+        margin-top: -5px !important;
+    }
+    .card-footer>div>ul {
+        margin-top: -5px !important;
+    }
+/*======= End Updates =============*/
+    .timetable-header {
+        text-align: center;
+        border: 1px solid #ddd;
+        margin-bottom: 0px;
+        padding: 2%;
+        border-bottom: none;
+        background: #f1f1f1;
+    }
+/*======= For school Shuqa dont show the second table =============*/
+.print-display
+{
+	visibility: hidden !important;  
+}
+/*======= End for School shuqa  =============*/
+.etlanamaDiv {
+    background-image: url(../assets/images/logo.png) !important;
+    background-repeat: no-repeat !important;
+    background-size: 350px !important;
+    background-position-x: 50% !important;
+    background-position-y: 80% !important;
+}
+    #result_logo {
+        height: 138px;
+        margin-top: -9px;
+        margin-right: -12px;
+        background-color: #fff;
+    }
+    .border-result {
+        padding: 0 15px !important; margin-top: -30px !important;
+    }
+    .studentReport th, .studentReport td {
+        text-align: center !important;
+    }
+ div#cardBg {
+    background-image:url("../assets/images/card-bg.png") !important;
+	background-repeat:no-repeat !important;
+    /* height:400px !important; */
+	width:780px !important;
+	border:none !important;
+}
+#kankorKard,#kankorKard>tbody>tr,#kankorKard>tbody>tr>td{
+    border: none !important;
+    background: transparent !important;
+}
+
+.newEnrolledStudentsTable>tbody>tr>td, 
+.newEnrolledStudentsTable>tbody>tr>th, 
+.newEnrolledStudentsTable>tfoot>tr>td, 
+.newEnrolledStudentsTable>tfoot>tr>th, 
+.newEnrolledStudentsTable>thead>tr>td, 
+.newEnrolledStudentsTable>thead>tr>th {
+    border: 1px solid #000 !important;
+    text-align: center !important;
+    background-color:transparent !important;
+}
+table.no_border *,table.no_border 
+{
+    border: 0px !important;
+}
+table.new_border_color > tbody > tr.odd > td{
+    background-color: #f5f5f5 !important;
+}
+
+table>tbody>tr.odd>td{
+    background-color: #f5f5f5 !important;
+}
+table.new_border_color tr th,table.new_border_color tr td,table.new_border_color
+{
+    border: 1px solid #000 !important;
+}
+table.small_cell>tbody>tr>td
+{
+    padding: 4px 2px !important;
+}
+table.narrow_cell_print>tbody>tr>td
+{
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+table.middle-align>tbody>tr>td
+{
+    vertical-align: middle !important
+}
+#print_report {
+	display: block !important;
+}
+.att_report>tbody>tr.even>td{
+	background-color: #f9f9f9 !important;
+}
+div.report_title{
+	display:block !important;
+	width: 100% !important;
+}
+.att_report>thead>tr>td#report_title{
+	width: 100% !important;
+}
+.att_report>thead>tr>th,.att_report>tbody>tr>td{
+	border: 1px solid 1px #000 !important;
+}
+
+.att_report>thead>tr>th {
+	background-color: #ccc !important;
+	border-bottom: #ccc !important;
+}
+.att_report>body,.att_report>thead {
+	border: 1px solid #ddd !important;
+}
+div.printMode {
+	display:block !important;
+}
+#bas td{font-size:10px !important}
+.colored_table>thead>tr>th,.colored_table>tbody>tr>td {
+	border: 1px solid #000 !important;
+}
+/* HR part */
+table.att_report td{text-align:center !important;}
+table.att_report{margin-top:20px !important;margin-bottom:50px !important}
+
+#emp_att_report>tbody>tr>td{
+	text-align: center !important;
+}
+#emp_att_report td{padding:3px 8px !important}
+#school_result>tbody>tr>td{
+    border: 1px solid #000 !important;
+}
+.summaryTable>thead>tr>th,.summaryTable>tbody>tr>td {
+    border: 1px solid #000 !important;
+    padding: 2px !important;
+    text-align: center !important;
+}
+.school_result_middle_table>tbody>tr>td {
+    border-top-color: #fff !important;
+    border-left-color: #fff !important;
+    border-right-color: #fff !important;
+}
+.school_result_middle_table,.school_result_middle_table>tbody,.school_result_middle_table>tbody>tr,.school_result_middle_table>tbody>tr>td {
+    border-bottom-color: #fff !important;
+}
+.child-report-header{
+    display: block !important;
+}
+.child-report-table>thead>tr>th{
+    font-size: 10px !important;
+}
+.child-report-table>tbody>tr>td {
+    font-size: 10px !important;
+}
+.report-table>thead>tr>th{
+    font-size: 10px !important;
+}
+tr.make_dark>th{
+    background: #ccc !important;
+}
+#report_data{
+    direction: rtl !important;
+}
+#resultTable td {
+    font-size:11px !important;
+}
+.reportHeader {
+    display: block !important;
+    width: 100 !important;
+    /*text-align: center !important;*/
+}
+table#sample_editable_1z thead tr th,table#sample_editable_1z tbody tr td{border:1px solid #000 !important}
+table#sample_editable_1x thead tr th,table#sample_editable_1x tbody tr td{border:1px solid #000 !important}
+tr.xyz td{background-color:#ddd !important}
+table#student_attendance tbody{border-top:1px solid #000 !important}
+table#student_attendance thead tr th{border-bottom:1px solid #000 !important}
+#student_attendance{direction:rtl !important;}
+#student_attendance tbody tr td{padding:2px 5px !important;}
+.xx{margin:0px !important;font-size:16px !important;font-weight:bold}
+table#student_attendance th{padding-top:0px !important;}
+table.newEnrolledStudentsTable tbody tr td{font-size:11px !important;padding:5px 1px !important;}
+#mohe_result *{font-family:B Zar !important;font-weight:bold !important;color:#000 !important;}
+#card-footer *{font-family:B Zar !important;font-weight:bold !important;}
+#summary_result td{padding-top:0px !important;padding-bottom:0px !important;font-size:9px !important;}
+
+
+
+/*Update */
+.font-times {
+        font-family: 'Times New Roman' !important;
+    }
+	.noPrint {
+		display: none !important;
+	}
+ 
+ /*End @media*/
+}
+
+/*----------start for  joural------------------------*/
+#action_header{
+display: none !important;
+}
+#action_body{
+display: none !important;
+}
+#journal_header{
+display: block !important;
+}
+
+/*----------end  for  joural------------------------*/

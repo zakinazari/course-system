@@ -1,0 +1,20 @@
+@media print
+{
+   #library_card tr td,#library_card tr th
+   {
+   		border: 1px solid #000 !important;
+   }
+   #ok_dear
+   {
+   	border:1px solid red;
+   }
+
+   .u_print
+   {
+   		display: none !important;
+   }
+   #border_color_id table tr td,#border_color_id table tr th
+   {
+   		border: 1px solid #000 !important;
+   }
+}

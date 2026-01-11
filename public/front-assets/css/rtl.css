@@ -1,0 +1,863 @@
+[type="email"], [type="number"], [type="tel"], [type="url"] {
+  direction: rtl;
+}
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, span, p, li, a {
+letter-spacing: 0px !important;
+font-family: "Vazirmatn RD FD", sans-serif;
+}
+.odometer.odometer-auto-theme,.odometer.odometer-theme-default{direction: ltr;font-family: "Vazirmatn RD FD", sans-serif;}
+#timer {
+  direction: ltr;
+}
+button, input, optgroup, select, textarea {
+font-family: "Vazirmatn RD FD", sans-serif;
+}
+
+
+.latest-news-area .paginations .flaticon-next:before,.default-btn .flaticon-next:before, .read-more-btn .flaticon-next:before {
+    content: "\f111" !important;
+}
+.latest-news-area .paginations .flaticon-back:before,.default-btn .flaticon-back:before, .read-more-btn .flaticon-back:before {
+    content: "\f112" !important;
+}
+.odometer.odometer-auto-theme,.odometer.odometer-theme-default{direction: ltr; font-family: "sahel", sans-serif;}
+.single-courses-card .courses-content .bottom-content ul li ul li i {
+  color: #e32845;
+}
+.switch-box {
+  left: auto;
+  right: 3%;
+}
+.ri-arrow-left-line:before { content: "\ea6c" !important;}
+.ri-arrow-right-line:before { content: "\ea60" !important;}
+.hero-slider .ri-arrow-left-line:before { content: "\ea60" !important;}
+.hero-slider .ri-arrow-right-line:before { content: "\ea6c" !important;}
+.single-events-card.style-3 .events-content {
+  background-color: #ffffff;
+  -webkit-box-shadow: 0 0 20px 3px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 0 20px 3px rgba(0, 0, 0, 0.05);
+}
+.single-campus-card .campus-content,.single-health-care-card .health-care-content,.single-news-card .news-content,.single-courses-card.style2 .courses-content,.single-courses-card.style4 .courses-content,.single-events-card.style2 .events-content,.single-news-card.style3 .news-content,.single-events-card.style-4 .events-content,.single-stories-card .stories-content {
+  padding: 30px 30px 20px 30px;
+  background-color: #ffffff;
+  -webkit-box-shadow: 0 0 20px 3px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 0 20px 3px rgba(0, 0, 0, 0.05);
+}
+.single-news-card.style3 .news-content {
+  padding: 30px 30px 20px 30px;
+  background-color: #ffffff;
+  -webkit-box-shadow: unset;
+          box-shadow: unset;
+}
+.single-stories-card.style2 .stories-content {
+  background-color: unset;
+}
+.theme-dark .single-stories-card .stories-content {
+  background-color: #131212;
+}
+
+.single-program-card {
+  background-color: #ffffff;
+  margin-bottom: 30px;
+padding: unset;
+}
+
+.single-program-card .program-content {
+  padding: 30px;
+}
+
+.single-program-card .program-content h3 {
+  font-size: 22px;
+  margin-bottom: 17px;
+}
+
+.single-program-card .program-content h3 a {
+  color: #111d5e;
+  -webkit-transition: all ease 0.5s;
+  transition: all ease 0.5s;
+}
+
+.single-program-card .program-content h3 a:hover {
+  color: #e32845;
+}
+
+.single-program-card .program-content p {
+  margin-bottom: 17px;
+}
+@media only screen and (max-width: 767px) {
+.single-program-card {
+  padding: 20px;
+}
+}
+@media only screen and (min-width: 768px) and (max-width: 991px) {
+.single-program-card {
+  padding: 20px;
+}
+}
+@media only screen and (min-width: 992px) and (max-width: 1199px) {
+.single-program-card {
+  padding: 20px;
+}
+}
+.ri-arrow-drop-left-fill:before { content: "\ea53" !important;}
+.ri-arrow-drop-right-fill:before { content: "\ea51" !important;}
+.coming-soon-area .coming-soon .list ul {
+  direction: ltr;
+}
+
+
+
+
+
+.mr-20 {
+  margin-left: 15px;
+  margin-right: 0;
+}
+
+.pl-20 {
+  padding-right: 20px;
+  padding-left: 0;
+}
+
+.pr-20 {
+  padding-left: 20px;
+  padding-right: 0;
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item:last-child a {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item:first-child a {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu li a.dropdown-toggle::before {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu li .dropdown-menu {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu li .dropdown-menu li .dropdown-menu {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu {
+
+}
+
+.desktop-nav .navbar .navbar-nav .nav-item .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu li .dropdown-menu {
+
+}
+
+.desktop-nav .navbar .others-options {
+
+}
+
+.navbar-brand {
+
+}
+
+.modal.right .modal-content button.close {
+
+}
+
+.modal.right.fade .modal-dialog {
+
+}
+
+.modal.right.fade.show .modal-dialog {
+
+}
+
+.sidebarModal.modal .modal-body .sidebar-contact-info .info-list {
+
+}
+
+.sidebarModal.modal .modal-body .sidebar-contact-info .info-list li {
+
+}
+
+.sidebarModal.modal .modal-body .sidebar-contact-info .info-list li i {
+
+}
+
+.sidebarModal.modal .modal-body .sidebar-social-list {
+
+}
+
+.sidebarModal.modal .modal-body .sidebar-social-list li {
+
+}
+
+.form-control {
+  text-align: right;
+  padding-right: 15px;
+  padding-left: 0;
+}
+
+.header-right-content {
+
+}
+
+.header-right-content .list ul {
+
+}
+
+.header-right-content .list ul li {
+
+}
+
+/*
+Banner Style
+======================================================*/
+.banner-area .container-fluid {
+  padding-right: 30px;
+  padding-left: 0;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.slider-item {
+
+}
+
+.slider-content {
+
+}
+
+.hero-slider.owl-theme .owl-dots {
+
+}
+
+.hero-slider.owl-theme .owl-dots .owl-dot:hover span::after, .hero-slider.owl-theme .owl-dots .owl-dot.active span::after {
+
+}
+
+.hero-slider.owl-theme .owl-nav [class*=owl-] {
+
+}
+
+.hero-slider.owl-theme .owl-nav [class*=owl-].owl-next {
+
+}
+
+.owl-thumbs {
+
+}
+
+.single-academics-card .academic-top-content {
+  padding-right: 40px;
+  padding-left: 0;
+}
+
+.single-academics-card .academic-top-content i {
+  right: 0;
+  left: auto;
+}
+
+.single-academics-card2 .academic-content .academic-top-content {
+  padding-right: 30px;
+  padding-left: 0;
+}
+
+.single-academics-card2 .academic-content .academic-top-content i {
+  right: 0;
+  left: auto;
+}
+
+.single-academics-card2 .serial {
+  right: 30px;
+  left: auto;
+}
+
+.academics-list ul {
+  padding-right: 0;
+}
+
+.academics-list ul li i {
+  left: 0;
+  right: auto;
+}
+
+.related-download ul {
+  padding-right: 0;
+}
+
+.related-download ul li {
+  padding-right: 70px;
+  padding-left: 0;
+}
+
+.related-download ul li i {
+  right: 0;
+  left: auto;
+}
+
+.academics-details .registration-and-fee .list ul {
+  padding-right: 0;
+}
+
+.academics-details .prepare-exam .exam-card {
+  padding-right: 30px;
+}
+
+.academics-details .prepare-exam .exam-card h4::before {
+  right: -30px;
+  left: auto;
+}
+
+.campus-content .list ul {
+
+}
+
+.campus-content .list ul li {
+
+}
+
+.campus-content .list ul li i {
+
+}
+
+.student-life-card .tags {
+  right: 20px;
+  left: auto;
+}
+
+.admission-right-content {
+
+}
+
+.admission-right-content .icon {
+
+}
+
+.admission-right-content p {
+
+}
+
+.how-to-apply .apply-list ul {
+  padding-right: 0;
+}
+
+.how-to-apply .apply-list ul li {
+  padding-left: 0;
+  padding-right: 20px;
+}
+
+.how-to-apply .apply-list ul li i {
+  right: 0;
+  left: auto;
+}
+
+.single-courses-card .courses-content .admin-profile {
+
+}
+
+.single-courses-card .courses-content .admin-profile::before {
+
+}
+
+.single-courses-card .courses-content .admin-profile img {
+
+}
+
+.single-courses-card .courses-content .bottom-content ul {
+
+}
+
+.single-courses-card .courses-content .bottom-content ul li ul {
+
+}
+
+.single-courses-card .courses-content .bottom-content ul li ul li {
+
+}
+
+.single-courses-card .courses-content .bottom-content ul li ul li i {
+
+}
+
+.single-courses-card.style2 .courses-content .admin-profile {
+
+}
+
+.single-courses-card.style2 .courses-content .admin-profile img {
+
+}
+
+.single-courses-card.style3 .list-1 ul {
+
+}
+
+.single-courses-card.style3 .admin-profile::before {
+
+}
+
+.single-courses-card.style3 .bottom-content ul {
+
+}
+
+.single-courses-card.style3 .bottom-content ul li ul {
+
+}
+
+.single-courses-card.style3 .bottom-content ul li ul li {
+
+}
+
+.enroll-courses .list ul {
+
+}
+
+.courses-details .courses-card .list ul {
+
+}
+
+.courses-details .courses-card .list ul li .teacher {
+
+}
+
+.courses-details .courses-card .list ul li .teacher img {
+
+}
+
+.overview .overview-box {
+
+}
+
+.overview .overview-box h4::before {
+
+}
+
+.curriculum .curriculum-list ul {
+
+}
+
+.curriculum .curriculum-list ul li span {
+
+}
+
+.instructor .instructor-content .quick-contact ul {
+
+}
+
+.instructor .instructor-content .social ul {
+
+}
+
+.instructor .instructor-content .social ul li {
+
+}
+
+.single-reviews-card .icon {
+
+}
+
+.single-events-card .events-image .date {
+  right: 30px;
+  left: auto;
+}
+
+.single-events-card .events-content .admin {
+  text-align: left;
+}
+
+.single-events-card.style2 .events-content .admin-and-date ul {
+  padding-right: 0;
+}
+
+.single-events-card.style-3 .events-content .date-and-read-more ul {
+  padding-right: 0;
+}
+
+.serch-content .form-group .src-btn {
+  left: 10px;
+  right: auto;
+}
+
+.next-workshop .list ul {
+  padding-right: 0;
+}
+
+.next-workshop .list ul li {
+  padding-right: 120px;
+  padding-left: 0;
+}
+
+.next-workshop .list ul li span {
+  right: 0;
+  left: auto;
+}
+
+.about-lecturer .address .list ul {
+  padding-right: 0;
+}
+
+.about-lecturer .address .list ul li {
+  padding-right: 20px;
+  padding-left: 0;
+}
+
+.about-lecturer .address .list ul li::before {
+  right: 0;
+  left: auto;
+}
+
+.about-lecturer .social-content ul {
+  padding-right: 0;
+}
+
+.about-lecturer .social-content ul li {
+  margin-right: 0;
+  margin-left: 10px;
+}
+
+.categories ul {
+  padding-right: 0;
+}
+
+.single-podcasts-card.style2 .podcast-content ul {
+  padding-right: 0;
+}
+
+.single-podcasts-card.style2 .podcast-content ul li.date {
+  padding-right: 35px;
+  padding-left: 0;
+}
+
+.single-podcasts-card.style2 .podcast-content ul li.date::before {
+  right: 0;
+  left: auto;
+}
+
+.single-podcasts-card.style3 .podcast-content .date p {
+  padding-right: 15px;
+  padding-left: 0;
+}
+
+.single-podcasts-card.style3 .podcast-content .date p::before {
+  right: 0;
+  left: auto;
+}
+
+.single-podcasts-card .podcast-content .play-icon span {
+  padding-left: 0;
+  padding-right: 7px;
+}
+
+.more-health-care.style2 {
+
+}
+
+.madical-care-content .medical-care .list ul {
+  padding-right: 0;
+}
+
+.madical-care-content .medical-care .list ul li {
+  padding-right: 20px;
+  padding-left: 0;
+}
+
+.madical-care-content .medical-care .list ul li::before {
+  right: 0;
+  left: auto;
+}
+
+.page-banner-content ul {
+
+}
+
+.page-banner-content ul li {
+
+}
+
+.page-banner-content ul li::before {
+
+}
+
+.single-news-card .news-content .list ul {
+  padding-right: 0;
+}
+
+.single-news-card .news-content .list ul li {
+  margin-right: 0;
+  margin-left: 15px;
+}
+
+.category-list ul {
+  padding-right: 0;
+}
+
+.category-list ul li i {
+  left: 0;
+  right: auto;
+}
+
+.related-post-area .related-post-box .related-post-content {
+  padding-left: 0;
+  padding-right: 105px;
+}
+
+.related-post-area .related-post-box .related-post-content img {
+  right: 0;
+  left: auto;
+}
+
+.latest-news-simple-card .news-content .list ul {
+
+}
+
+.latest-news-simple-card .news-content .list ul li {
+
+}
+
+.news-details .news-simple-card .list ul {
+  padding-right: 0;
+}
+
+.news-details .news-simple-card .list ul li {
+  margin-right: 0;
+  margin-left: 15px;
+}
+
+.news-details .theory .theory-box {
+  padding-right: 30px;
+}
+
+.news-details .theory .theory-box h4::before {
+  right: -30px;
+}
+
+.tags-and-share .tags ul {
+  padding-right: 0;
+}
+
+.tags-and-share .tags ul li {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+.tags-and-share .share {
+
+}
+
+.comments .reply {
+
+}
+
+.comments .single-comments-box {
+
+}
+
+.comments .single-comments-box img {
+
+}
+
+.privacy-content .list ul {
+  padding-right: 0;
+}
+
+.privacy-content .list ul li {
+  padding-right: 20px;
+  padding-left: 0;
+}
+
+.privacy-content .list ul li i {
+  right: 0;
+  left: auto;
+}
+
+.condition-content .list ul {
+  padding-right: 0;
+}
+
+.condition-content .list ul li {
+  padding-right: 20px;
+  padding-left: 0;
+}
+
+.condition-content .list ul li i {
+  right: 0;
+  left: auto;
+}
+
+.coming-soon-area .coming-soon .newsletter-form .default-btn {
+  left: 0;
+  right: auto;
+}
+
+.footer-widjet .list ul {
+  padding-right: 0;
+}
+
+.footer-logo-area .contact-list ul {
+  padding-right: 0;
+}
+
+.copyright .social-content ul {
+  padding-right: 0;
+}
+
+.copyright .social-content ul li {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+.copyright .copy {
+  text-align: left;
+}
+
+.contact-and-address .social-media ul {
+  padding-right: 0;
+}
+
+.contact-and-address .social-media ul li {
+  margin-right: 0;
+  margin-left: 10px;
+}
+
+.additional-information .list ul {
+  padding-right: 0;
+}
+
+.single-reviews-card {
+
+}
+
+.single-reviews-card img {
+
+}
+
+.tranding .tranding-box .tranding-content {
+  padding-left: 0;
+  padding-right: 105px;
+}
+
+.tranding .tranding-box .tranding-content img {
+  right: 0;
+  left: auto;
+}
+
+@media only screen and (max-width: 767px) {
+  .pl-20 {
+    padding-right: 0;
+    padding-left: 0;
+  }
+  .pr-20 {
+    padding-right: 0;
+    padding-left: 0;
+  }
+  .header-right-content {
+
+  }
+  .slider-item {
+
+  }
+  .banner-area .container-fluid {
+    padding-right: 0;
+  }
+  .slider-content {
+
+  }
+  .hero-slider.owl-theme .owl-nav [class*=owl-] {
+
+  }
+  .hero-slider.owl-theme .owl-nav [class*=owl-].owl-next {
+
+  }
+  .copyright .copy {
+    text-align: center;
+  }
+  .admission-right-content .icon::before {
+
+  }
+  .admission-right-content .icon::after {
+
+  }
+  .comments .single-comments-box {
+
+  }
+  .curriculum .curriculum-list ul li span {
+
+  }
+  .single-reviews-card {
+
+  }
+}
+
+@media only screen and (max-width: 991px) and (min-width: 768px) {
+  .pl-20 {
+    padding-right: 0;
+    padding-left: 0;
+  }
+  .pr-20 {
+    padding-right: 0;
+    padding-left: 0;
+  }
+  .banner-area .container-fluid {
+    padding-right: 0;
+    margin: auto;
+  }
+  .admission-right-content .icon::before {
+
+  }
+  .admission-right-content .icon::after {
+
+  }
+}
+
+@media only screen and (max-width: 1199px) and (min-width: 992px) {
+  .pl-20 {
+    padding-right: 0;
+  }
+  .pr-20 {
+    padding-left: 0;
+  }
+  .mr-20 {
+    margin-left: 0;
+  }
+}
+
+@media only screen and (max-width: 991px) {
+  .others-option-for-responsive .dot-menu {
+    left: 60px;
+    right: auto;
+  }
+  .others-option-for-responsive .others-options ul {
+    padding-right: 0;
+  }
+  .others-option-for-responsive .others-options ul li {
+    margin-right: 0;
+  }
+  .others-option-for-responsive .container .container {
+    left: 0;
+    right: auto;
+  }
+  .mean-container a.meanmenu-reveal {
+    left: 0 !important;
+    right: auto !important;
+  }
+  .mobile-responsive-nav .mobile-responsive-menu.mean-container .mean-nav ul li a {
+    text-align: right;
+  }
+  .mobile-responsive-nav .mobile-responsive-menu.mean-container .mean-nav ul li a.mean-expand {
+    width: 90%;
+    text-align: left;
+  }
+}
+/*# sourceMappingURL=rtl.css.map */

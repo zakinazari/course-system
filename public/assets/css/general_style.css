@@ -1,0 +1,79 @@
+div#decrease_margin #tab1 .form-group, form#decrease_form_group .form-group
+{
+	margin-bottom: 6px !important;
+}
+
+#bar
+{
+	margin-bottom: 10px !important;
+}
+
+form#decrease_form_group .form-body
+{
+	padding: 4px 10px !important;
+}
+#books_result tr.student_info td,#chapters_result tr.student_info td
+{
+	cursor: pointer !important;
+}
+i.operation_td:hover
+{
+	color:red !important;
+}
+a
+{
+	text-decoration: none !important;
+}
+
+ #ajax_searching_box
+{
+	margin-bottom: 10px !important;
+}
+#just_student_card
+{
+	background-color: tan !important;
+	padding: 15px !important;
+}
+
+#just_student_card div
+{
+	background-color: lightgreen !important;
+	//margin: 20px !important;
+}
+
+#second_table tr td,#second_table tr th
+   {
+   		border: 1px solid #000 !important;
+   }
+   #lookatme
+   {
+   	background-color: #bfdff9 !important;
+   }
+table#second_library_side
+{
+	margin-bottom: 3px !important;
+}
+table#second_library_side td,table#second_library_side th
+{
+	padding: 2px 8px !important;
+	border: 0px;
+}
+
+#library_card_border_first, #library_card_border_second
+{
+	border: 25px solid #89bef4 !important;
+}
+
+#library_card_border_first, #library_card_border_second
+{
+	background-color: lightblue !important;
+}
+#library_card_border_first table td, #library_card_border_second table td,#library_card_border_first table th, #library_card_border_second table th
+{
+	background-color: lightblue !important;
+}
+#model_input_border_remove .model_input_border_remove
+{
+	border: 1px solid #fff !important;
+	text-align: ltr !important;
+}

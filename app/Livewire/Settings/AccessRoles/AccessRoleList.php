@@ -1,0 +1,196 @@
+<?php
+
+namespace App\Livewire\Settings\AccessRoles;
+use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\Settings\AccessRole;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AccessRolesExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Settings\Menu;
+use Auth;
+class AccessRoleList extends Component
+{
+    // -------start generals--------------------
+    use WithPagination;
+    public $perPage = 5;
+    protected $paginationTheme = 'bootstrap';   
+    public $editMode = false;
+    public $active_menu_id;
+    public $active_menu;
+    public $modalId = 'access-role-list-addEditModal';
+    public $table_name='access_roles';
+    protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
+    public function closeModal(){
+        $this->resetInputFields();
+        $this->resetValidation();
+        $this->dispatch('close-modal', id: $this->modalId);
+
+    }
+    public function openModal(){
+        $this->resetInputFields();
+        $this->resetValidation();
+        $this->dispatch('open-modal', id: $this->modalId);
+    }
+     // Hook for real time error message
+    public function updated($propertyName)
+    {
+        if (array_key_exists($propertyName, $this->rules())) {
+            $this->validateOnly($propertyName);
+        }
+    }
+
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+    public function applySearch()
+    {
+        $this->resetPage();
+    }
+    
+    // ---------------------------------end generals-------------
+ 
+    public function mount($active_menu_id = null)
+    {
+        // -------------start for activing menu in sidebar ----------------------
+        $this->dispatch('setActiveMenuFromPage', $active_menu_id);
+        $this->active_menu_id = $active_menu_id;
+        $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
+        // -------------start for activing menu in sidebar ----------------------
+    }
+
+    public $role_name, $role_id;
+
+    public function resetInputFields(){
+        $this->resetExcept([
+            'active_menu_id',
+            'active_menu',
+            'table_name',
+            'modalId',
+            'search',
+        ]);
+    }
+    public $search = [
+            'role_name' => null,
+        ];
+
+    public function render()
+    {
+        
+        $roles = AccessRole::query()
+            ->when(!empty($this->search['role_name']), function ($query) {
+                $query->where('role_name', 'like', '%' . $this->search['role_name'] . '%');
+            })
+            ->paginate($this->perPage);
+
+        return view('livewire.settings.access-roles.access-role-list', compact('roles'));
+    }
+
+
+    protected function rules()
+    {
+        return [
+            'role_name' => 'required|string|max:255|unique:access_roles,role_name,' . $this->role_id,
+        ];
+    }
+    // Localized messages
+    protected function messages()
+    {
+        return [
+            'role_name.required' => __('label.role_name.required'),
+            'role_name.string'   => __('label.role_name.string'),
+            'role_name.max'      => __('label.role_name.max'),
+            'role_name.unique'   => __('label.role_name.unique'),
+        ];
+    }
+    // Create role
+    public function store()
+    {
+        if(add(Auth::user()->role_ids,$this->active_menu_id)){
+            $this->validate();
+            try{
+                AccessRole::create([
+                    'role_name' => $this->role_name,
+                ]);
+                $this->closeModal();
+                $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
+            }catch (\Exception $e) {
+            
+                $this->dispatch('alert', type: 'error', message: __('label.store_error').' : '. $e->getMessage());
+            }
+        }else{
+            $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
+        }
+    }
+
+
+    public function edit($id)
+    {
+        $this->resetValidation(); 
+        $this->role_id = $id;    
+        $role = AccessRole::find($id);
+        $this->role_name = $role->role_name;
+        $this->editMode = true;
+        $this->dispatch('open-modal', id: $this->modalId);
+    }
+    // Update role
+    public function update()
+    {
+        if(edit(Auth::user()->role_ids,$this->active_menu_id)){
+            $this->validate();
+            try {
+                AccessRole::findOrFail($this->role_id)->update([
+                    'role_name' => $this->role_name,
+                ]);
+                $this->closeModal();
+                $this->dispatch('alert', type: 'success', message: __('label.successfully_updated'));
+            } catch (\Exception $e) {
+            
+                $this->dispatch('alert', type: 'error', message: __('label.update_error').' : '. $e->getMessage());
+            }
+        }else{
+            $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
+        }
+    }
+
+    
+    public function handleGlobalDelete($payload)
+    {
+
+        if (!isset($payload['table']) || $payload['table'] !== $this->table_name) {
+            return;
+        }
+
+        $this->delete($payload['id']);
+    }
+
+    public function delete($id)
+    {
+        if(delete(Auth::user()->role_ids,$this->active_menu_id)){
+            try {
+                AccessRole::findOrFail($id)->delete();
+                $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
+            } catch (\Exception $e) {
+                $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
+            }
+        }else{
+            $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
+        }
+    }
+
+    public function exportPdf()
+    {
+        $roles = AccessRole::query()
+            ->when(!empty($this->search['role_name']), fn($q) => $q->where('role_name', 'like', "%{$this->search['role_name']}%"))
+            ->orderBy('id', 'desc')
+            ->get();
+
+         $pdf = Pdf::loadView('livewire.settings.access-roles.access_roles_pdf', compact('roles'));
+        return response()->streamDownload(fn() => print($pdf->output()), 'access_roles.pdf');
+    }
+    public function exportExcel()
+    {
+        return Excel::download(new AccessRolesExport($this->search), 'access_roles.xlsx');
+    }
+}
