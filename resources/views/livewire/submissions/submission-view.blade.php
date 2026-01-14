@@ -336,36 +336,36 @@
                                     <i class="fa fa-user mt-1 me-2"></i>
                                     <div>
                                         <span>
-                                            {{ App::getLocale()=='en' ? $authors->name_en: $authors->name_fa }}
-                                            {{ App::getLocale()=='en' ? $authors->family_name_en: $authors->family_name_fa }}
+                                            {{ App::getLocale()=='en' ? $authors?->name_en: $authors?->name_fa }}
+                                            {{ App::getLocale()=='en' ? $authors?->family_name_en: $authors?->family_name_fa }}
                                         </span>
                                         <span class="text-muted">
                                             (<small>{{ __('label.author') }}</small>)
                                         </span>
                                         <hr>
                                         <div>
-                                            <small>{{ __('label.education_degree') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->educationDegree?->name_en: $authors->educationDegree?->name_fa }} </span></small>
+                                            <small>{{ __('label.education_degree') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->educationDegree?->name_en: $authors?->educationDegree?->name_fa }} </span></small>
                                         </div>
                                         <div>
-                                            <small>{{ __('label.academic_rank') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->academicRank?->name_en: $authors->academicRank?->name_fa }} </span></small>
+                                            <small>{{ __('label.academic_rank') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->academicRank?->name_en: $authors?->academicRank?->name_fa }} </span></small>
                                         </div>
                                         <div>
-                                            <small>{{ __('label.department') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->department_en: $authors->department_fa }} </span></small>
+                                            <small>{{ __('label.department') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->department_en: $authors?->department_fa }} </span></small>
                                         </div>
                                         <div>
-                                            <small>{{ __('label.preferred_research_area') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->preferred_research_area_en: $authors->preferred_research_area_fa }} </span></small>
+                                            <small>{{ __('label.preferred_research_area') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->preferred_research_area_en: $authors?->preferred_research_area_fa }} </span></small>
                                         </div>
                                         <div>
-                                            <small>{{ __('label.affiliation') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->affiliation_en: $authors->affiliation_fa }} </span></small>
+                                            <small>{{ __('label.affiliation') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->affiliation_en: $authors?->affiliation_fa }} </span></small>
                                         </div>
                                         <div>
-                                            <small>{{ __('label.country') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->country?->country_name_en: $authors->country?->country_name_fa }} </span></small>
+                                            <small>{{ __('label.country') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->country?->country_name_en: $authors?->country?->country_name_fa }} </span></small>
                                         </div>
                                         <div>
-                                            <small>{{ __('label.province') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->province?->name_en: $authors->province?->name_fa }} </span></small>
+                                            <small>{{ __('label.province') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->province?->name_en: $authors?->province?->name_fa }} </span></small>
                                         </div>
                                         <div>
-                                            <small>{{ __('label.city') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->city_en: $authors->city_fa }} </span></small>
+                                            <small>{{ __('label.city') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->city_en: $authors?->city_fa }} </span></small>
                                         </div>
                                     </div>
                                 </div>

@@ -84,12 +84,14 @@
             </div>
         </div>
     </div>
+
     <button type="button" class="default-btn btn mt-5">
         <a href="{{ route('page',['menu_id' =>1, 'slug' =>'articles'])}}" style="color:white;">
             {{ __('label.all_articles') }}<i class="flaticon-next"></i>
         </a>
     </button>
     <br>
+    @if(count($similar_articles) > 0)
     <div style="" class="mt-5">
         <h4>{{ __('label.similar_articles') }}</h4>
         <div class="madical-care-content">
@@ -108,4 +110,5 @@
             </div>
         </div>
     </div>
+    @endif
 </div>

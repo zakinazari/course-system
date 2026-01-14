@@ -20,7 +20,7 @@
             @php $collapseId = 'gazette-'.$gazette->id; @endphp
 
             <li class="list-group-item bg-transparent border-0 px-0">
-                <a class="d-flex align-items-center text-decoration-none fw-bold"
+                <a class="d-flex align-items-center text-decoration-none fw-bold fs-5"
                    data-bs-toggle="collapse"
                    href="#{{ $collapseId }}"
                    role="button"
@@ -36,7 +36,7 @@
                             <a href="{{ route('gazette.file.view', $file->id) }}"
                                target="_blank"
                                class="text-decoration-none d-flex align-items-center">
-                                <i class="flaticon-pdf-file" style="color:red;"></i><span class="ms-2">{{ $file->file_name }}</span>
+                                <i class="flaticon-pdf-file flaticon-pdf-file fs-4 text-danger" ></i><span class="ms-2">{{ $file->file_name }}</span>
                             </a>
                         </li>
                     @endforeach
