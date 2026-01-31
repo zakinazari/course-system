@@ -11,6 +11,7 @@ class ReviewFile extends Model
         'file_path',
         'original_name',
         'mime',
+        'type',
         'size',
     ];
 }

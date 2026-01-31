@@ -25,7 +25,12 @@ class Submission extends Model
         'issue_id',
         'submitted_at',
         'last_activity_at',
-        'views'
+        'views',
+        'accepted_abstract_id',
+        'main_axis_id',
+        'sub_axis_id',
+        'upload_status',
+        
     ];
 
     protected $dates = [

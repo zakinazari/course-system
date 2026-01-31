@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "alkoumi/laravel-hijri-date": "^1.0",
         "anhskohbo/no-captcha": "^3.7",
         "barryvdh/laravel-dompdf": "^3.1",
         "hekmatinasser/verta": "^8.5",

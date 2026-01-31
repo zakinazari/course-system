@@ -53,6 +53,5 @@
 <!-- Vendor Styles -->
 @yield('vendor-style')
 
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css"> -->
 <!-- Page Styles -->
 @yield('page-style')

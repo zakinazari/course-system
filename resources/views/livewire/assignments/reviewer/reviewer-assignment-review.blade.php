@@ -28,7 +28,7 @@
             <small>{{ __('label.uploaded_files') }}</small>
             <ul class="list-group small">
                 @foreach($uploaded_files as $f)
-                    <li class="list-group-item d-flex justify-content-between align-items-center small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center small table-responsive">
                         @php
                             $ext = strtolower(pathinfo($f->original_name, PATHINFO_EXTENSION));
                             switch ($ext) {

@@ -14,9 +14,12 @@ class Gazette extends Model
         'status',
     ];
 
-
     public function files(): HasMany
     {
         return $this->hasMany(GazetteFile::class);
+    }
+    public function ruling(): HasMany
+    {
+        return $this->hasMany(Ruling::class);
     }
 }

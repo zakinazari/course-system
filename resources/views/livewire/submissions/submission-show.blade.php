@@ -42,7 +42,7 @@
                 <span>{{ __('label.uploaded_files') }}</span>
                 <ul class="list-group">
                     @foreach($uploaded_files as $f)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item d-flex justify-content-between align-items-center table-responsive">
                             @php
                                 $ext = strtolower(pathinfo($f->original_name, PATHINFO_EXTENSION));
                                 switch ($ext) {
@@ -65,6 +65,45 @@
                             
                             <div class="d-flex gap-2">
                                 <a wire:click.prevent="downloadFile({{ $f->id }})" class="btn btn-sm btn-secondary text-white">
+                                      <i class="bx bx-download me-1"></i> {{ __('label.download') }}
+                                </a>
+                            </div>
+
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+    @elseif($section ==='files_for_review')
+        @if($files_for_review->count())
+            <div class="mt-3">
+                <span>{{ __('label.files') }}</span>
+                <ul class="list-group">
+                    @foreach($files_for_review as $f)
+                        <li class="list-group-item d-flex justify-content-between align-items-center table-responsive">
+                            @php
+                                $ext = strtolower(pathinfo($f->original_name, PATHINFO_EXTENSION));
+                                switch ($ext) {
+                                    case 'pdf':
+                                        $icon = '📄'; 
+                                        break;
+                                    case 'doc':
+                                    case 'docx':
+                                        $icon = '📝'; 
+                                        break;
+                                    default:
+                                        $icon = '📁'; 
+                                        break;
+                                }
+                            @endphp
+                            <span>
+                                <span class="me-2">{{ $icon }}</span>
+                                <span>{{ $f->original_name }}</span>&nbsp;&nbsp;&nbsp;<small></small>
+                            </span>
+                            
+                            <div class="d-flex gap-2">
+                                <a wire:click.prevent="downloadFileForReview({{ $f->id }})" class="btn btn-sm btn-secondary text-white">
                                       <i class="bx bx-download me-1"></i> {{ __('label.download') }}
                                 </a>
                             </div>
@@ -220,6 +259,19 @@
                     {{ $submission->comments_to_editor_en }}
                 @elseif(App::getLocale() == 'fa')
                     {{ $submission->comments_to_editor_fa }}
+                @endif
+            </small>
+            
+    @elseif($section==='editor_comment')
+    <h5 class="card-title">{{ __('label.editor_comment') }}</h5>
+         <i class="fa fa-comment mb-2"></i>
+            {{ __('label.editor_comment') }} &nbsp;
+            </span><br>
+            <small class="card-text ">
+                @if(App::getLocale() == 'en')
+                    {{ $review->editor_message_en }}
+                @else
+                    {{ $review->editor_message_fa }}
                 @endif
             </small>
     @endif

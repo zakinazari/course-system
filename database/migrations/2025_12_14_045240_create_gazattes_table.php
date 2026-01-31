@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('title_fa');
             $table->string('title_en')->nullable();
             $table->string('gazette_number')->nullable();
-            $table->date('publish_date')->nullable();
+            $table->string('publish_date', 10);
             $table->boolean('status')->default(true);
             $table->timestamps();
         });

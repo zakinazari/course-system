@@ -26,137 +26,227 @@
         <!-- First column-->
         <div class="col-12 col-lg-9">
             <div class="card mb-4">
-            
-                <div class="container-fluid">
-                    <div class="row">
 
-                        <!-- SIDEBAR -->
-                        <div class="col-3 border-end sidebar" style="height:100vh; overflow-y:auto;">
-                            <h5 class="mt-3">{{ __('label.status') }} :
-                                <small>
-                                    @if($review->status ==='pending')
+            {{-- دکمه toggle فقط برای موبایل --}}
+            <div class="d-md-none px-3 pt-3">
+                <button class="btn btn-outline-secondary w-100"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mobileSidebar"
+                        aria-expanded="false"
+                        aria-controls="mobileSidebar">
+                    ☰ {{ __('label.menu') }}
+                </button>
+            </div>
+
+            <div class="container-fluid">
+                <div class="row">
+
+                    {{-- ================= SIDEBAR DESKTOP ================= --}}
+                    <div class="col-3 border-end sidebar d-none d-md-block"
+                        style="height:100vh; overflow-y:auto;">
+
+                        <h5 class="mt-3">{{ __('label.status') }} :
+                            <small>
+                                @if($review->status ==='pending')
                                     <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ __('label.pending') }}</span>
-                                    @elseif($review->status==='accepted')
+                                @elseif($review->status==='accepted')
                                     <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.accepted') }}</span>
-                                    @elseif($review->status==='completed')
+                                @elseif($review->status==='completed')
                                     <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.completed') }}</span>
-                                    @elseif($review->status==='declined')
+                                @elseif($review->status==='declined')
                                     <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ __('label.declined') }}</span>
-                                    @endif
-                                </small>
-                            </h5>
-                            <!-- ------------start Submission------------------------- -->
-                            <ul class="list-group" id="mainMenus">
+                                @endif
+                            </small>
+                        </h5>
+
+                        <ul class="list-group" id="mainMenus">
+                            <li class="list-group-item bg-transparent">
+                                <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#menu2Desktop">
+                                    📝 {{ __('label.submission') }}
+                                </a>
+                                <ul class="collapse mt-2 ps-3
+                                    {{ in_array($current_page, ['details','files_for_review','contributors','editor_comment']) ? 'show' : '' }}"
+                                    id="menu2Desktop">
+                                    <li>
+                                        <a href="#"
+                                        class="submenu text-body {{ $current_page==='details' ? 'active text-primary fw-bold' : '' }}"
+                                        wire:click="setPage('details',{{ $current_round }})">
+                                            {{ __('label.details') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#"
+                                        class="submenu text-body {{ $current_page==='files_for_review' ? 'active text-primary fw-bold' : '' }}"
+                                        wire:click="setPage('files_for_review',{{ $current_round }})">
+                                            {{ __('label.files') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#"
+                                        class="submenu text-body {{ $current_page==='editor_comment' ? 'active text-primary fw-bold' : '' }}"
+                                        wire:click="setPage('editor_comment',{{ $current_round }})">
+                                            {{ __('label.editor_comment') }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            @if($review->status==='declined')
                                 <li class="list-group-item bg-transparent">
-                                    <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#menu2">
-                                        📝 {{ __('label.submission') }}
-                                    </a>
-
-                                    <ul class="collapse mt-2 ps-3 
-                                        {{ in_array($current_page, ['details','files','contributors','comment']) ? 'show' : '' }}"
-                                        id="menu2">
-
-                                        <li>
-                                            <a href="#" class="submenu text-body {{ $current_page==='details' ? 'active text-primary  fw-bold' : '' }}"
-                                            wire:click="setPage('details',{{ $current_round }})">{{ __('label.details') }}</a>
-                                        </li>
-
-                                        <li>
-                                            <a href="#" class="submenu text-body {{ $current_page==='files' ? 'active text-primary  fw-bold' : '' }}"
-                                            wire:click="setPage('files',{{ $current_round }})">{{ __('label.files') }}</a>
-                                        </li>
-
-                                        <li>
-                                            <a href="#" class="submenu text-body {{ $current_page==='contributors' ? 'active text-primary  fw-bold' : '' }}"
-                                            wire:click="setPage('contributors',{{ $current_round }})">{{ __('label.contributors') }}</a>
-                                        </li>
-
-                                    </ul>
-                                </li>
-                                <!-- ------------end Submission------------------------- -->
-
-                                <!-- ----------start Declined Reason--------------------- -->
-                                @if($review->status==='declined')
-                                 <li class="list-group-item bg-transparent">
-                                    <a class="text-decoration-none text-body  {{ $current_page === 'declined_reason' ? 'active text-primary fw-bold' : '' }}"
-                                    wire:click="setPage('declined_reason',{{ $current_round }})"
-                                    data-bs-toggle="collapse" href="#reviewerDeclinedMenu">
+                                    <a href="#" style="font-size:13px !important;"
+                                    class="text-decoration-none text-body {{ $current_page==='declined_reason' ? 'active text-primary fw-bold' : '' }}"
+                                    wire:click="setPage('declined_reason',{{ $current_round }})">
                                         ⚖️ {{ __('label.reviewer_declined_reason') }}
                                     </a>
                                 </li>
-                                @endif
-                                <!-- ----------end Declined Reason--------------------- -->
-                                <!-- ----------start Declined Reason--------------------- -->
-                                @if($review->status==='completed')
-                                 <li class="list-group-item bg-transparent">
-                                    <a class="text-decoration-none text-body  {{ $current_page === 'recommendation' ? 'active text-primary fw-bold' : '' }}"
-                                    wire:click="setPage('recommendation',{{ $current_round }})"
-                                    data-bs-toggle="collapse" href="#reviewerRecommendationMenu">
-                                        ⚖️ {{__('label.recommendation')}}
+                            @endif
+
+                            @if($review->status==='completed')
+                                <li class="list-group-item bg-transparent">
+                                    <a href="#" style="font-size:13px !important;"
+                                    class="text-decoration-none text-body {{ $current_page==='recommendation' ? 'active text-primary fw-bold' : '' }}"
+                                    wire:click="setPage('recommendation',{{ $current_round }})">
+                                        ⚖️ {{ __('label.recommendation') }}
                                     </a>
                                 </li>
-                                @endif
-                                <!-- ----------end Declined Reason--------------------- -->
-                            </ul>
+                            @endif
+
+                        </ul>
+                    </div>
+
+                    {{-- ================= SIDEBAR MOBILE ================= --}}
+                    <div class="col-12 d-md-none">
+                        <div class="collapse" id="mobileSidebar" style="overflow-y:auto;">
+                            <div class="border-end pb-3">
+
+                                <h5 class="mt-3">{{ __('label.status') }} :
+                                    <small>
+                                        @if($review->status ==='pending')
+                                            <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ __('label.pending') }}</span>
+                                        @elseif($review->status==='accepted')
+                                            <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.accepted') }}</span>
+                                        @elseif($review->status==='completed')
+                                            <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.completed') }}</span>
+                                        @elseif($review->status==='declined')
+                                            <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ __('label.declined') }}</span>
+                                        @endif
+                                    </small>
+                                </h5>
+
+                                <ul class="list-group" id="mobileMenus">
+                                    <li class="list-group-item bg-transparent">
+                                        <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#menu2Mobile">
+                                            📝 {{ __('label.submission') }}
+                                        </a>
+                                        <ul class="collapse mt-2 ps-3
+                                            {{ in_array($current_page, ['details','files_for_review','contributors','editor_comment']) ? 'show' : '' }}"
+                                            id="menu2Mobile">
+                                            <li>
+                                                <a href="#"
+                                                class="submenu text-body {{ $current_page==='details' ? 'active text-primary fw-bold' : '' }}"
+                                                wire:click="setPage('details',{{ $current_round }})">
+                                                    {{ __('label.details') }}
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="#"
+                                                class="submenu text-body {{ $current_page==='files_for_review' ? 'active text-primary fw-bold' : '' }}"
+                                                wire:click="setPage('files_for_review',{{ $current_round }})">
+                                                    {{ __('label.files') }}
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="#"
+                                                class="submenu text-body {{ $current_page==='editor_comment' ? 'active text-primary fw-bold' : '' }}"
+                                                wire:click="setPage('editor_comment',{{ $current_round }})">
+                                                    {{ __('label.editor_comment') }}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+
+                                    @if($review->status==='declined')
+                                        <li class="list-group-item bg-transparent">
+                                            <a href="#"
+                                            class="text-decoration-none text-body {{ $current_page==='declined_reason' ? 'active text-primary fw-bold' : '' }}"
+                                            wire:click="setPage('declined_reason',{{ $current_round }})">
+                                                ⚖️ {{ __('label.reviewer_declined_reason') }}
+                                            </a>
+                                        </li>
+                                    @endif
+
+                                    @if($review->status==='completed')
+                                        <li class="list-group-item bg-transparent">
+                                            <a href="#" 
+                                            class="text-decoration-none text-body {{ $current_page==='recommendation' ? 'active text-primary fw-bold' : '' }}"
+                                            wire:click="setPage('recommendation',{{ $current_round }})">
+                                                ⚖️ {{ __('label.recommendation') }}
+                                            </a>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- CONTENT -->
-                        <div class="col-9 p-4">
-                            <!-- ------------start Submission------------------------- -->
-                            @if($current_page === 'details')
-                                @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'details'])
-                            @elseif($current_page === 'files')
-                                @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'files'])
-                            @elseif($current_page === 'contributors')
-                                @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'contributors'])
-                            @elseif($current_page === 'comment')
-                                @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'comment'])
-                            @endif
-                            <!-- ------------end Submission------------------------- -->
+                    {{-- ================= CONTENT ================= --}}
+                    <div class="col-12 col-md-9 p-4">
 
+                        @if($current_page === 'details')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'details'])
+                        @elseif($current_page === 'files_for_review')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'files_for_review','review_id'=>$review_id])
+                        @elseif($current_page === 'files_for_review')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'files_for_review','review_id'=>$review_id])
+                        @elseif($current_page === 'editor_comment')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'editor_comment','review_id'=>$review_id])
+                        @endif
 
-                            <!-- ------------end Reviews------------------------- -->
+                        
+                        @if ($current_page ==='declined_reason' && $review->status==='declined')
+                            @livewire('assignments.reviewer.reviewer-assignment-decline-reason', ['review_id' => $review_id])
+                        @endif
 
-                             
-                            @if ($current_page ==='declined_reason')
-                                @if($review->status==='declined')
-                                    @livewire('assignments.reviewer.reviewer-assignment-decline-reason', ['review_id' => $review_id])
-                                @endif
-                            @endif
-                            
-                            @if ($current_page ==='recommendation')
-                                @if($review->status==='completed')
-                                    @livewire('assignments.reviewer.reviewer-assignment-review', ['review_id' => $review_id])
-                                @endif
-                            @endif
-                        </div>
+                        @if ($current_page ==='recommendation' && $review->status==='completed')
+                            @livewire('assignments.reviewer.reviewer-assignment-review', ['review_id' => $review_id])
+                        @endif
 
                     </div>
+
                 </div>
             </div>
+        </div>
+
             <!-- /Second column -->
 
         </div>
         <!-- Second column -->
-          <div class="col-12 col-lg-3">
+          <div class="col-12 col-lg-3 ">
                 <!-- Pricing Card -->
-                <div class="card mb-4">
+                <div class="card mb-4 " style="height:100vh; overflow-y:auto;">
                     <div class="card-body">
-                        @if($review->status ==='pending')
-                        <button  type="button" class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#{{ $acceptModalId }}">
-                            {{ __('label.accept_review') }}
-                        </button><br>
-                        
-                        <button  type="button" class="btn btn-danger mt-2" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                            {{ __('label.decline_review') }}
-                        </button><br>
+                        @if($review?->submission?->status !== 'published')
+
+                            @if($review->status ==='pending')
+                            <button  type="button" class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#{{ $acceptModalId }}">
+                                {{ __('label.accept_review') }}
+                            </button><br>
+                            
+                            <button  type="button" class="btn btn-danger mt-2" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
+                                {{ __('label.decline_review') }}
+                            </button><br>
+                            @endif
+
+                            @if($review->status ==='accepted')
+                            <button  type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#{{ $recommendationModalId }}">
+                                {{ __('label.make_recommendation') }}
+                            </button><br>
+                            @endif
+
                         @endif
 
-                        @if($review->status ==='accepted')
-                        <button  type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#{{ $recommendationModalId }}">
-                            {{ __('label.make_recommendation') }}
-                        </button><br>
-                        @endif
+                        {{--
                         <div class="mt-3">
                             <ul class="list-group">
                                 <li class="list-group-item">
@@ -164,42 +254,43 @@
                                         <i class="fa fa-user mt-1 me-2"></i>
                                         <div>
                                             <span>
-                                                {{ App::getLocale()=='en' ? $authors->name_en: $authors->name_fa }}
-                                                {{ App::getLocale()=='en' ? $authors->family_name_en: $authors->family_name_fa }}
+                                                {{ App::getLocale()=='en' ? $authors?->name_en: $authors?->name_fa }}
+                                                {{ App::getLocale()=='en' ? $authors?->family_name_en: $authors?->family_name_fa }}
                                             </span>
                                             <span class="text-muted">
                                                 (<small>{{ __('label.author') }}</small>)
                                             </span>
                                             <hr>
                                             <div>
-                                                <small>{{ __('label.education_degree') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->educationDegree?->name_en: $authors->educationDegree?->name_fa }} </span></small>
+                                                <small>{{ __('label.education_degree') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->educationDegree?->name_en: $authors?->educationDegree?->name_fa }} </span></small>
                                             </div>
                                             <div>
-                                                <small>{{ __('label.academic_rank') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->academicRank?->name_en: $authors->academicRank?->name_fa }} </span></small>
+                                                <small>{{ __('label.academic_rank') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->academicRank?->name_en: $authors?->academicRank?->name_fa }} </span></small>
                                             </div>
                                             <div>
-                                                <small>{{ __('label.department') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->department_en: $authors->department_fa }} </span></small>
+                                                <small>{{ __('label.department') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->department_en: $authors?->department_fa }} </span></small>
                                             </div>
                                             <div>
-                                                <small>{{ __('label.preferred_research_area') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->preferred_research_area_en: $authors->preferred_research_area_fa }} </span></small>
+                                                <small>{{ __('label.preferred_research_area') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->preferred_research_area_en: $authors?->preferred_research_area_fa }} </span></small>
                                             </div>
                                             <div>
-                                                <small>{{ __('label.affiliation') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->affiliation_en: $authors->affiliation_fa }} </span></small>
+                                                <small>{{ __('label.affiliation') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->affiliation_en: $authors?->affiliation_fa }} </span></small>
                                             </div>
                                             <div>
-                                                <small>{{ __('label.country') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->country?->country_name_en: $authors->country?->country_name_fa }} </span></small>
+                                                <small>{{ __('label.country') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->country?->country_name_en: $authors?->country?->country_name_fa }} </span></small>
                                             </div>
                                             <div>
-                                                <small>{{ __('label.province') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->province?->name_en: $authors->province?->name_fa }} </span></small>
+                                                <small>{{ __('label.province') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->province?->name_en: $authors?->province?->name_fa }} </span></small>
                                             </div>
                                             <div>
-                                                <small>{{ __('label.city') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors->city_en: $authors->city_fa }} </span></small>
+                                                <small>{{ __('label.city') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->city_en: $authors?->city_fa }} </span></small>
                                             </div>
                                         </div>
                                     </div>
                                 </li>
                             </ul>
                         </div>
+                        --}}
                     </div>
                 </div>
                 <!-- /Pricing Card -->

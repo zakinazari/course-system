@@ -5,6 +5,7 @@ use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Issues\Issue;
 use App\Models\Website\WebMenu;
+use App\Models\Website\WebPageFile;
 use App\Models\Website\Post;
 use App\Models\Website\Gazette;
 use App\Models\Submissions\Submission;
@@ -55,12 +56,23 @@ class CustomPage extends Component
 
         }elseif($menu->slug == 'gazette'){
 
-            $gazettes = Gazette::with('files')->where('status',true)->get();
-            return view('livewire.front.gazettes',compact('menu','gazettes'));
+            return view('livewire.front.gazette.gazettes-page');
+
+        }elseif($menu->slug == 'orders'){
+
+            return view('livewire.front.ruling.orders-page');
+
+        }elseif($menu->slug == 'decrees'){
+
+            return view('livewire.front.ruling.decrees-page');
 
         }elseif($menu->slug == 'articles'){
 
             return view('livewire.front.articles.article-list-page');
+
+        }elseif($menu->slug == 'accepted_abstracts'){
+
+            return view('livewire.front.articles.accepted-abstracts-page');
 
         }elseif($menu->slug =='scientific_board'){
             $scientific_board = ScientificBoard::with('members')->get();
@@ -87,5 +99,22 @@ class CustomPage extends Component
         }
 
         return Storage::disk('local')->download($path, $file->original_name);
+    }
+
+    public function downloadPageFile($file_id)
+    {
+        $file = WebPageFile::findOrFail($file_id);
+
+        $path = $file->file_path;
+
+        if (!Storage::disk('local')->exists($path)) {
+            $this->dispatch('alert', 
+                type: 'error',
+                message: 'File not found!'
+            );
+            return;
+        }
+
+        return Storage::disk('local')->download($path, $file->file_name);
     }
 }

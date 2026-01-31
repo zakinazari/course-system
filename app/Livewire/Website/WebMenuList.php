@@ -121,7 +121,6 @@ class WebMenuList extends Component
         ->orderBy('parent_id', 'asc')
         ->orderBy('order', 'asc')
         ->paginate($this->perPage);
-
         return view('livewire.website.web-menu-list',compact('menus'));
     }
 

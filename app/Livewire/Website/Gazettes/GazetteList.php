@@ -114,9 +114,20 @@ class GazetteList extends Component
         return [
             'title_fa' => 'required|string|max:255',
             'title_en' => 'nullable|string|max:255',
+            'gazette_number' => [
+                'required',
+                \Illuminate\Validation\Rule::unique('gazettes', 'gazette_number')
+                    ->ignore($this->gazette_id ?? null),
+            ],
+            'publish_date' => [
+                'required',
+                'string',
+                'size:10',
+                'regex:/^\d{4}\/\d{2}\/\d{2}$/',
+            ],
             'status' => 'boolean',
 
-            'files'   => 'required|array',
+            'files'   => 'nullable|array',
             'files.*' => 'file|mimes:pdf|max:2048',
         ];
     }
@@ -125,6 +136,13 @@ class GazetteList extends Component
     {
         return [
             'title_fa.required' => __('label.title.required'),
+
+            'gazette_number.required' => __('label.gazette_number.required'),
+            'gazette_number.unique' => __('label.gazette_number.unique'),
+
+            'publish_date.required' => __('label.gazette_date.required'),
+            'publish_date.size'     => __('label.gazette_date.size'),
+            'publish_date.regex'    => __('label.gazette_date.regex'),
 
             'files.required' => __('label.file_required'),
             'files.*.file' => __('label.file_invalid'),
@@ -145,8 +163,9 @@ class GazetteList extends Component
                 $gazette = Gazette::create([
                     'title_fa' => $this->title_fa,
                     'title_en' => $this->title_en,
+                    'gazette_number' => $this->gazette_number,
+                    'publish_date' => $this->publish_date,
                     'status' => $this->status,
-                    'publish_date' => now(),
                 ]);
 
                 if ($this->files) {
@@ -198,9 +217,6 @@ class GazetteList extends Component
         $this->dispatch('open-modal', id: 'modalShowFiles');
     }
 
-
-
-
     public function edit($id)
     {
         $this->resetValidation();
@@ -209,6 +225,8 @@ class GazetteList extends Component
         $this->gazette_id = $id;
         $this->title_fa = $gazette->title_fa;
         $this->title_en = $gazette->title_en;
+        $this->gazette_number = $gazette->gazette_number;
+        $this->publish_date = $gazette->publish_date;
         $this->status = $gazette->status;
         $this->editMode = true;
 
@@ -233,6 +251,8 @@ class GazetteList extends Component
             $gazette->update([
                 'title_fa' => $this->title_fa,
                 'title_en' => $this->title_en,
+                'gazette_number' => $this->gazette_number,
+                'publish_date' => $this->publish_date,
                 'status' => $this->status,
             ]);
 

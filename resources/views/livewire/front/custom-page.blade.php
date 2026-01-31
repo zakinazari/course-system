@@ -38,9 +38,11 @@
             Your browser does not support the video tag.
             </video>
             @else
-            <iframe src="{{ getImage($menu?->page?->files->pluck('file_path')->first()) }}" width="100%" height="700" style="border:none;">
-
-            </iframe>
+                @foreach($menu?->page?->files as $file)
+                <a wire:click.prevent="downloadPageFile({{ $file->id }})"class="default-btn btn" 
+                style="padding:5px 10px;border-radius: 10px;" title="{{ $file->file_name }}">
+                    <i class="flaticon-pdf-file" style="font-size:20px;padding-right:0px;"></i></a>
+                @endforeach
             @endif
         @endif
 </div>

@@ -36,259 +36,310 @@
 
             <!-- Inventory -->
             <div class="card mb-4">
-         
-                <div class="container-fluid">
-                    <div class="row">
 
-                        <!-- SIDEBAR -->
-                        <div class="col-3 border-end sidebar" style="height:100vh; overflow-y:auto;">
-                            <h5 class="mt-3">{{ __('label.status') }} :
-                                <small>
+            {{-- دکمه toggle فقط برای موبایل --}}
+            <div class="d-md-none px-3 pt-3">
+                <button class="btn btn-outline-secondary w-100"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mobileSidebar"
+                        aria-expanded="false"
+                        aria-controls="mobileSidebar">
+                    ☰ {{ __('label.menu') }}
+                </button>
+            </div>
+
+            <div class="container-fluid">
+                <div class="row">
+
+                    {{-- ================= SIDEBAR DESKTOP ================= --}}
+                    <div class="col-3 border-end sidebar d-none d-md-block" style="height:100vh; overflow-y:auto;">
+                        <h5 class="mt-3">{{ __('label.status') }} :
+                            <small>
                                 @switch($submission->status)
-                                
                                     @case('submitted')
-                                        <span class="badge bg-label-primary me-1" style="font-size:10px;">
-                                            {{ __('label.submitted') }}
-                                        </span>
+                                        <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ __('label.submitted') }}</span>
                                         @break
-
                                     @case('screening')
-                                        <span class="badge bg-label-secondary me-1" style="font-size:10px;">
-                                             {{ __('label.screening') }}
-                                        </span>
+                                        <span class="badge bg-label-secondary me-1" style="font-size:10px;">{{ __('label.screening') }}</span>
                                         @break
-
                                     @case('under_review')
-                                        <span class="badge bg-label-info me-1" style="font-size:10px;">
-                                             {{ __('label.under_review') }}
-                                        </span>
+                                        <span class="badge bg-label-info me-1" style="font-size:10px;">{{ __('label.under_review') }}</span>
                                         @break
                                     @case('revision_required')
-                                        <span class="badge bg-label-warning me-1" style="font-size:10px;">
-                                             {{ __('label.revision_required') }}
-                                        </span>
+                                        <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ __('label.revision_required') }}</span>
                                         @break
-
                                     @case('accepted')
-                                        <span class="badge bg-label-success me-1" style="font-size:10px;">
-                                            {{ __('label.accepted') }}
-                                        </span>
+                                        <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.accepted') }}</span>
                                         @break
                                     @case('rejected')
-                                        <span class="badge bg-label-danger me-1" style="font-size:10px;">
-                                             {{ __('label.rejected') }}
-                                        </span>
+                                        <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ __('label.rejected') }}</span>
                                         @break
-
                                     @case('published')
-                                        <span class="badge bg-label-success me-1" style="font-size:10px;">
-                                            {{ __('label.published') }}
-                                        </span>
+                                        <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.published') }}</span>
                                         @break
                                     @default
-                                        <span class="badge bg-label-primary me-1" style="font-size:10px;">
-                                            {{ $submission->status }}
-                                        </span>
-                                    @endswitch
-                                </small>
-                            </h5>
-                            <!-- ------------start Submission------------------------- -->
-                            <ul class="list-group" id="mainMenus">
-                                <li class="list-group-item bg-transparent">
-                                    <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#menu2">
-                                        📝 {{ __('label.submission') }}
-                                    </a>
+                                        <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ $submission->status }}</span>
+                                @endswitch
+                            </small>
+                        </h5>
 
-                                    <ul class="collapse mt-2 ps-3 
-                                        {{ in_array($current_page, ['details','files','contributors','comment']) ? 'show' : '' }}"
-                                        id="menu2">
+                        <ul class="list-group" id="mainMenus">
+                            {{-- Submission Menu --}}
+                            <li class="list-group-item bg-transparent">
+                                <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#menu2Desktop">
+                                    📝 {{ __('label.submission') }}
+                                </a>
+                                <ul class="collapse mt-2 ps-3
+                                    {{ in_array($current_page, ['details','files','contributors','comment']) ? 'show' : '' }}"
+                                    id="menu2Desktop">
+                                    <li>
+                                        <a href="#" style="font-size:14px !important;"
+                                        class="submenu text-body {{ $current_page==='details' ? 'active text-primary fw-bold' : '' }}"
+                                        wire:click="setPage('details',{{ $current_round }})">
+                                            {{ __('label.details') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" style="font-size:14px !important;"
+                                        class="submenu text-body {{ $current_page==='files' ? 'active text-primary fw-bold' : '' }}"
+                                        wire:click="setPage('files',{{ $current_round }})">
+                                            {{ __('label.files') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" style="font-size:14px !important;"
+                                        class="submenu text-body {{ $current_page==='contributors' ? 'active text-primary fw-bold' : '' }}"
+                                        wire:click="setPage('contributors',{{ $current_round }})">
+                                            {{ __('label.contributors') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" style="font-size:14px !important;"
+                                        class="submenu text-body {{ $current_page==='comment' ? 'active text-primary fw-bold' : '' }}"
+                                        wire:click="setPage('comment',{{ $current_round }})">
+                                            {{ __('label.author_comment') }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
 
-                                        <li>
-                                            <a href="#" class="submenu text-body {{ $current_page==='details' ? 'active text-primary  fw-bold' : '' }}"
-                                            wire:click="setPage('details',{{ $current_round }})">{{ __('label.details') }}</a>
+                            {{-- Reviews --}}
+                            @if($reviews)
+                            <li class="list-group-item bg-transparent">
+                                <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#reviewMenuDesktop">
+                                    🗂️ {{ __('label.reviews') }}
+                                </a>
+                                <ul class="collapse mt-2 ps-3
+                                    {{ in_array($current_page, ['reviewers','recommendations','declined_reasons']) ? 'show' : '' }}"
+                                    id="reviewMenuDesktop">
+                                    @for($i = 1; $i <= $submission->round; $i++)
+                                        @php
+                                            $hasRecommendation = $this->getRecommendationCountByRound($i) > 0;
+                                            $hasDeclined = $this->getDeclinedCountByRound($i) > 0;
+                                        @endphp
+                                        <li class="mb-2">
+                                            <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#roundReviewDesktop_{{ $i }}">
+                                                🟢 {{ __('label.round') }} {{ $i }}
+                                            </a>
+                                            <ul class="collapse mt-2 ps-3
+                                                {{ ($current_round == $i && in_array($current_page, ['reviewers','recommendations','declined_reasons'])) ? 'show' : '' }}"
+                                                id="roundReviewDesktop_{{ $i }}">
+                                                @if(Auth::user()->isAdmin())
+                                                    <li><a href="#" style="font-size:13px !important;" class="submenu text-body {{ ($current_page === 'reviewers' && $current_round == $i) ? 'text-primary fw-bold' : '' }}" wire:click="setPage('reviewers', {{ $i }})">{{ __('label.reviewers') }}</a></li>
+                                                @endif
+             
+
+                                                @if($hasRecommendation)
+                                                <li>
+                                                    <a href="#" style="font-size:13px !important;"
+                                                    class="submenu text-body {{ ($current_page === 'recommendations' && $current_round == $i) ? 'text-primary fw-bold' : '' }}"
+                                                    wire:click="setPage('recommendations', {{ $i }})">
+                                                        {{ __('label.recommendations') }}
+                                                    </a>
+                                                </li>
+                                                @endif
+                                                @if($hasDeclined)
+                                                <li>
+                                                    <a href="#" style="font-size:13px !important;"
+                                                    class="submenu text-body {{ ($current_page === 'declined_reasons' && $current_round == $i) ? 'text-primary fw-bold' : '' }}"
+                                                    wire:click="setPage('declined_reasons', {{ $i }})">
+                                                        {{ __('label.reviewer_declined_reasons') }}
+                                                    </a>
+                                                </li>
+                                                @endif
+                                            </ul>
                                         </li>
+                                    @endfor
+                                </ul>
+                            </li>
+                            @endif
 
+                            {{-- Editor Decision --}}
+                            @if(in_array($submission->status, ['accepted','rejected','revision_required','published']))
+                            <li class="list-group-item bg-transparent">
+                                <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#editorDecisionDesktop">
+                                    ⚖️ {{ __('label.editor_decision') }}
+                                </a>
+                                <ul class="collapse mt-2 ps-3
+                                    {{ str_starts_with($current_page, 'editor_decision.') ? 'show' : '' }}"
+                                    id="editorDecisionDesktop">
+                                    @for($i = 1; $i <= $submission->round; $i++)
                                         <li>
-                                            <a href="#" class="submenu text-body {{ $current_page==='files' ? 'active text-primary  fw-bold' : '' }}"
-                                            wire:click="setPage('files',{{ $current_round }})">{{ __('label.files') }}</a>
-                                        </li>
-
-                                        <li>
-                                            <a href="#" class="submenu text-body {{ $current_page==='contributors' ? 'active text-primary  fw-bold' : '' }}"
-                                            wire:click="setPage('contributors',{{ $current_round }})">{{ __('label.contributors') }}</a>
-                                        </li>
-
-                                        <li>
-                                            <a href="#" class="submenu text-body {{ $current_page==='comment' ? 'active text-primary  fw-bold' : '' }}"
-                                            wire:click="setPage('comment',{{ $current_round }})">{{ __('label.author_comment') }}</a>
-                                        </li>
-
-                                    </ul>
-                                </li>
-                                <!-- ------------end Submission------------------------- -->
-
-
-                                <!-- ------------start Reviews------------------------- -->
-                                @if($reviews)
-
-                                <li class="list-group-item bg-transparent" >
-                                    <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#reviewMenu">
-                                        🗂️ {{ __('label.reviews') }}
-                                    </a>
-
-                                    <ul class="collapse mt-2 ps-3
-                                        {{ in_array($current_page, ['reviewers','recommendations','declined_reasons']) ? 'show' : '' }}"
-                                        id="reviewMenu" >
-
-                                        @for($i = 1; $i <= $submission->round; $i++)
-                                            
-                                            @php
-                                                $hasRecommendation = $this->getRecommendationCountByRound($i) > 0;
-                                                $hasDeclined = $this->getDeclinedCountByRound($i) > 0;
-                                            @endphp
-
-                                            <li class="mb-2" >
-
-                                               
-                                                <a class="text-decoration-none text-body"
-                                                data-bs-toggle="collapse"
-                                                href="#roundReview_{{ $i }}">
-                                                    🟢 {{ __('label.round') }} {{ $i }}
-                                                </a>
-
-                                                
-                                                <ul class="collapse mt-2 ps-3
-                                                    {{ ($current_round == $i && in_array($current_page, ['reviewers','recommendations','declined_reasons'])) ? 'show' : '' }}"
-                                                    id="roundReview_{{ $i }}" style="padding:0px !important;">
-
-                                                    <li>
-                                                        <a href="#"
-                                                        class="submenu text-body 
-                                                        {{ ($current_page === 'reviewers' && $current_round == $i) ? 'text-primary fw-bold' : '' }}"
-                                                        wire:click="setPage('reviewers', {{ $i }})">
-                                                            {{ __('label.reviewers') }}
-                                                        </a>
-                                                    </li>
-                                                    @if($hasRecommendation)
-                                                    <li >
-                                                        <a href="#"
-                                                        class="submenu text-body 
-                                                        {{ ($current_page === 'recommendations' && $current_round == $i) ? 'text-primary fw-bold' : '' }}"
-                                                        wire:click="setPage('recommendations', {{ $i }})">
-                                                            {{ __('label.recommendations') }}
-                                                        </a>
-                                                    </li>
-                                                    @endif
-                                                    @if($hasDeclined)
-                                                    <li>
-                                                        <a href="#"
-                                                        class="submenu text-body 
-                                                        {{ ($current_page === 'declined_reasons' && $current_round == $i) ? 'text-primary fw-bold' : '' }}"
-                                                        wire:click="setPage('declined_reasons', {{ $i }})">
-                                                            {{ __('label.reviewer_declined_reasons') }}
-                                                        </a>
-                                                    </li>
-                                                    @endif
-                                                </ul>
-                                            </li>
-                                        @endfor
-
-                                    </ul>
-                                </li>
-                                @endif
-                                <!-- ------------end Reviews------------------------- -->
-
-                                <!-- ------------start Editor Decision------------------------- -->
-                                @if($submission->status==='accepted' || $submission->status==='rejected' || $submission->status==='revision_required' || $submission->status==='published')
-                                <li class="list-group-item bg-transparent">
-                                    <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#editorDecisionMenu">
-                                        ⚖️ {{ __('label.editor_decision') }}
-                                    </a>
-
-                                    <ul class="collapse mt-2 ps-3 
-                                        {{ str_starts_with($current_page, 'editor_decision.') ? 'show' : '' }}"
-                                        id="editorDecisionMenu">
-
-                                        @for($i = 1; $i <= $submission->round; $i++)
-                                            <li>
-                                                <a href="#"
-                                                class="submenu text-body
-                                                {{ $current_page === 'editor_decision.'.$i ? 'active text-primary fw-bold' : '' }}"
-                                                wire:click="setPage('editor_decision.{{ $i }}',{{ $i }})">
+                                            <a href="#"
+                                            class="submenu text-body {{ $current_page === 'editor_decision.'.$i ? 'active text-primary fw-bold' : '' }}"
+                                            wire:click="setPage('editor_decision.{{ $i }}',{{ $i }})">
                                                 {{__('label.round')}} {{ $i }}
-                                                </a>
-                                            </li>
-                                        @endfor
+                                            </a>
+                                        </li>
+                                    @endfor
+                                </ul>
+                            </li>
+                            @endif
+                        </ul>
+                    </div>
 
-                                    </ul>
-                                </li>
-                                @endif
-                                <!-- ------------end Editor Decision------------------------- -->
-                            </ul>
+                    {{-- ================= SIDEBAR MOBILE ================= --}}
+                    <div class="col-12 d-md-none">
+                        <div class="collapse" id="mobileSidebar" style="overflow-y:auto;">
+                            <div class="border-end pb-3">
+                                <h5 class="mt-3">{{ __('label.status') }} :
+                                    <small>
+                                        @switch($submission->status)
+                                            @case('submitted') <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ __('label.submitted') }}</span> @break
+                                            @case('screening') <span class="badge bg-label-secondary me-1" style="font-size:10px;">{{ __('label.screening') }}</span> @break
+                                            @case('under_review') <span class="badge bg-label-info me-1" style="font-size:10px;">{{ __('label.under_review') }}</span> @break
+                                            @case('revision_required') <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ __('label.revision_required') }}</span> @break
+                                            @case('accepted') <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.accepted') }}</span> @break
+                                            @case('rejected') <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ __('label.rejected') }}</span> @break
+                                            @case('published') <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.published') }}</span> @break
+                                            @default <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ $submission->status }}</span>
+                                        @endswitch
+                                    </small>
+                                </h5>
+
+                                {{-- Mobile menus: Submission, Reviews, Editor Decision --}}
+                                <ul class="list-group">
+                                    {{-- Submission --}}
+                                    <li class="list-group-item bg-transparent">
+                                        <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#menu2Mobile">
+                                            📝 {{ __('label.submission') }}
+                                        </a>
+                                        <ul class="collapse mt-2 ps-3
+                                            {{ in_array($current_page, ['details','files','contributors','comment']) ? 'show' : '' }}"
+                                            id="menu2Mobile">
+                                            <li><a href="#" class="submenu text-body {{ $current_page==='details' ? 'active text-primary fw-bold' : '' }}" wire:click="setPage('details',{{ $current_round }})">{{ __('label.details') }}</a></li>
+                                            <li><a href="#" class="submenu text-body {{ $current_page==='files' ? 'active text-primary fw-bold' : '' }}" wire:click="setPage('files',{{ $current_round }})">{{ __('label.files') }}</a></li>
+                                            <li><a href="#" class="submenu text-body {{ $current_page==='contributors' ? 'active text-primary fw-bold' : '' }}" wire:click="setPage('contributors',{{ $current_round }})">{{ __('label.contributors') }}</a></li>
+                                            <li><a href="#" class="submenu text-body {{ $current_page==='comment' ? 'active text-primary fw-bold' : '' }}" wire:click="setPage('comment',{{ $current_round }})">{{ __('label.author_comment') }}</a></li>
+                                        </ul>
+                                    </li>
+
+                                    {{-- Reviews --}}
+                                    @if($reviews)
+                                    <li class="list-group-item bg-transparent">
+                                        <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#reviewMenuMobile">
+                                            🗂️ {{ __('label.reviews') }}
+                                        </a>
+                                        <ul class="collapse mt-2 ps-3
+                                            {{ in_array($current_page, ['reviewers','recommendations','declined_reasons']) ? 'show' : '' }}"
+                                            id="reviewMenuMobile">
+                                            @for($i = 1; $i <= $submission->round; $i++)
+                                                @php
+                                                    $hasRecommendation = $this->getRecommendationCountByRound($i) > 0;
+                                                    $hasDeclined = $this->getDeclinedCountByRound($i) > 0;
+                                                @endphp
+                                                <li class="mb-2">
+                                                    <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#roundReviewMobile_{{ $i }}">
+                                                        🟢 {{ __('label.round') }} {{ $i }}
+                                                    </a>
+                                                    <ul class="collapse mt-2 ps-3
+                                                        {{ ($current_round == $i && in_array($current_page, ['reviewers','recommendations','declined_reasons'])) ? 'show' : '' }}"
+                                                        id="roundReviewMobile_{{ $i }}">
+                                                        
+                                                        @if(Auth::user()->isAdmin())
+                                                        <li><a href="#" style="font-size:13px !important;" class="submenu text-body {{ ($current_page === 'reviewers' && $current_round == $i) ? 'text-primary fw-bold' : '' }}" wire:click="setPage('reviewers', {{ $i }})">{{ __('label.reviewers') }}</a></li>
+                                                        @endif
+
+                                                        @if($hasRecommendation)
+                                                        <li><a href="#" style="font-size:13px !important;" class="submenu text-body {{ ($current_page === 'recommendations' && $current_round == $i) ? 'text-primary fw-bold' : '' }}" wire:click="setPage('recommendations', {{ $i }})">{{ __('label.recommendations') }}</a></li>
+                                                        @endif
+                                                        @if($hasDeclined)
+                                                        <li><a href="#" style="font-size:13px !important;" class="submenu text-body {{ ($current_page === 'declined_reasons' && $current_round == $i) ? 'text-primary fw-bold' : '' }}" wire:click="setPage('declined_reasons', {{ $i }})">{{ __('label.reviewer_declined_reasons') }}</a></li>
+                                                        @endif
+                                                    </ul>
+                                                </li>
+                                            @endfor
+                                        </ul>
+                                    </li>
+                                    @endif
+
+                                    {{-- Editor Decision --}}
+                                    @if(in_array($submission->status, ['accepted','rejected','revision_required','published']))
+                                    <li class="list-group-item bg-transparent">
+                                        <a class="text-decoration-none text-body" data-bs-toggle="collapse" href="#editorDecisionMobile">
+                                            ⚖️ {{ __('label.editor_decision') }}
+                                        </a>
+                                        <ul class="collapse mt-2 ps-3
+                                            {{ str_starts_with($current_page, 'editor_decision.') ? 'show' : '' }}"
+                                            id="editorDecisionMobile">
+                                            @for($i = 1; $i <= $submission->round; $i++)
+                                                <li><a href="#" class="submenu text-body {{ $current_page === 'editor_decision.'.$i ? 'active text-primary fw-bold' : '' }}" wire:click="setPage('editor_decision.{{ $i }}',{{ $i }})">{{__('label.round')}} {{ $i }}</a></li>
+                                            @endfor
+                                        </ul>
+                                    </li>
+                                    @endif
+
+                                </ul>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- CONTENT -->
-                        <div class="col-9 p-4">
-                            <!-- ------------start Submission------------------------- -->
-                            @if($current_page === 'details')
-                                @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'details'])
-                            @elseif($current_page === 'files')
-                                @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'files'])
-                            @elseif($current_page === 'contributors')
-                                @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'contributors'])
-                            @elseif($current_page === 'comment')
-                               @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'comment'])
-                            @endif
-                            <!-- ------------end Submission------------------------- -->
+                    {{-- ================= CONTENT ================= --}}
+                    <div class="col-12 col-md-9 p-4">
 
-                            <!-- ------------start Reviews------------------------- -->
-                           @if($current_page === 'reviewers')
-                                @livewire('submissions.submission-review',
-                                    [
-                                        'active_menu_id' => $active_menu_id,
-                                        'submission_id' => $submission_id,
-                                        'round' => $current_round
-                                    ],
-                                    key('reviewers-' . $current_round) 
-                                )
+                        @if($current_page === 'details')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'details'])
+                        @elseif($current_page === 'files')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'files'])
+                        @elseif($current_page === 'contributors')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'contributors'])
+                        @elseif($current_page === 'comment')
+                            @livewire('submissions.submission-show', ['submission_id' => $submission_id,'section'=>'comment'])
+                        @endif
 
-                            @elseif($current_page === 'recommendations')
+                        {{-- Reviews --}}
+                        @if($current_page === 'reviewers')
+                            @livewire('submissions.submission-review', [
+                                'active_menu_id' => $active_menu_id,
+                                'submission_id' => $submission_id,
+                                'round' => $current_round
+                            ], key('reviewers-' . $current_round))
+                        @elseif($current_page === 'recommendations')
+                            @livewire('assignments.reviewer.reviewer-assignment-decision', [
+                                'submission_id' => $submission_id,
+                                'round' => $current_round
+                            ], key('recommendations-' . $current_round))
+                        @elseif($current_page === 'declined_reasons')
+                            @livewire('assignments.reviewer.reviewer-assignment-declined-reasons', [
+                                'submission_id' => $submission_id,
+                                'round' => $current_round
+                            ], key('declined_reasons-' . $current_round))
+                        @endif
 
-                                @livewire('assignments.reviewer.reviewer-assignment-decision',
-                                    [
-                                        'submission_id' => $submission_id,
-                                        'round' => $current_round
-                                    ],
-                                    key('recommendations-' . $current_round)  
-                                )
-
-                            @elseif($current_page === 'declined_reasons')
-
-                                @livewire('assignments.reviewer.reviewer-assignment-declined-reasons',
-                                    [
-                                        'submission_id' => $submission_id,
-                                        'round' => $current_round
-                                    ],
-                                    key('declined_reasons-' . $current_round)  
-                                )
-
-                            @endif
-
-                            <!-- ------------end Reviews------------------------- -->
-                            <!-- ------------start Editor Decision------------------------- -->
-                            @if (str_starts_with($current_page, 'editor_decision.'))
-                                @livewire('submissions.editor-decision', [
-                                    'submission_id' => $submission_id,
-                                    'round' => $current_round 
-                                ],key('editor_decision_'.$current_round ))
-                            @endif
-                            <!-- ------------end Editor Decision------------------------- -->
-
-                        </div>
+                        {{-- Editor Decision --}}
+                        @if(str_starts_with($current_page, 'editor_decision.'))
+                            @livewire('submissions.editor-decision', [
+                                'submission_id' => $submission_id,
+                                'round' => $current_round
+                            ], key('editor_decision_'.$current_round))
+                        @endif
 
                     </div>
                 </div>
             </div>
+        </div>
+
             <!-- /Inventory -->
         </div>
         <!-- /Second column -->
@@ -361,9 +412,9 @@
                                         <div>
                                             <small>{{ __('label.country') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->country?->country_name_en: $authors?->country?->country_name_fa }} </span></small>
                                         </div>
-                                        <div>
+                                        <!-- <div>
                                             <small>{{ __('label.province') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->province?->name_en: $authors?->province?->name_fa }} </span></small>
-                                        </div>
+                                        </div> -->
                                         <div>
                                             <small>{{ __('label.city') }}: <span class="text-muted">{{ App::getLocale()=='en' ? $authors?->city_en: $authors?->city_fa }} </span></small>
                                         </div>
@@ -409,7 +460,7 @@
     </div>
     
     <div class="modal fade" id="{{ $sendForReviewModalId }}" tabindex="-1" aria-hidden="true" wire:ignore.self>
-        <div class="modal-dialog modal-md" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <form wire:submit.prevent="sendForReviewSubmission">
                     <div class="modal-header">
@@ -418,16 +469,9 @@
                     </div>
                     <div class="modal-body">
 
-                        <div class="mb-3">
+                        <div class="row g-3 mb-3" wire:ignore>
                             <label class="form-label">{{ __('label.reviewer') }}</label>
-
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="{{ __('label.search') }}"
-                                
-                                 wire:model.live="search_reviewer"
-                                 wire:keydown.enter.prevent="search_reviewer">
-
-                                <select class="form-select" wire:model="reviewer_id">
+                                <select class="form-select select2" wire:model="reviewer_id" id ="reviewer_id">
                                     <option value="">{{ __('label.select') }}</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">
@@ -435,31 +479,43 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            </div>
-
+                        </div>
                             @error('reviewer_id')
                                 <div class="text-danger mt-1">{{ $message }}</div>
                             @enderror
+                          
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-12 fv-plugins-icon-container">
+                                <label for="formFileMultiple" class="form-label">{{ __('label.file_upload') }}</label>
+                                <div class="input-group mb-2">
+                                    <input type="file" class="form-control @error('file.*') is-invalid @enderror" id="fileInput" multiple wire:model.lazy="file" multiple>
+                                        
+                                </div>
+                                    @error('file.*')
+                                        <span class="text-danger" id ="fileErrors">{{ $message }}</span>
+                                    @enderror
+                                    @error('file')<span class="text-danger">{{ $message }}</span>@enderror
+                                <div id="fileError" class="invalid-feedback d-block" style="display:none;"></div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-12 fv-plugins-icon-container">
+                                <label class="form-label" for="">{{ __('label.comments_for_reviewer') }}</label>
+                                <textarea  id="comments_fa" class="form-control @error('comments_fa') is-invalid @enderror" placeholder="" wire:model.lazy="comments_fa" rows="4"></textarea>
+                                <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
+                                
+                            </div>
+                             @error('comments_fa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
 
-                          <div class="row g-3">
-                                <div class="col-sm-12 fv-plugins-icon-container">
-                                    <label class="form-label" for="">{{ __('label.comments_for_author') }}</label>
-                                    <textarea  id="comments_fa" class="form-control @error('comments_fa') is-invalid @enderror" placeholder="" wire:model.lazy="comments_fa" rows="4"></textarea>
-                                        @error('comments_fa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                                    <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
-                                    
-                                </div>
+                        <div class="row g-3 mt-3">
+                            <div class="col-sm-12 fv-plugins-icon-container">
+                                <label class="form-label" for="">{{ __('label.comments_for_reviewer' ) }} ({{ __('label.en',locale:'en')}})</label>
+                                <textarea  id="comments_to_editor_en" class="form-control @error('comments_en') is-invalid @enderror" placeholder="" wire:model.lazy="comments_en" rows="4"></textarea>
+                                    @error('comments_en') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
                             </div>
-
-                            <div class="row g-3 mt-3">
-                                <div class="col-sm-12 fv-plugins-icon-container">
-                                    <label class="form-label" for="">{{ __('label.comments_for_author',locale:'en') }}</label>
-                                    <textarea  id="comments_to_editor_en" class="form-control @error('comments_en') is-invalid @enderror" placeholder="" wire:model.lazy="comments_en" rows="4"></textarea>
-                                        @error('comments_en') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                                    <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
-                                </div>
-                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">{{__('label.no')}}</button>
@@ -793,3 +849,66 @@
 <script src="{{ asset('assets/js/forms-file-upload.js') }}"></script>
 <script src="{{ asset('assets/js/forms-editors.js') }}"></script>
 @endsection
+
+@script
+<script>
+document.addEventListener("livewire:initialized", function () {
+
+    function initSelect2() {
+
+        $('.select2').each(function () {
+            const $select = $(this);
+            const $modal  = $select.closest('.modal');
+
+           
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            $select.select2({
+                width: '100%',
+                dropdownParent: $modal.length ? $modal : $(document.body)
+            });
+        });
+
+        $('#reviewer_id')
+        .off('change')
+        .on('change', function () {
+            $wire.set('reviewer_id', $(this).val());
+        });
+    }
+
+    initSelect2();
+
+    Livewire.hook('morphed', () => {
+        initSelect2();
+    });
+
+    $(document).on('shown.bs.modal', function () {
+        initSelect2();
+    });
+
+});
+
+ const input = document.getElementById('fileInput');
+    const errorDiv = document.getElementById('fileError');
+    const maxLengthEnglish = 120;
+    const maxLengthPersian = 60;
+
+    input.addEventListener('change', function() {
+        const file = this.files[0];
+        if(file){
+            const isPersian = /[\u0600-\u06FF]/.test(file.name); 
+            const maxLength = isPersian ? maxLengthPersian : maxLengthEnglish;
+
+            if(file.name.length > maxLength){
+                errorDiv.textContent = "{{ __('label.file_name_too_long') }}".replace(':max', maxLength);
+                errorDiv.style.display = 'block';
+                this.value = ''; 
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
+    });
+</script>
+@endscript

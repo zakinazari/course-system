@@ -95,8 +95,9 @@ class PermissionList extends Component
         ->when(!empty($this->search['identity']), function ($q) {
             $search = $this->search['identity'];
             $q->where(function ($qq) use ($search) {
-                $qq->where('name', 'like', "%{$search}%")
+                $qq->where('name_fa', 'like', "%{$search}%")
                 ->orWhere('name_en', 'like', "%{$search}%")
+                ->orWhere('name_pa', 'like', "%{$search}%")
                 ->orWhere('url', 'like', "%{$search}%");
             });
         })
@@ -220,7 +221,6 @@ class PermissionList extends Component
             ->where('parent_id', $main_menu_id)
             ->orderBy('order', 'asc')
             ->get();
-            
     }
     
 }

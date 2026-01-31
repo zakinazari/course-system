@@ -108,13 +108,14 @@
                                     <i class="bx bx-show"></i>
                                 </button>
                            </td>
+                        
                             <td>
                                 <button type="button" class="btn btn-secondary btn-icon rounded-pill" wire:click="showFiles({{ $page->id }})">
                                     <i class=" bx bx-detail"></i>
                                 </button>
                            </td>
-                            
-                          {{--   <td class="text-center align-middle">
+                            {{-- 
+                            <td class="text-center align-middle">
                                 @if($page->cover_image && \Storage::disk('public')->exists($page->cover_image))
                                     <img src="{{ asset('storage/' . $page->cover_image) }}" 
                                         alt="Cover Image" 
@@ -220,8 +221,8 @@
                                 @error('cover_image') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
-                       --}}
-
+                       
+                         --}}
                        <div class="row" style="margin-top:100px;">
                             <div class="col-md-12 mb-3">
                                 <label for="fileInput" class="form-label">{{ __('label.files') }}</label>
@@ -232,11 +233,12 @@
                                     <span class="text-danger" id ="fileErrors">{{ $message }}</span>
                                 @enderror
                                 <div id="fileError" class="invalid-feedback d-block" style="display:none;"></div>
+                                <small style="color: #2ab7b2;">{{ __('label.file_mimes',['value'=>'pdf,mp4,mov,avi,webm']) }}</small>
                             </div>
                         </div>
                     </div>
 
-                    <div class="modal-footer" >
+                    <div class="modal-footer" style="">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('label.close') }}</button>
                         <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }} @else {{ __('label.save') }} @endif</button>
                     </div>
@@ -343,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike'],
         ['blockquote', 'code-block'],
-        // ['link', 'image', 'formula'],
+        ['link', 'image', 'formula'],
         ['link', 'formula'],
         [{ 'header': 1 }, { 'header': 2 }],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],

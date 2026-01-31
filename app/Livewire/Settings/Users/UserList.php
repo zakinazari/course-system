@@ -201,9 +201,9 @@ class UserList extends Component
         $this->name = $user->name;
         $this->email = $user->email;
 
-        $this->role_ids = $user->roles->pluck('id')->toArray();
-        $this->editMode = true;
+        $this->role_ids = $user->roles?->pluck('id')->toArray();
         $this->check_all = count($this->role_ids) === $this->access_roles->count();
+        $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
 
@@ -214,21 +214,29 @@ class UserList extends Component
         try {
             $user = User::findOrFail($this->user_id);
 
-            $user->update([
+            $data = [
+                'name'  => $this->name,
                 'email' => $this->email,
-                'name' => $this->name,
-                'password' => bcrypt($this->password),
-            ]);
+            ];
 
+            if (!empty($this->password)) {
+                $data['password'] = bcrypt($this->password);
+            }
 
+            $user->update($data);
             $user->roles()->sync($this->role_ids);
+
             $this->closeModal();
+            $this->resetInputFields();
+            $this->editMode = false;
+
             $this->dispatch('alert', type: 'success', message: __('label.successfully_updated'));
 
         } catch (\Exception $e) {
             $this->dispatch('alert', type: 'error', message: __('label.update_error').' : '. $e->getMessage());
         }
     }
+
 
     public function toggleSelectAll()
     {

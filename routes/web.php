@@ -45,6 +45,8 @@ Route::get('registration-form', function ($menu_id = null) {
 
 Route::get('/gazette/file/view/{id}', [GazetteFileController::class, 'view'])
     ->name('gazette.file.view');
+Route::get('/gazette/ruling/file/view/{id}', [GazetteFileController::class, 'viewRulingFile'])
+    ->name('gazette.ruling.file.view');
 
 Route::post('/gazette/upload-file', [GazetteFileController::class, 'upload'])
      ->name('gazette.upload')
@@ -241,6 +243,27 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.website.leadership-board-list-page', ['menu_id' => $menu_id]);
     })->name('leadership-board');
 
+    Route::get('/accepted-abstracts/{menu_id?}', function ($menu_id = null) {
+         if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.website.abstract.accepted-abstract-list-page', ['menu_id' => $menu_id]);
+    })->name('accepted-abstracts');
+
+    Route::get('/main-axes/{menu_id?}', function ($menu_id = null) {
+         if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.website.axes.main-axis-list-page', ['menu_id' => $menu_id]);
+    })->name('main-axes');
+
+    Route::get('/sub-axes/{menu_id?}', function ($menu_id = null) {
+         if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.website.axes.sub-axis-list-page', ['menu_id' => $menu_id]);
+    })->name('sub-axes');
+
     Route::get('/gazettes/{menu_id?}', function ($menu_id = null) {
          if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
@@ -257,8 +280,55 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.website.scientific-board-list-page', ['menu_id' => $menu_id]);
     })->name('sientific-board');
+
+    Route::get('/decrees/{menu_id?}', function ($menu_id = null) {
+         if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.website.ruling.decree-list-page', ['menu_id' => $menu_id]);
+    })->name('decrees');
+
+    Route::get('/orders/{menu_id?}', function ($menu_id = null) {
+         if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.website.ruling.order-list-page', ['menu_id' => $menu_id]);
+    })->name('orders');
+
+
+     Route::get('/about-us/{menu_id?}', function ($menu_id = null) {
+         if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.website.about-us.about-us-list-page', ['menu_id' => $menu_id]);
+    })->name('about-us');
+
     // --------end website-----------------------
     
+
+    Route::get('/search-abstracts', function (\Illuminate\Http\Request $request) {
+
+        $q = $request->get('q');
+
+        $query = \DB::table('accepted_abstracts')
+            ->select('id', 'title_fa','title_en');
+
+        if ($q) {
+            if(App::getLocale() =='fa'){
+                $query->where('title_fa', 'like', "%{$q}%");
+            }else{
+                $query->where('title_en', 'like', "%{$q}%");
+            }
+        }
+        return $query
+            ->limit(20)
+            ->get()
+            ->map(fn ($item) => [
+                'id'   => $item->id,
+                'text' => (App::getLocale() =='fa')? $item->title_fa : $item->title_en,
+            ]);
+    });
+
 });
 // -----------------------end admin panel routes-------------------------------
 require __DIR__.'/auth.php';

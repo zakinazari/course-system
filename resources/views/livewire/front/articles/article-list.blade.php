@@ -1,24 +1,74 @@
 <div>
+    <!-- title -->
+    @section('title',
+    (
+        ($active_menu?->parent?->{app()->getLocale() === 'fa' ? 'name' : 'name_en'} ?? '') 
+        ? $active_menu?->parent?->{app()->getLocale() === 'fa' ? 'name' : 'name_en'} . '-' 
+        : ''
+    ) 
+    . $active_menu?->{app()->getLocale() === 'fa' ? 'name_fa' : 'name_en'} 
+    . ' | ' . __('label.app_name')
+    )
+    <!-- end title -->
     <div class="search-content">
     <form wire:submit.prevent="applySearch" class="row g-3 align-items-end">
-        <h3>{{ __('label.search') }}</h3>
+        <h3>{{ __('label.published_articles') }}</h3>
 
         <div class="form-group">
-            <div class="input-group">
-                <!-- نوع جستجو کوچک -->
-                <select class="form-select form-select-sm flex-grow-0" style="width: 120px;" wire:model.live="search.type">
-                    <option value="title">{{ __('label.title') }}</option>
-                    <option value="author">{{ __('label.author') }}</option>
-                </select>
+            <div class="row">
+                <div class="category-content col-md-6">
+                    <h6>{{ __('label.main_axes') }}</h6>
+                    <select class="form-select form-control" aria-label="Default select example"
+                    wire:model.live="search.main_axis_id"
+                    wire:change="loadSubAxes($event.target.value)">
+                        <option value="">{{ __('label.all') }}</option>
+                        @foreach($main_axes as $main)
+                            <option value="{{ $main->id }}"> 
+                                @if(App::getLocale()=='fa')
+                                    {{ substr($main->title_fa, 0, 200) }}{{ strlen($main->title_en) > 200 ? '…' : '' }}
+                                @else
+                                    {{ substr($main->title_en, 0, 200) }}{{ strlen($main->title_en) > 200 ? '…' : '' }}
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                <!-- متن جستجو بزرگ -->
-                <input type="text" class="form-control form-control-sm"
-                 placeholder="{{ $search['type'] === 'title' ? __('label.search_by_title') : __('label.search_by_author') }}"
-                 wire:model.live="search.identity">
+                <div class="category-content col-md-6">
+                    <h6>{{ __('label.sub_axes') }}</h6>
+                    <select class="form-select form-control" aria-label="Default select example"
+                     wire:model.live="search.sub_axis_id">
+                        <option value="">{{ __('label.all') }}</option>
+                        @foreach($sub_axes as $sub)
+                            <option value="{{ $sub->id }}"> 
+                                @if(App::getLocale()=='fa')
+                                    {{ substr($sub->title_fa, 0, 200) }}{{ strlen($sub->title_en) > 200 ? '…' : '' }}
+                                @else
+                                    {{ substr($sub->title_en, 0, 200) }}{{ strlen($sub->title_en) > 200 ? '…' : '' }}
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                <button type="submit" class="btn  btn-sm" style="background-color:#00b2f2;color:white;">
-                    <i class="flaticon-search"></i>
-                </button>
+            </div>
+
+            <div class="row">
+                <div class="input-group category-content">
+                    <select class="form-select form-select-sm flex-grow-0" style="width: 120px;" wire:model.live="search.type">
+                        <option value="title">{{ __('label.title') }}</option>
+                        <option value="author">{{ __('label.author') }}</option>
+                    </select>
+
+                
+                    <input type="text" class="form-control form-control-sm"
+                    placeholder="{{ $search['type'] === 'title' ? __('label.search_by_title') : __('label.search_by_author') }}"
+                    wire:model.live="search.identity">
+
+                    <button type="submit" class="btn  btn" style="background-color:#00b2f2;color:white;">
+                        <i class="flaticon-search"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </form>

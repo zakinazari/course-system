@@ -80,6 +80,7 @@ return [
     // -----end settings----------------------
 
     // -----start settings--------------------
+    'menu' => 'Menu',
     'menu_name' => 'Menu Name',
     'menu_name_en' => 'Menu Name',
     'url' => 'URL',
@@ -137,10 +138,12 @@ return [
     'country'=>'Country',
     'author_type'=>"Contributor's Role",
 
+    'editor_comment'=>'Editor Comment',
     'author_comment'=>'Author Comment',
     'comment'=>'Comment',
     'comments_for_editor'=>'Comments for the Editor',
     'comments_for_author' => 'Comments for the Author',
+    'comments_for_reviewer' => 'Comments for the Reviewer',
     'details' => 'Details',
     'files' => 'Files',
     'file_upload' => 'Upload Files',
@@ -183,7 +186,20 @@ return [
     'recommendation' => 'Recommendation',
     'recommendation.required' => 'Recommendation is required',
 
+    'main_axes' => 'Main Axes',
+    'sub_axes'  => 'Sub Axes',
+    'main_axis.required' => 'Main axis is required',
+    'sub_axis.required'  => 'Sub axis is required',
+    'accepted_abstracts' => 'Accepted Abstracts',
+    'accepted_abstract_id.required' => 'Accepted abstract is required', 
+    
+    'processing' => 'Processing…',
+    'upload_failed' => 'Upload failed!',
 
+    'facebook' => 'Facebook',
+    'website'  => 'Website',
+    'address'  => 'Address',
+    'logo'     => 'Logo',
     // ----------end submission labels----------------
 
     // --------start issues------------------
@@ -350,5 +366,35 @@ return [
     'scientific_board_members' => 'Scientific Board Members',
     'file_type_not_allowed' => 'This file type is not allowed',
 
-    
+     'gazette' => 'Gazette',
+    'gazette_number' => 'Gazette Number',
+    'gazette_number.required' => 'The gazette number is required',
+    'gazette_number.unique' => 'The gazette number has already been taken',
+    'gazette.required' => 'The gazette is required',
+    'gazette_date' => 'Gazette Publication Date',
+    'gazette_date.required' => 'The gazette publication date is required',
+    'gazette_date.size' => 'The date format must be YYYY/MM/DD',
+    'gazette_date.regex' => 'The date format must be YYYY/MM/DD',
+
+    'decree' => [
+        'decree_list' => 'Decree List',
+        'decree_number' => 'Decree Number',
+        'decree_date' => 'Decree Date',
+        'decree_number.required' => 'The decree number is required',
+        'decree_number.unique' => 'The decree number has already been taken',
+        'decree_date.required' => 'The decree date is required',
+        'decree_date.size' => 'The date format must be YYYY/MM/DD',
+        'decree_date.regex' => 'The date format must be YYYY/MM/DD',
+    ],
+
+    'ruling_order' => [
+        'order_list' => 'Order List',
+        'order_number' => 'Order Number',
+        'order_date' => 'Order Date',
+        'order_number.required' => 'The order number is required',
+        'order_number.unique' => 'The order number has already been taken',
+        'order_date.required' => 'The order date is required',
+        'order_date.size' => 'The date format must be YYYY/MM/DD',
+        'order_date.regex' => 'The date format must be YYYY/MM/DD',
+    ],
 ];

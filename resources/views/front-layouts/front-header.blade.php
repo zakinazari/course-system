@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="{{ asset('front-assets/css/responsive.css') }}">
 <link rel="stylesheet" href="{{ asset('front-assets/css/rtl.css') }}">
 <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+<link rel="stylesheet" href="{{asset('assets/vendor/libs/select2/select2.css')}}" />
 <!-- <title></title> -->
 
 

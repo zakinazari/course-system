@@ -39,7 +39,7 @@ class ReviewerAssignmentReview extends Component
 
     public function loadUploadedFiles()
     {
-        $this->uploaded_files = ReviewFile::where('review_id', $this->review_id)
+        $this->uploaded_files = ReviewFile::where('type','reviewed')->where('review_id', $this->review_id)
                                 ->latest()
                                 ->get();
     }
@@ -58,7 +58,7 @@ class ReviewerAssignmentReview extends Component
     {
         if ($propertyName === 'file') {
 
-            // هنگام انتخاب فایل جدید، خطاهای قبلی فورا پاک شود
+        
             $this->resetErrorBag('file.*');
 
             foreach ($this->file as $i => $f) {
@@ -169,6 +169,7 @@ class ReviewerAssignmentReview extends Component
                     'file_path' => $path,
                     'size' => $size,
                     'mime' => $mime,
+                    'type' => 'reviewed',
                 ]);
 
                  $f->delete();
@@ -237,7 +238,7 @@ class ReviewerAssignmentReview extends Component
 
             ReviewDecision::findOrFail($id)->delete();
 
-            $files = ReviewFile::where('review_id', $this->review_id)->get();
+            $files = ReviewFile::where('type','reviewed')->where('review_id', $this->review_id)->get();
 
             foreach ($files as $file) {
                 if (Storage::disk('local')->exists($file->file_path)) {

@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('original_name')->nullable();
             $table->string('mime')->nullable();
             $table->unsignedBigInteger('size')->nullable();
+            $table->enum('type', [
+                'for_review','reviewed'
+            ])->default('for_review');
             $table->timestamps();
         });
     }

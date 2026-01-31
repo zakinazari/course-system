@@ -30,6 +30,9 @@ return new class extends Migration
             $table->foreignId('issue_id')->nullable()->constrained('issues')->nullOnDelete();
             $table->timestamp('last_activity_at')->nullable();
             $table->unsignedBigInteger('views')->default(0);
+            $table->foreignId('main_axis_id')->constrained('main_axes')->onDelete('cascade');
+            $table->foreignId('sub_axis_id')->constrained('sub_axes')->onDelete('cascade');
+            $table->foreignId('accepted_abstract_id')->nullable()->constrained('accepted_abstracts')->nullOnDelete();
             $table->softDeletes();
             $table->timestamps();
         });

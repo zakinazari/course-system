@@ -102,7 +102,7 @@ class Register extends Component
             'country_id' => ['required', 'integer', 'min:1'],
             'education_degree_id' => ['required', 'integer'],
             'academic_rank_id' => ['required', 'integer'],
-            'province_id' => ['required', 'integer'],
+            // 'province_id' => ['required', 'integer'],
             'city_fa' => ['nullable', 'string', 'max:255'],
             'city_en' => ['nullable', 'string', 'max:255'],
             'department_fa' => ['required', 'string', 'max:255'],
@@ -167,8 +167,8 @@ class Register extends Component
             'academic_rank_id.integer' => __('validation.academic_rank_integer'),
 
             // ------------------ Province ------------------
-            'province_id.required' => __('validation.province_required'),
-            'province_id.integer' => __('validation.province_integer'),
+            // 'province_id.required' => __('validation.province_required'),
+            // 'province_id.integer' => __('validation.province_integer'),
 
             // ------------------ City ------------------
             'city_fa.string' => __('validation.city_fa_string'),

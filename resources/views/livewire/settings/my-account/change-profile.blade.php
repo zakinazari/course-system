@@ -106,6 +106,7 @@
                             @endforeach
                         </select>
                     </div>
+                    {{--
                     <div class="mb-3 col-md-6">
                         <label class="form-label" for="province_id">{{ __('label.province') }}</label>
                         <select id="province_id" class=" form-select" wire:model.lazy = "province_id">
@@ -115,7 +116,7 @@
                             @endforeach
                         </select>
                     </div>
-
+                    --}}
                     <div class="mb-3 col-md-6">
                         <label for="city_fa" class="form-label">{{ __('label.city') }}</label>
                         <input type="text" class="form-control" id="city_fa" wire:model.lazy = 'city_fa'/>

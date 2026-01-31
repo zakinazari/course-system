@@ -7,7 +7,6 @@ use App\Models\User;
 class Review extends Model
 {
 
-
     protected $fillable = [
         'submission_id',
         'reviewer_id',
@@ -21,7 +20,6 @@ class Review extends Model
         'completed_at',
     ];
 
-    
     public function submission()
     {
         return $this->belongsTo(Submission::class);
@@ -31,12 +29,23 @@ class Review extends Model
     {
         return $this->belongsTo(User::class, 'reviewer_id');
     }
+
     public function decision()
     {
         return $this->hasOne(ReviewDecision::class, 'review_id');
     }
+
     public function file()
     {
         return $this->hasMany(ReviewFile::class, 'review_id');
+    }
+
+    public function reviewedFiles()
+    {
+        return $this->hasMany(ReviewFile::class)->where('type', 'reviewed');
+    }
+    public function filesForReview()
+    {
+        return $this->hasMany(ReviewFile::class)->where('type', 'for_review');
     }
 }

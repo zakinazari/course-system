@@ -16,7 +16,7 @@ class ReviewerAssignmentDecision extends Component
 
     public function mount($submission_id = null,$round)
     {
-       $this->reviews = Review::with('decision','file','reviewer:id,name')
+       $this->reviews = Review::with('decision','reviewedFiles','reviewer:id,name')
        ->where('submission_id',$submission_id)
        ->where('round',$round)
        ->where('status','completed')->get();

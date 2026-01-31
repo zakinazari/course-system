@@ -217,7 +217,7 @@
                                     <div class="invalid-feedback d-block">{{ $message }}</div> 
                                 @enderror
                             </div>
-
+                            {{-- 
                             <div class="col mb-3" >
                                 <label class="form-label">{{__('label.province')}}</label>
                                 <select id="province_id" class="form-control" wire:model.lazy="province_id">
@@ -234,6 +234,7 @@
                                 </select>
                                 @error('province_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
+                            --}}
                         </div>
                         <div class="row">
                             <div class="col mb-3" dir="rtl">
@@ -328,10 +329,10 @@
                                 <td>{{ __('label.country') }}</td>
                                 <td>{{ App::getLocale()==='en' ? $author_details->country?->country_name_en: $author_details->country?->country_name_fa }}</td>
                             </tr>
-                            <tr>
+                            <!-- <tr>
                                 <td>{{ __('label.province') }}</td>
                                 <td>{{ App::getLocale()==='en' ? $author_details->province?->name_en: $author_details->province?->name_fa }}</td>
-                            </tr>
+                            </tr> -->
                             <tr>
                                 <td>{{ __('label.city') }}</td>
                                 <td>{{ App::getLocale()==='en' ? $author_details->city_en: $author_details->city_fa }}</td>

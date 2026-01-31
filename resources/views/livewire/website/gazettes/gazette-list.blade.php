@@ -75,8 +75,10 @@
                         <tr>
                             <th>{{ __('label.NO') }}</th>
                             <th>{{ __('label.title') }}</th>
+                            <th>{{ __('label.gazette_number') }}</th>
+                            <th>{{ __('label.gazette_date') }}</th>
                             <th>{{ __('label.status') }}</th>
-                            <th>{{ __('label.files') }}</th>
+                            <!-- <th>{{ __('label.files') }}</th> -->
                             <th>{{ __('label.actions') }}</th>
                         </tr>
                     </thead>
@@ -87,6 +89,8 @@
                             <td>
                                  @if(App::getLocale()=='fa') {{ $gazette->title_fa }} @else {{ $gazette->title_en }} @endif 
                             </td>
+                            <td> {{ $gazette->gazette_number }} </td>
+                            <td> {{ $gazette->publish_date }} </td>
                              <td>
                                 @if($gazette->status)
                                 <span class="badge bg-label-success me-1">{{ __('label.published') }}</span>
@@ -94,11 +98,11 @@
                                 <span class="badge bg-label-danger me-1">{{ __('label.unpublished') }}</span>
                                 @endif
                             </td>
-                            <td>
+                            <!-- <td>
                                 <button type="button" class="btn btn-success btn-icon rounded-pill" wire:click="showFiles({{ $gazette->id }})">
                                     <i class="bx bx-show"></i>
                                 </button>
-                           </td>
+                           </td> -->
                            
                             <td>
                                 <div class="dropdown position-static">
@@ -152,7 +156,25 @@
                             </div>
                         </div>
                         <div class="row" style="">
-                           <div class="col-md-6 mb-3">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.gazette_number') }}</label>
+                                <input type="text" id="nameBasic" class="form-control @error('gazette_number') is-invalid @enderror" wire:model.lazy="gazette_number">
+                                @error('gazette_number') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                           <div class="col mb-3">
+                                <label class="form-label">{{ __('label.gazette_date') }}</label>
+
+                                <input type="text"
+                                    class="form-control @error('publish_date') is-invalid @enderror"
+                                    placeholder="{{ hijri::Date('Y/m/d') }}"
+                                    wire:model.defer="publish_date">
+                                @error('publish_date')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="row" style="">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label d-block">{{ __('label.status') }}</label>
                                 <div class="form-check form-check-inline">
                                     <input name="status" 
@@ -178,7 +200,8 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="row">
+                        {{--
+                       <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label for="fileInput" class="form-label">{{ __('label.files') }}</label>
                                 <div class="input-group mb-2">
@@ -189,6 +212,7 @@
                                 <div id="fileError" class="invalid-feedback d-block" style="display:none;"></div>
                             </div>
                         </div>
+                        --}}
                     </div>
 
                     <div class="modal-footer" >

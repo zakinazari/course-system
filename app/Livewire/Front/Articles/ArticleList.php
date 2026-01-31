@@ -4,16 +4,25 @@ namespace App\Livewire\Front\Articles;
 use Livewire\WithPagination;
 use App\Models\Submissions\Submission;
 use App\Models\Submissions\SubmissionFile;
+use App\Models\Submissions\MainAxis;
+use App\Models\Submissions\SubAxis;
+use App\Models\Website\WebMenu;
 use Livewire\Component;
 use Storage;
 class ArticleList extends Component
 {
      // -------start generals--------------------
     use WithPagination;
-    public $perPage = 10;
+    public $perPage = 40;
     public $active_menu_id;
+    public $active_menu;
     public $keyword_id = null; 
     protected $paginationTheme = 'custom';   
+
+    public $main_axes = [];
+    public $sub_axes = [];
+    public $main_axis_id;
+    public $sub_axis_id;
 
     public function updatingPerPage()
     {
@@ -39,12 +48,18 @@ class ArticleList extends Component
     {
         // -------------start for activing menu in sidebar ----------------------
         $this->active_menu_id = $active_menu_id;
+        $this->dispatch('setActiveMenuFromPage', $this->active_menu_id);
+        $this->active_menu = WebMenu::with(['parent', 'grandParent', 'subMenu'])->find($this->active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
         $this->keyword_id  = $keyword;
+        $this->main_axes = MainAxis::all();
+        $this->sub_axes = SubAxis::all();
     }
     public $search = [
             'identity' => null,
             'type'=>'title',
+            'main_axis_id'=> null,
+            'sub_axis_id'=> null,
         ];
 
 
@@ -68,6 +83,12 @@ class ArticleList extends Component
                         ->orWhere('family_name_en', 'like', "%{$searchTerm}%");
                     });
                 }
+            })
+            ->when(!empty($this->search['main_axis_id']), function ($query) {
+                $query->where('main_axis_id',$this->search['main_axis_id']);
+            })
+            ->when(!empty($this->search['sub_axis_id']), function ($query) {
+                $query->where('sub_axis_id',$this->search['sub_axis_id']);
             })
             ->when($this->keyword_id, function ($query) {
                 $query->whereHas('keywords', function ($q) {
@@ -100,5 +121,10 @@ class ArticleList extends Component
         }
 
         return Storage::disk('local')->download($path, $file->original_name);
+    }
+
+    public function loadSubAxes($main_axis_id)
+    {
+        $this->sub_axes = SubAxis::where('main_axis_id', $main_axis_id)->get();
     }
 }

@@ -77,6 +77,7 @@ return [
 
     // -----start settings--------------------
 
+    'menu' => 'منو',
     'menu_name' => 'د منو نوم',
     'menu_name_en' => 'د منو انگلیسي نوم',
     'url' => 'لینک پته',
@@ -133,10 +134,12 @@ return [
     'country' => 'هیواد',
     'author_type' => 'د ګډون کوونکي نقش',
     
+    'editor_comment' => 'د مدیر نظر',
     'author_comment' => 'د لیکوال نظر',
     'comment' => 'نظر',
     'comments_for_editor' => 'د مدیر لپاره نظریات',
     'comments_for_author' => 'د لیکوال لپاره نظریات',
+    'comments_for_reviewer' => 'د داور لپاره نظریات',
     
     'details' => 'جزئیات',
     'file_upload' => 'فایل اپلوډ',
@@ -180,6 +183,21 @@ return [
     'recommendation' => 'وړاندیز',
     'recommendation.required' => 'وړاندیز ضروري دی',
 
+
+    'main_axes' => 'اصلي محورونه',
+    'sub_axes'  => 'فرعي محورونه',
+    'main_axis.required' => 'اصلي محور لازمي دی',
+    'sub_axis.required'  => 'فرعي محور لازمي دی',
+    'accepted_abstracts' => 'منل شوي لنډیزونه',
+    'accepted_abstract_id.required' => 'منل شوي لنډیزونه ضروري ده',
+
+    'processing' => 'په پروسه کې…',
+    'upload_failed' => 'اپلوډ ناکام شو!',
+
+    'facebook' => 'فېسبوک',
+    'website'  => 'وېب‌سایټ',
+    'address'  => 'پته',
+    'logo'     => 'لوګو',
     // ----------end submission labels----------------
 
     // --------start issues------------------
@@ -344,5 +362,35 @@ return [
     'scientific_board_members' => 'د علمي بورډ غړي',
     'file_type_not_allowed' => 'د دې فایل ډول اجازه نشته',
 
-    
+    'gazette' => 'جریده',
+    'gazette_number' => 'د جریدې شمېره',
+    'gazette_number.required' => 'د جریدې شمېره لازمي ده',
+    'gazette_number.unique' => 'د جریدې شمېره تکراري ده',
+    'gazette.required' => 'جریده لازمي ده',
+    'gazette_date' => 'د جریدې د خپرېدو نېټه',
+    'gazette_date.required' => 'د جریدې د خپرېدو نېټه لازمي ده',
+    'gazette_date.size' => 'د نېټې فورمټ باید YYYY/MM/DD وي',
+    'gazette_date.regex' => 'د نېټې فورمټ باید YYYY/MM/DD وي',
+
+    'decree' => [
+        'decree_list' => 'د احکامو فهرست',
+        'decree_number' => 'د حکم شمېره',
+        'decree_date' => 'د حکم نېټه',
+        'decree_number.required' => 'د حکم شمېره لازمي ده',
+        'decree_number.unique' => 'د حکم شمېره تکراري ده',
+        'decree_date.required' => 'د حکم نېټه لازمي ده',
+        'decree_date.size' => 'د نېټې فورمټ باید YYYY/MM/DD وي',
+        'decree_date.regex' => 'د نېټې فورمټ باید YYYY/MM/DD وي',
+    ],
+
+    'ruling_order' => [
+        'order_list' => 'د فرمانانو فهرست',
+        'order_number' => 'د فرمان شمېره',
+        'order_date' => 'د فرمان نېټه',
+        'order_number.required' => 'د فرمان شمېره لازمي ده',
+        'order_number.unique' => 'د فرمان شمېره تکراري ده',
+        'order_date.required' => 'د فرمان نېټه لازمي ده',
+        'order_date.size' => 'د نېټې فورمټ باید YYYY/MM/DD وي',
+        'order_date.regex' => 'د نېټې فورمټ باید YYYY/MM/DD وي',
+    ],
 ];

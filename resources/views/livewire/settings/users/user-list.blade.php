@@ -125,126 +125,145 @@
     </div>
     
     <!--/ Bootstrap Table with Header Dark -->
-    <div class="modal fade" id="{{$modalId}}" tabindex="-1" aria-hidden="true" wire:ignore.self> 
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@if($editMode) {{ __('label.editing') }}  @else {{ __('label.adding') }} @endif  {{ $active_menu?->name }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
-                </div>
-                <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.name') }}</label>
-                                <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name">
-                                @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
-                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.email') }}</label>
-                                <input type="email" id="nameBasic" class="form-control @error('email') is-invalid @enderror" wire:model.lazy="email">
-                                @error('email') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-                        <div class="row">
-                            <!-- Password -->
-                            <div class="col mb-3">
-                                <label class="form-label">{{ __('label.password') }}</label>
-                                <div class="input-group">
-                                    <input 
-                                        type="{{ $show_password ? 'text' : 'password' }}" 
-                                        class="form-control @error('password') is-invalid @enderror" 
-                                        wire:model.lazy="password"
-                                    >
-                                    <span class="input-group-text" style="cursor:pointer;" wire:click="togglePassword">
-                                        @if($show_password)
-                                            <i class="bx bx-show"></i>
-                                        @else
-                                            <i class="bx bx-hide"></i>
-                                        @endif
-                                    </span>
-                                </div>
-                                @error('password') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
-                            
-                            <!-- Confirm Password -->
-                            <div class="col mb-3">
-                                <label class="form-label">{{ __('label.confirm_password') }}</label>
-                                <div class="input-group">
-                                    <input 
-                                        type="{{ $show_confirm_password ? 'text' : 'password' }}" 
-                                        class="form-control @error('confirm_password') is-invalid @enderror" 
-                                        wire:model.lazy="confirm_password"
-                                    >
-                                    <span class="input-group-text" style="cursor:pointer;" wire:click="toggleConfirmPassword">
-                                        @if($show_confirm_password)
-                                            <i class="bx bx-show"></i>
-                                        @else
-                                            <i class="bx bx-hide"></i>
-                                        @endif
-                                    </span>
-                                </div>
-                                @error('confirm_password') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
+    <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true" wire:ignore.self>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {{ $editMode ? __('label.editing') : __('label.adding') }}
+                    {{ $active_menu?->name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form wire:submit.prevent="{{ $editMode ? 'update' : 'store' }}" autocomplete="off">
+
+                {{-- 🔒 Fake inputs to kill Chrome autofill --}}
+                <input type="text" name="fake_user" style="display:none">
+                <input type="password" name="fake_pass" style="display:none">
+
+                <div class="modal-body">
+
+                    {{-- Name & Email --}}
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label class="form-label">{{ __('label.name') }}</label>
+                            <input
+                                type="text"
+                                name="name_{{ uniqid() }}"
+                                class="form-control @error('name') is-invalid @enderror"
+                                wire:model.defer="name"
+                                autocomplete="off"
+                            >
+                            @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
 
-                         <div class="col-12">
-                        
-                          <div class="table-responsive">
-                            <table class="table table-flush-spacing">
-                              <tbody>
+                        <div class="col mb-3">
+                            <label class="form-label">{{ __('label.email') }}</label>
+                            <input
+                                type="email"
+                                name="email_{{ uniqid() }}"
+                                class="form-control @error('email') is-invalid @enderror"
+                                wire:model.defer="email"
+                                autocomplete="off"
+                            >
+                            @error('email') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Password --}}
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label class="form-label">{{ __('label.password') }}</label>
+                            <div class="input-group">
+                                <input
+                                    type="{{ $show_password ? 'text' : 'password' }}"
+                                    name="password_{{ uniqid() }}"
+                                    class="form-control @error('password') is-invalid @enderror"
+                                    wire:model.defer="password"
+                                    autocomplete="new-password"
+                                >
+                                <span class="input-group-text" style="cursor:pointer;" wire:click="togglePassword">
+                                    <i class="bx {{ $show_password ? 'bx-show' : 'bx-hide' }}"></i>
+                                </span>
+                            </div>
+                            @error('password') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col mb-3">
+                            <label class="form-label">{{ __('label.confirm_password') }}</label>
+                            <div class="input-group">
+                                <input
+                                    type="{{ $show_confirm_password ? 'text' : 'password' }}"
+                                    name="confirm_{{ uniqid() }}"
+                                    class="form-control @error('confirm_password') is-invalid @enderror"
+                                    wire:model.defer="confirm_password"
+                                    autocomplete="new-password"
+                                >
+                                <span class="input-group-text" style="cursor:pointer;" wire:click="toggleConfirmPassword">
+                                    <i class="bx {{ $show_confirm_password ? 'bx-show' : 'bx-hide' }}"></i>
+                                </span>
+                            </div>
+                            @error('confirm_password') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Roles --}}
+                    <div class="table-responsive">
+                        <table class="table table-flush-spacing">
+                            <tbody>
                                 <tr>
-                                    <td class="text-nowrap fw-medium">
-                                        <label class="form-check-label" for="selectAll">{{ __('label.access_role') }} </label>
-                                    </td>
+                                    <td class="fw-medium">{{ __('label.access_role') }}</td>
                                     <td>
-                                        <div class="d-flex">
-                                            <div class="form-check me-3 me-lg-5">
-                                                <input class="form-check-input" type="checkbox" id="selectAll"
-                                                    wire:model="check_all"
-                                                    wire:change="toggleSelectAll">
-                                                <label class="form-check-label" for="selectAll">{{ __('label.all') }} </label>
-                                            </div>
-                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            wire:model="check_all"
+                                            wire:change="toggleSelectAll"
+                                        >
+                                        <label class="form-check-label">{{ __('label.all') }}</label>
                                     </td>
                                 </tr>
 
                                 @foreach($access_roles as $role)
                                     <tr wire:key="role-{{ $role->id }}">
-                                        <td class="text-nowrap fw-medium">{{ $role->role_name }}</td>
+                                        <td>{{ $role->role_name }}</td>
                                         <td>
-                                            <div class="d-flex">
-                                                <div class="form-check me-3 me-lg-5">
-                                                    <input 
-                                                        type="checkbox"
-                                                        wire:model="role_ids"
-                                                        value="{{ $role->id }}"
-                                                        id="role_{{ $role->id }}"
-                                                        class="form-check-input" 
-                                                    />
-                                                </div>
-                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                class="form-check-input"
+                                                wire:model.defer="role_ids"
+                                                value="{{ $role->id }}"
+                                            >
                                         </td>
                                     </tr>
-                                    @endforeach
-                              </tbody>
-                            </table>
-                                @error('role_ids')
-                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                @enderror
-                          </div>
-                          <!-- Permission table -->
-                        </div>
+                                @endforeach
+                            </tbody>
+                        </table>
+
+                        @error('role_ids')
+                            <div class="text-danger mt-2">{{ $message }}</div>
+                        @enderror
                     </div>
-                   
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
-                        <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
-                    </div>
-                </form>
-            </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ __('label.close') }}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {{ $editMode ? __('label.update') : __('label.save') }}
+                    </button>
+                </div>
+
+            </form>
+
         </div>
     </div>
+</div>
+
    
 </div>
 

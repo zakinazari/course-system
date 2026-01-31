@@ -19,7 +19,7 @@
                 <span class="badge rounded-2 badge-warning bg-label-warning fs-tiny py-1">{{ $decision->decision }}</span>
                 @endif
                 </span> &nbsp; 
-                @if($round == $submission->round && $submission->status !='published')     
+                @if($round == $submission->round && $submission->status !='published' && Auth::user()->isAdmin() && Auth::user()->id ==$decision->editor_id)     
                 <a class="" href="javascript:void(0);" wire:click="editDecision({{ $decision->id }})">
                     <i class="bx bx-edit-alt me-1 text-success"></i></a>
                 <a class="" href="javascript:void(0);"  onclick="confirmDelete({{ $decision->id }},'{{$table_name}}')">

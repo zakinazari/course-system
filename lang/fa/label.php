@@ -77,6 +77,7 @@ return [
 
     // -----start settings--------------------
 
+    'menu' => 'منو',
     'menu_name' => 'نام منو',
     'menu_name_en' => 'نام انگلیسی منو',
     'url' => 'آدرس لینک',
@@ -134,13 +135,16 @@ return [
     'country' => 'کشور',
     'author_type' => 'نقش مشارکت‌کننده',
     
+    'editor_comment' => 'نظر سردبیر',
     'author_comment' => 'نظر نویسنده',
     'comment' => 'نظر',
     'comments_for_editor' => 'نظرات برای سردبیر',
     'comments_for_author' => 'نظرات برای نویسنده',
+    'comments_for_reviewer' => 'نظرات برای داور',
     
     'details' => 'جزئیات',
     'file_upload' => 'آپلود فایل',
+    
     'files' => 'فایل ها',
     'download' => 'دانلود',
     'file_required' => 'لطفاً فایل را انتخاب کنید.',
@@ -181,6 +185,20 @@ return [
     'recommendation' => 'پیشنهاد', 
     'recommendation.required' => ' پیشنهاد الزامی است.', 
 
+    'main_axes' => 'محورهای اصلی', 
+    'sub_axes' => 'محورهای فرعی', 
+    'main_axis.required' => 'محور اصلی الزامی است', 
+    'sub_axis.required' => 'محور فرعی الزامی است', 
+    'accepted_abstracts' => 'خلاصه های پذیرفته شده', 
+    'accepted_abstract_id.required' => 'خلاصه های پذیرفته شده الزامی است.', 
+
+    'processing' => 'در حال پردازش…',
+    'upload_failed' => 'آپلود ناموفق بود!',
+
+    'facebook' => 'فیسبوک',
+    'website' => 'وبسایت',
+    'address' => 'آدرس',
+    'logo' => 'لوگو',
     // ----------end submission labels----------------
 
     // --------start issues------------------
@@ -343,4 +361,36 @@ return [
     'add_member' => 'افزودن عضو',
     'scientific_board_members' => 'اعضای بورد علمی',
     'file_type_not_allowed' => 'این نوع فایل مجاز نیست',
+
+
+    'gazette' => 'جریده',
+    'gazette_number' => 'شماره جریده',
+    'gazette_number.required' => 'شماره جریده الزامی است',
+    'gazette_number.unique' => 'شماره جریده تکرار است',
+    'gazette.required' => 'جریده الزامی است',
+    'gazette_date' => 'تاریخ  نشر جریده',
+    'gazette_date.required' => 'تاریخ نشر جریده الزامی است',
+    'gazette_date.size' => 'فرمت تاریخ باید به شکل YYYY/MM/DD باشد',
+    'gazette_date.regex' => 'فرمت تاریخ باید به شکل YYYY/MM/DD باشد',
+
+    'decree' => [
+        'decree_list' => 'فهرست احکام',
+        'decree_number' => 'شماره حکم',
+        'decree_date' => 'تاریخ حکم',
+        'decree_number.required' => 'شماره حکم الزامی است',
+        'decree_number.unique' => 'شماره تکراری است',
+        'decree_date.required' => 'تاریخ حکم الزامی است',
+        'decree_date.size' => 'فرمت تاریخ باید به شکل YYYY/MM/DD باشد',
+        'decree_date.regex' => 'فرمت تاریخ باید به شکل YYYY/MM/DD باشد',
+    ],
+    'ruling_order' => [
+        'order_list' => 'فهرست فرامین',
+        'order_number' => 'شماره فرمان',
+        'order_date' => 'تاریخ فرمان',
+        'order_number.required' => 'شماره فرمان الزامی است',
+        'order_number.unique' => 'شماره تکراری است',
+        'order_date.required' => 'تاریخ فرمان الزامی است',
+        'order_date.size' => 'فرمت تاریخ باید به شکل YYYY/MM/DD باشد',
+        'order_date.regex' => 'فرمت تاریخ باید به شکل YYYY/MM/DD باشد',
+    ],
 ];

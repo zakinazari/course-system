@@ -28,11 +28,11 @@
                     </label>
                 </div>
 
-                @if($review?->file->count() > 0)
+                @if($review?->reviewedFiles->count() > 0)
                     <div class="mt-3 px-4">
                         <small>{{ __('label.uploaded_files') }}</small>
                         <ul class="list-group small">
-                            @foreach($review?->file as $f)
+                            @foreach($review?->reviewedFiles as $f)
                                 <li class="list-group-item d-flex justify-content-between align-items-center small">
                                     @php
                                         $ext = strtolower(pathinfo($f->original_name, PATHINFO_EXTENSION));

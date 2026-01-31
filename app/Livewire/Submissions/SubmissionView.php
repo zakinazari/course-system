@@ -3,17 +3,22 @@
 namespace App\Livewire\Submissions;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Str;
 use App\Models\Settings\Menu;
 use App\Models\Submissions\Submission;
 use App\Models\Submissions\SubmissionFile;
 use App\Models\Submissions\EditorialDecision;
 use App\Models\Submissions\Review;
+use App\Models\Submissions\ReviewFile;
 use App\Models\Issues\Issue;
 use App\Models\User;
+
 use Storage;
 use DB;
 class SubmissionView extends Component
 {
+    use WithFileUploads;
     public $active_menu_id;
     public $active_menu;
     public $submission_id;
@@ -23,6 +28,7 @@ class SubmissionView extends Component
     public $reviewer_id;
     public $current_round;
     public $reviews;
+    public $file=[];
     public $issues = [];
     public $issue_id;
     public $current_page = 'details';
@@ -315,25 +321,48 @@ class SubmissionView extends Component
             ->where('name', 'like', '%' . $this->search_reviewer . '%')
             ->get();
 
-        // 🔹 اگر نام دقیقاً یکی از کاربران باشد، اتومات انتخاب شود
+       
         $matchedUser = $this->users->firstWhere('name', $this->search_reviewer);
         if ($matchedUser) {
             $this->reviewer_id = $matchedUser->id;
         } else {
-            $this->reviewer_id = null; // اگر پیدا نشد، گزینه انتخاب شده خالی باشد
+            $this->reviewer_id = null; 
         }
     }
 
+    protected function rules()
+    {
+        return [
+            'submission_id' => 'required',
+            'reviewer_id' => 'required',
+            'file' => 'required|array',
+            'file.*' => 'file|max:5120|mimes:pdf,doc,docx',
+        ];
+    }
+    protected function messages()
+    {
+        return [
+
+            'reviewer_id.required' => __('label.reviewer.required'),
+            'file.required' => __('label.file_required'),
+            'file.*.file' => __('label.file_invalid'),
+            'file.*.max' => __('label.file_max',['value'=>5]),
+            'file.*.mimes' => __('label.file_mimes',['value'=>'pdf,doc,docx']),
+        ];
+    }
+
+
+
     public function sendForReviewSubmission()
     {
-       
-         DB::beginTransaction();
+        $this->validate();
+        DB::beginTransaction();
         try {
             $submission = Submission::findOrFail($this->submission_id);
             $submission->update([
                 'status'=>'under_review',
             ]);
-            Review::updateOrCreate(
+            $review = Review::updateOrCreate(
                 [
                     'submission_id'=> $this->submission_id,
                     'reviewer_id' => $this->reviewer_id,
@@ -348,7 +377,28 @@ class SubmissionView extends Component
                     'assigned_at' => now(),
                 ],
             );
-        
+
+            foreach ($this->file as $f) {
+                $originalName = $f->getClientOriginalName();
+                $mime = $f->getClientMimeType();
+                $size = $f->getSize();
+                $storedName = Str::random(40) . '.' . $f->getClientOriginalExtension();
+                
+                $path = $f->storeAs('files-for-review/' . $review->id, $storedName, 'local');
+                ReviewFile::create([
+                    'review_id' => $review->id,
+                    'original_name' => $originalName,
+                    'file_path' => $path,
+                    'type' => 'for_review',
+                    'size' => $size,
+                    'mime' => $mime,
+                ]);
+
+                $f->delete();
+            }
+
+            $this->file = [];
+
             DB::commit();
             $this->closeModal($this->sendForReviewModalId);
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
@@ -368,12 +418,7 @@ class SubmissionView extends Component
         }
     }
 
-    protected function rules()
-    {
-        return [
-            'submission_id' => 'required',
-        ];
-    }
+
 
     public function assignToIssue()
     {

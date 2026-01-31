@@ -77,6 +77,7 @@
                 </select>
                 @error('country_id') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
+            {{--
             <div class="form-group mb-3">
                 <label>{{ __('label.province') }} <span style="color:red;">*</span></label>
                 <select class="form-control @error('province_id') is-invalid @enderror" wire:model.lazy="province_id">
@@ -87,7 +88,7 @@
                 </select>
                 @error('province_id') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
-
+        --}}
             <div class="form-group mb-2">
                 <label>{{ __('label.city') }}  <span style="color:red;"></span></label>
                 <input type="text" wire:model.lazy="city_fa" class="form-control @error('city_fa') is-invalid @enderror" placeholder="{{ __('label.city') }}">

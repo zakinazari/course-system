@@ -70,7 +70,10 @@ class ReviewerAssignmentView extends Component
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
         $this->review_id = $review_id;
-        $this->review = Review::with('submission:id,title_en,title_fa,submitter_id','submission:submitter','submission.submitter.country','submission.submitter.province','submission.submitter.educationDegree','submission.submitter.academicRank')->findOrFail($review_id);
+        $this->review = Review::with(['submission:id,title_en,title_fa,submitter_id','submission:submitter',
+        'submission.submitter.country','submission.submitter.province',
+        'submission.submitter.educationDegree',
+        'submission.submitter.academicRank'])->findOrFail($review_id);
         $this->current_round = $this->review->round;
         $this->submission_id = $this->review->submission_id;
         $this->authors = $this->review?->submission?->submitter;
@@ -121,8 +124,8 @@ class ReviewerAssignmentView extends Component
         return [
             'review_id' => 'required',
             'recommendation' => 'required',
-            'file' => 'required',
-            'file.*' => 'file|max:2048|mimes:pdf,doc,docx,xls,xlsx,csv',
+            'file' => 'required|array',
+            'file.*' => 'file|max:5120|mimes:pdf,doc,docx',
         ];
     }
 
@@ -133,8 +136,8 @@ class ReviewerAssignmentView extends Component
             
             'file.required' => __('label.file_required'),
             'file.*.file' => __('label.file_invalid'),
-            'file.*.max' => __('label.file_max',['value'=>2]),
-            'file.*.mimes' => __('label.file_mimes',['value'=>'pdf,doc,docx,xls,xlsx,csv']),
+            'file.*.max' => __('label.file_max',['value'=>5]),
+            'file.*.mimes' => __('label.file_mimes',['value'=>'pdf,doc,docx']),
         ];
     }
     
@@ -192,9 +195,10 @@ class ReviewerAssignmentView extends Component
                     'file_path' => $path,
                     'size' => $size,
                     'mime' => $mime,
+                    'type' => 'reviewed',
                 ]);
 
-                 $f->delete();
+                $f->delete();
             }
 
             $this->file = [];

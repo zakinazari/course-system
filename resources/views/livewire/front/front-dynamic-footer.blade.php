@@ -1,37 +1,25 @@
 <div>
-    <div class="footer-area pt-100 pb-70 ">
+    <div class="footer-area pt-100 pb-70">
         <div class="container">
             <div class="row">
+                @foreach($about_us as $about)
                 <div class="col-lg-5 col-sm-6">
                     <div class="footer-logo-area">
-                        <a href="#"><img src="{{ asset('front-assets/images/logo_mis.png') }}" style="width:70px;" alt="Image"></a>
-                        <p>{{ __('label.wardak_university.name') }}</p>
+                        <a href="#"><img src="{{ asset('storage/' . $about->logo) }}" style="width:70px;" alt="Image"></a>
+                        <p> {{ App::getLocale()=='fa'? $about->title_fa: $about->title_en }} </p>
                         <div class="contact-list">
                             <ul>
-                                <li><a href="#"> {{ __('label.wardak_university.email') }}</a></li>
-                                <li><a href="#"> {{ __('label.wardak_university.website') }}</a></li>
-                                <li><a href="#">{{ __('label.wardak_university.facebook') }}</a></li>
-                                <li><a href="#"> {{ __('label.wardak_university.contact') }}</a></li>
-                                <li><a href="#"> {{ __('label.wardak_university.address') }}</a></li>
+                                <li><a href="#"> {{ __('label.email') }}: {{ $about->email }}</a></li>
+                                <li><a href="#"> {{ __('label.website') }}: {{ $about->website }}</a></li>
+                                <li><a href="#">{{ __('label.facebook') }}: {{ $about->facebook }}</a></li>
+                                <li><a href="#"> {{ __('label.phone') }}: {{ $about->phone }}</a></li>
+                                <li><a href="#"> {{ __('label.address') }}: {!! App::getLocale()=='fa'? $about->address_fa: $about->address_en !!}</a></li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-5 col-sm-6">
-                    <div class="footer-logo-area">
-                        <a href="#"><img src="{{ asset('favicon.png') }}" style="width:70px;" alt="Image"></a>
-                        <p>{{ __('label.national_conference.name') }}</p>
-                        <div class="contact-list">
-                            <ul>
-                                <li><a href="#">{{ __('label.national_conference.email') }}</a></li>
-                                <li><a href="#">{{ __('label.national_conference.website') }}</a></li>
-                                <li><a href="#"> {{ __('label.national_conference.facebook') }}</a></li>
-                                <li><a href="#">{{ __('label.national_conference.contact') }}</a></li>
-                                <li><a href="#"> {{ __('label.national_conference.address') }} </a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                @endforeach
+
                 <div class="col-lg-2 col-sm-6">
                     <div class="footer-widjet">
                         @foreach($menus as $m)

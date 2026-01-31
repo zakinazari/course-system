@@ -1,6 +1,15 @@
 <div>
-    
-    <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+    <style>
+        #layout-menu {
+            height: 100vh;
+        }
+
+        #layout-menu .menu-inner {
+            height: calc(100vh - 64px);
+            overflow: hidden; 
+        }
+    </style>
+    <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme" >
     <div class="app-brand demo">
       <a href="{{ url('/') }}" class="app-brand-link">
         <img src="{{ asset('front-assets/images/imarat.png') }}" alt="Image" style="width:50px;">
@@ -92,3 +101,25 @@
   </aside>
 
 </div>
+@script
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const menuInner = document.querySelector('#layout-menu .menu-inner');
+    if (!menuInner || typeof PerfectScrollbar === 'undefined') return;
+
+    if (menuInner._ps) {
+        menuInner._ps.destroy();
+    }
+
+
+    menuInner._ps = new PerfectScrollbar(menuInner, {
+        wheelSpeed: 1.5,
+        suppressScrollX: true,
+        swipeEasing: true,
+        wheelPropagation: false
+    });
+});
+</script>
+@endscript
+
+

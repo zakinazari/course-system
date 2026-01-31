@@ -7,16 +7,25 @@
                     <input type="file"  
                      id="fileInput"
                      
-                    class="form-control @error('file.*') is-invalid @enderror"  multiple wire:model.lazy="file" multiple>
+                    class="form-control @error('file.*') is-invalid @enderror"  multiple wire:model="file" multiple>
                     <button type="submit" class="btn btn-success">{{ __('label.upload') }}</button>
                 </div>
                     @error('file.*')
                         <span class="text-danger" id ="fileErrors">{{ $message }}</span>
                     @enderror
-                    @error('files')<span class="text-danger">{{ $message }}</span>@enderror
+                    @error('file')<span class="text-danger">{{ $message }}</span>@enderror
                 <div id="fileError" class="invalid-feedback d-block" style="display:none;"></div>
                
             </form>
+        @if($uploading)
+            <div class="progress mt-3" wire:poll.1500ms="checkUploadStatus" style="height: 40px; font-size: 1.2rem;">
+                <div 
+                    class="progress-bar progress-bar-striped progress-bar-animated bg-info d-flex align-items-center justify-content-center"
+                    style="width: 100%;">
+                    {{ __('label.processing') }}...
+                </div>
+            </div>
+        @endif
 
         @if($uploaded_files->count())
             <div class="mt-3">
@@ -48,9 +57,12 @@
                                 <a wire:click.prevent="downloadFile({{ $f->id }})" class="btn btn-xs btn-secondary text-white">
                                       <i class="bx bx-download me-1"></i> {{ __('label.download') }}
                                 </a>
-                                <button wire:click="deleteFile({{ $f->id }})" type="button" class="btn btn-icon btn-label-danger">
+                                <button onclick="confirmDelete({{ $f->id }},'submission_files')" type="button" class="btn btn-icon btn-label-danger">
                                 <i class="bx bx-trash-alt"></i>
                                 </button>
+                                <!-- <button wire:click="deleteFile({{ $f->id }})">
+                                <i class="bx bx-trash-alt"></i>
+                                </button> -->
                                 <!-- <button wire:click="deleteFile({{ $f->id }})" class="btn btn-sm btn-danger">
                                     {{ __('label.delete') }}
                                 </button> -->

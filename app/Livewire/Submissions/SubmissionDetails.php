@@ -5,10 +5,14 @@ namespace App\Livewire\Submissions;
 use Livewire\Component;
 use App\Models\Settings\Menu;
 use App\Models\Submissions\Submission;
+use App\Models\Submissions\AcceptedAbstract;
 use App\Models\Submissions\Keyword;
 use App\Models\Submissions\SubmissionKeyword;
+use App\Models\Submissions\MainAxis;
+use App\Models\Submissions\SubAxis;
 use Auth;
 use DB;
+use App;
 class SubmissionDetails extends Component
 {
     public $submission_id;
@@ -18,6 +22,15 @@ class SubmissionDetails extends Component
     public $keywords_en = [];
     public $abstract_fa;
     public $abstract_en;
+
+    public $main_axes = [];
+    public $sub_axes = [];
+    public $main_axis_id;
+    public $sub_axis_id;
+
+    public $accepted_abstracts = [];
+    public $accepted_abstract_id;
+    
     public function mount($menu_id = null,$submission_id = null)
     {
        
@@ -29,6 +42,9 @@ class SubmissionDetails extends Component
         // -------------start for activing menu in sidebar ----------------------
      
         $this->submission_id = $submission_id;
+        $sumbission = Submission::findOrFail($this->submission_id);
+        $this->main_axes = MainAxis::all();
+        $this->sub_axes = SubAxis::where('main_axis_id',$sumbission->main_axis_id)->get();
 
         if ($this->submission_id) {
            
@@ -39,6 +55,8 @@ class SubmissionDetails extends Component
                 $this->abstract_fa = $submission->abstract_fa;
                 $this->title_en = $submission->title_en;
                 $this->abstract_en = $submission->abstract_en;
+                $this->main_axis_id = $submission->main_axis_id;
+                $this->sub_axis_id = $submission->sub_axis_id;
 
                 $this->keywords_fa = $submission->keywords
                     ->whereNotNull('keyword_fa')
@@ -119,22 +137,26 @@ class SubmissionDetails extends Component
     protected function rules()
     {
         $rules = [
+            'main_axis_id' => 'required',
+            'sub_axis_id' => 'required',
+            
             'title_fa' => 'required|string|max:255|unique:submissions,title_fa,' . $this->submission_id . ',id',
             'title_en' => 'required|string|max:255|unique:submissions,title_en,' . $this->submission_id . ',id',
+            
             'abstract_fa' => ['required', 'string', function ($attribute, $value, $fail) {
                 $wordCount = $this->word_count_unicode($value);
-                if ($wordCount < 180) {
-                    $fail(__('label.abstract_wordcount_min', ['min' => 180]));
-                } elseif ($wordCount > 200) {
-                    $fail(__('label.abstract_wordcount_max', ['max' => 200]));
+                if ($wordCount < 150) {
+                    $fail(__('label.abstract_wordcount_min', ['min' => 150]));
+                } elseif ($wordCount > 300) {
+                    $fail(__('label.abstract_wordcount_max', ['max' => 300]));
                 }
             }],
             'abstract_en' => ['required', 'string', function ($attribute, $value, $fail) {
                 $wordCount = $this->word_count_unicode($value);
-                if ($wordCount < 180) {
-                    $fail(__('label.abstract_wordcount_min', ['min' => 180]));
-                } elseif ($wordCount > 200) {
-                    $fail(__('label.abstract_wordcount_max', ['max' => 200]));
+                if ($wordCount < 150) {
+                    $fail(__('label.abstract_wordcount_min', ['min' => 150]));
+                } elseif ($wordCount > 300) {
+                    $fail(__('label.abstract_wordcount_max', ['max' => 300]));
                 }
             }],
             'keywords_fa' => 'nullable|array',
@@ -157,7 +179,7 @@ class SubmissionDetails extends Component
                 }
             }],
 
-            // ---------- کلیدواژه انگلیسی ----------
+            
             'keywords_en' => ['nullable', 'array', function ($attribute, $value, $fail) {
 
                 $count = collect($value)
@@ -187,6 +209,9 @@ class SubmissionDetails extends Component
             'title_en.required' => __('label.title.required'),
             'title_fa.max' => __('label.title_fa.max'),
             'title_en.max' => __('label.title_en.max'),
+            'main_axis_id.required' => __('label.main_axis.required'),
+            'sub_axis_id.required' => __('label.sub_axis.required'),
+
             'abstract_fa.required' => __('label.abstract_required'),
             'abstract_en.required' => __('label.abstract_required'),
         ];
@@ -200,14 +225,29 @@ class SubmissionDetails extends Component
         DB::beginTransaction();
 
         try {
-            
-            $submission = Submission::findOrFail($this->submission_id);
+
+        $submission = Submission::findOrFail($this->submission_id);
+
+            if ($this->accepted_abstract_id) {
+                $abs = AcceptedAbstract::findOrFail($this->accepted_abstract_id);
+
+                $this->title_fa = app()->getLocale() == 'fa'
+                    ? $abs->title_fa
+                    : $abs->title_en;
+            }else{
+                $abs = AcceptedAbstract::findOrFail($submission->accepted_abstract_id);
+                $this->title_fa = app()->getLocale() == 'fa'
+                    ? $abs->title_fa
+                    : $abs->title_en;
+            }
             
             $submission->update([
                 'title_fa'    => $this->title_fa,
                 'title_en'    => $this->title_en,
                 'abstract_fa' => $this->abstract_fa,
                 'abstract_en' => $this->abstract_en,
+                'main_axis_id' => $this->main_axis_id,
+                'sub_axis_id' => $this->sub_axis_id,
             ]);
 
             // -------- کلیدواژه‌ها ----------------
@@ -249,6 +289,8 @@ class SubmissionDetails extends Component
             $this->abstract_en = $submission->abstract_en;
 
             $this->comment = $submission->comments_to_editor;
+            $this->main_axis_id = $submission->main_axis_id;
+            $this->sub_axis_id = $submission->sub_axis_id;
 
             $this->keywords_fa = $submission->keywords->whereNotNull('keyword_fa')->pluck('keyword_fa')->toArray();
             $this->keywords_en = $submission->keywords->whereNotNull('keyword_en')->pluck('keyword_en')->toArray();
@@ -278,5 +320,16 @@ class SubmissionDetails extends Component
         }
 
         $this->dispatch('stepValidated', is_valid: true);
+    }
+
+    public function loadSubAxes($main_axis_id)
+    {
+        $this->sub_axes = SubAxis::where('main_axis_id', $main_axis_id)->get();
+    }
+    
+    public function setTitle($id)
+    {
+        $abs= AcceptedAbstract::findOrFail($id);
+        $this->title_fa = (App::getlocale() == 'fa') ? $abs->title_fa: $abs->title_en;
     }
 }

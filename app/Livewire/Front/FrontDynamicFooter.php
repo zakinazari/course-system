@@ -4,6 +4,7 @@ namespace App\Livewire\Front;
 
 use Livewire\Component;
 use App\Models\Website\WebMenu;
+use App\Models\Website\AboutUs;
 class FrontDynamicFooter extends Component
 {
     public function render()
@@ -21,7 +22,7 @@ class FrontDynamicFooter extends Component
         ->where('type_id', 1)
         ->orderBy('order', 'ASC')
         ->get();
-
-        return view('livewire.front.front-dynamic-footer',compact('menus'));
+        $about_us = AboutUs::all();
+        return view('livewire.front.front-dynamic-footer',compact('menus','about_us'));
     }
 }

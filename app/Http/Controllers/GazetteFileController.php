@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\Website\GazetteFile;
+use App\Models\Website\RulingFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Str;
 class GazetteFileController extends Controller
@@ -13,6 +14,21 @@ class GazetteFileController extends Controller
    public function view($id)
     {
         $file = GazetteFile::findOrFail($id);
+
+        $path = $file->file_path;
+
+        if (!Storage::disk('local')->exists($path)) {
+            abort(404);
+        }
+
+        return response()->file(Storage::disk('local')->path($path), [
+            'Content-Disposition' => 'inline; filename="'.$file->file_name.'"'
+        ]);
+    }
+
+   public function viewRulingFile($id)
+    {
+        $file = RulingFile::where('ruling_id',$id)->first();
 
         $path = $file->file_path;
 

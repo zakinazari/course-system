@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use App\Models\Submissions\Submission;
 use App\Models\Submissions\SubmissionFile;
 use Livewire\Attributes\Validate;
+use \App\Jobs\UploadSubmissionFiles;
 use Auth;
 use DB;
 use Storage;
@@ -18,12 +19,14 @@ class SubmissionFiles extends Component
 
     public $file=[];
     public $uploaded_files = [];
+    public $uploading = false;
+    public $uploadStatus = null;
+    public $table_name='submission_files';
+    protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete','validate-step' => 'validateStep'];
 
     public function mount($submission_id=null){
 
         $this->submission_id = $submission_id;
-
-        $this->loadUploadedFiles();
     }
    
     public function loadUploadedFiles()
@@ -31,6 +34,7 @@ class SubmissionFiles extends Component
         $this->uploaded_files = SubmissionFile::where('submission_id', $this->submission_id)
                                 ->latest()
                                 ->get();
+
     }
 
  
@@ -51,61 +55,67 @@ class SubmissionFiles extends Component
 
     public function uploadFile()
     {
-    
-       $this->validate([
+        $this->validate([
             'file' => 'required|array',
-            'file.*' => 'file|max:2048|mimes:pdf,doc,docx,xls,xlsx,csv',
+            'file.*' => 'file|max:5120|mimes:pdf,doc,docx',
         ], [
             'file.required' => __('label.file_required'),
             'file.*.file' => __('label.file_invalid'),
-            'file.*.max' => __('label.file_max',['value'=>2]),
-            'file.*.mimes' => __('label.file_mimes',['value'=>'pdf,doc,docx,xls,xlsx,csv']),
+            'file.*.max' => __('label.file_max',['value'=>5]),
+            'file.*.mimes' => __('label.file_mimes',['value'=>'pdf,doc,docx']),
         ]);
 
-        DB::beginTransaction();
-        try {
 
-            $submission = Submission::findOrFail($this->submission_id);
-            if ($submission->status === 'revision_required') {
-                $submission->update([
-                    'round' => $submission->round + 1,
-                    'status' => 'submitted', 
-                ]);
-            }
-
-            $current_round = $submission->round;
-
-            foreach ($this->file as $f) {
-                $originalName = $f->getClientOriginalName();
-                $mime = $f->getClientMimeType();
-                $size = $f->getSize();
-                $storedName = Str::random(40) . '.' . $f->getClientOriginalExtension();
-                
-                $path = $f->storeAs('submissions/' . $this->submission_id, $storedName, 'local');
-                
-                SubmissionFile::create([
-                    'submission_id' => $this->submission_id,
-                    'file_type' => 'manuscript',
-                    'original_name' => $originalName,
-                    'file_path' => $path,
-                    'uploaded_by' => auth()->id(),
-                    'size' => $size,
-                    'mime' => $mime,
-                    'round' => $current_round,
-                    'uploaded_at' => now(),
-                ]);
-
-                 $f->delete();
-            }
-            DB::commit();
-            $this->file = [];
-            $this->loadUploadedFiles();
-            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
-            $this->dispatch('refreshSubmissionViewComponent');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->dispatch('alert', type: 'error', message: __('label.store_error') . $e->getMessage());
+        $tempFiles = [];
+        foreach ($this->file as $f) {
+                $tempFiles[] = [
+                'path' => $f->store('temp/submissions'),
+                'original_name' => $f->getClientOriginalName(), 
+            ];
         }
+
+        $this->uploading = true;
+        Submission::where('id', $this->submission_id)
+        ->update(['upload_status' => 'processing']);
+
+        UploadSubmissionFiles::dispatch(
+            $this->submission_id,
+            auth()->id(),
+            $tempFiles
+        );
+
+        $this->file = [];
+
+        // $this->dispatch('alert', type: 'info', message: __('label.file_sent_for_processing'));
+
+    }
+
+    public function checkUploadStatus()
+    {
+        $status = Submission::find($this->submission_id)?->upload_status;
+
+        if ($status === 'done') {
+            $this->uploading = false;
+            $this->loadUploadedFiles();
+
+            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
+        }
+
+        if ($status === 'failed') {
+            $this->uploading = false;
+
+            $this->dispatch('alert', type: 'error', message: __('label.upload_failed'));
+        }
+    }
+
+     public function handleGlobalDelete($payload)
+    {
+
+        if (!isset($payload['table']) || ($payload['table'] != $this->table_name && $payload['table'] != 'submissoin_files')) {
+            return;
+        }
+
+         $this->deleteFile($payload['id']);
     }
 
     public function deleteFile($id)
@@ -141,12 +151,11 @@ class SubmissionFiles extends Component
 
     public function render()
     {
-        
+         $this->loadUploadedFiles();
         return view('livewire.submissions.submission-files');
     }
 
 
-    protected $listeners = ['validate-step' => 'validateStep'];
     public function validateStep($step)
     {
         if ($step != 2) return;
