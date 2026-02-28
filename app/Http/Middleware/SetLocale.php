@@ -15,9 +15,9 @@ class SetLocale
         $context = $request->attributes->get('context', 'web');
 
         if ($context === 'admin') {
-            App::setLocale($request->session()->get('admin_locale', 'fa'));
+            App::setLocale($request->session()->get('admin_locale', 'en'));
         } else {
-            App::setLocale($request->session()->get('frontend_locale', 'fa'));
+            App::setLocale($request->session()->get('frontend_locale', 'en'));
         }
         return $next($request);
     }

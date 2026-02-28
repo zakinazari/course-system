@@ -1,4 +1,13 @@
 <div>
+   <!-- title -->
+      @section('title',(($active_menu?->parent?->name ?? '') ? $active_menu?->parent?->name . '-' : ''
+        ) . $active_menu?->name . ' | '.__('label.app_name'))
+    <!-- end title -->
+    <!-- start header -->
+    <h4 class="py-3 breadcrumb-wrapper mb-4">
+
+    </h4>
+    <!-- end header -->
     <div class="container-xxl flex-grow-1 container-p-y">
   
       <!-- Card Border Shadow -->

@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
 return new class extends Migration
 {
     /**
@@ -14,6 +13,7 @@ return new class extends Migration
         Schema::create('access_roles', function (Blueprint $table) {
             $table->id();
             $table->string('role_name',100);
+            $table->boolean('is_system')->default(false);
             $table->timestamps();
         });
     }

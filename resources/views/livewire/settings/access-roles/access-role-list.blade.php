@@ -97,6 +97,7 @@
                             <td>{{ ($roles->currentPage() - 1) * $roles->perPage() + $i + 1 }}</td>
                             <td>{{ $role->role_name }}</td>
                             <td>
+                                @if($role->role_name !='Super Admin')
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
@@ -112,6 +113,7 @@
                                         @endif
                                     </div>
                                 </div>
+                                @endif
                             </td>
                         </tr>
                         @endforeach

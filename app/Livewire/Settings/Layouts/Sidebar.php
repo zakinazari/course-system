@@ -41,7 +41,29 @@ class Sidebar extends Component
 
     public function render()
     {
-        $role_ids = Auth::user()->role_ids;
+        $currentUser = auth()->user();
+
+        // اگر Developer است، همه منوها بدون محدودیت نشان داده شود
+        if ($currentUser->isDeveloper()) {
+            $this->menu_section = MenuSection::with([
+                'menu' => fn($query) => $query->where('status', 1)
+                    ->orderBy('order', 'ASC')
+                    ->with([
+                        'subMenu' => fn($q) => $q->where('status', 1)
+                            ->orderBy('order', 'ASC')
+                            ->with([
+                                'subMenuSub' => fn($qq) => $qq->where('status', 1)
+                                    ->orderBy('order', 'ASC')
+                            ])
+                    ])
+            ])->orderBy('order', 'ASC')->get();
+
+            return view('livewire.settings.layouts.sidebar');
+        }
+
+        // اگر Developer نیست (Admin یا کاربران عادی)
+        $role_ids = $currentUser->role_ids;
+
         $this->menu_section = MenuSection::with([
             'menu' => function($query) use ($role_ids) {
                 $query->where('status', 1)
@@ -62,11 +84,8 @@ class Sidebar extends Component
                         }
                     ]);
             }
-        ])
-        ->orderBy('order', 'ASC')
-        ->get();
+        ])->orderBy('order', 'ASC')->get();
 
         return view('livewire.settings.layouts.sidebar');
-        
     }
 }

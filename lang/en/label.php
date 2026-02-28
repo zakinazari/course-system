@@ -2,13 +2,15 @@
 
 return [
     // -----------start general-------------------
-    'app_name' => 'Conference System',
+    'app_name' => 'Change MIS',
+    'center_name' => 'Change Academy',
     'light' => 'Light',
     'dark' => 'Dark',
     'fa' => 'Persian',
     'en' => 'English',
     'pa' => 'Pashto',
 
+    'are_you_sure'   => 'Are you sure?',
     'delete_title'   => 'Are you sure?',
     'delete_text'    => "You won't be able to revert this!",
     'confirm_text'   => 'Yes, delete it!',
@@ -16,6 +18,12 @@ return [
     'warning'    => 'Warning',
     'yes'    => 'Yes',
     'no'    => 'No',
+    'from_date'    => 'From Date',
+    'to_date'    => 'To Date',
+    'from'    => 'From',
+    'to'    => 'To',
+    'landscape'    => 'Landscape',
+    'portrait'    => 'Portrait',
 
     "successfully_done"      => "Successfully done!",
     "store_error"            => "Error storing the record!",
@@ -67,6 +75,7 @@ return [
 
     'prev' => 'Previous',
     'next' => 'Next',
+    'details' => 'Details',
     // -----------end  general-------------------
     
     // -----start settings--------------------
@@ -77,6 +86,8 @@ return [
     'role_name.max' => 'Role name may not be greater than 255 characters.',
     'role_name.unique' => 'This role name has already been taken.',
     'admin' => 'Admin',
+
+
     // -----end settings----------------------
 
     // -----start settings--------------------
@@ -105,122 +116,6 @@ return [
     // -----end settings----------------------
 
 
-    // ----------start submission labels--------------
-    'submission'=>'Submission',
-    'submission_submit'=>'Submission',
-    'title'=>'Title',
-    'title.required'=>'Title is required',
-    'title_fa.max' => 'The title must not exceed 255 characters.',
-    'title_en.max' => 'The title must not exceed 255 characters.',
-    'title_pa.max' => 'The title must not exceed 255 characters.',
-
-    'keywords'=>'Keywords',
-    'keywords.placeholder'=>'Type keywords and press Enter, Comma, or Space',
-    'abstract'=>'Abstract',
-    'abstract_required' => 'Abstract field is required',
-    'abstract_wordcount_min' => 'Abstract must be at least :min words',
-    'abstract_wordcount_max' => 'Abstract must not exceed :max words',
-    'keywords_min' => 'At least :min keywords are required',
-    'keywords_max' => 'No more than :max keywords are allowed',
-    'file_name_too_long' => 'File name must not exceed :max characters',
-
-
-
-    'contributor'=>'Contributor',
-    'given_name'=>'Given Name',
-    'family_name'=>'Family Name',
-    'email'=>'Email',
-    'password' => 'Password',
-    'confirm_password' => 'Confirm Password',
-    'phone'=>'Phone',
-    'city'=>'City',
-    'affiliation'=>'Affiliation',
-    'country'=>'Country',
-    'author_type'=>"Contributor's Role",
-
-    'editor_comment'=>'Editor Comment',
-    'author_comment'=>'Author Comment',
-    'comment'=>'Comment',
-    'comments_for_editor'=>'Comments for the Editor',
-    'comments_for_author' => 'Comments for the Author',
-    'comments_for_reviewer' => 'Comments for the Reviewer',
-    'details' => 'Details',
-    'files' => 'Files',
-    'file_upload' => 'Upload Files',
-    'download' => 'Download',
-    'file_required' => 'Please select a file.',
-    'file_invalid' => 'The selected file is not valid.',
-    'file_max' => 'The file size must not exceed :value MB.',
-    'file_mimes' => 'Only :value files are allowed.',
-    'uploaded_files' => 'Uploaded Files',
-    'contributors' => 'Contributors',
-    'author' => 'Author',
-
-    'details_step_required_message' => 'Please fill in all required fields',
-    'file_upload_step_required_message' => 'Please upload at least one file',
-    'contributors_step_required_message' => 'Please add at least one contributor',
-
-    'workflow' => 'Workflow',
-    'reviews' => 'Reviews',
-    'reviewers' => 'Reviewers',
-    'reviewer' => 'Reviewer',
-    'reviewer.required' => 'Reviewer is required',
-
-    'round' => 'Round',
-    'screening' => 'Screening',
-    'send_for_review' => 'Send for review to the university',
-    'accept_skip_review' => 'Accept & Skip Review',
-    'reject_submission' => 'Reject Submission',
-    'revision_required' => 'Revision Required',
-    'assign_to_issue' => 'Assign To Issue',
-    
-    'editor_decision' => 'Editor Decision',
-    'reviewer_recommendations' => 'Rreviewer Recommendations',
-    'recommendations' => 'Recommendations',
-
-    'reviewer_declined_reason' => 'Declined Reason',
-    'reviewer_declined_reasons' => 'Declined Reasons',
-    'accept_review' => 'Accept Review',
-    'decline_review' => 'Decline Review',
-    'make_recommendation' => 'Make a Recommendation',
-    'recommendation' => 'Recommendation',
-    'recommendation.required' => 'Recommendation is required',
-
-    'main_axes' => 'Main Axes',
-    'sub_axes'  => 'Sub Axes',
-    'main_axis.required' => 'Main axis is required',
-    'sub_axis.required'  => 'Sub axis is required',
-    'accepted_abstracts' => 'Accepted Abstracts',
-    'accepted_abstract_id.required' => 'Accepted abstract is required', 
-    
-    'processing' => 'Processing…',
-    'upload_failed' => 'Upload failed!',
-
-    'facebook' => 'Facebook',
-    'website'  => 'Website',
-    'address'  => 'Address',
-    'logo'     => 'Logo',
-    // ----------end submission labels----------------
-
-    // --------start issues------------------
-    'issue'=>'Issue',
-    'volume'=>'Volume',
-    'number'=>'Number',
-    'date_published'=>'Date Published',
-    'cover_image'=>'Cover Image',
-    'image'=>'Image',
-
-    'volume.required'=>'Volume is required',
-    'number.required'=>'Number is required',
-    // --------end issues--------------------
-
-     // --------start issues------------------
-    'page'=>'Page',
-    'content'=>'Content',
-    'name'=>'Name',
-    'name.required'=>'Name is required',
-    'title.required'=>'Title is required',
-    // --------end issues--------------------
 
      // --------start users label--------------------------
     // NAME
@@ -238,6 +133,10 @@ return [
     'roles_required' => 'Please select at least one role.',
     'roles_array'    => 'Invalid role selection.',
 
+    // Branches
+    'branch_required' => 'Please select at least one branch.',
+    'branch_array'    => 'Invalid branch selection.',
+
     // PASSWORD
     'password_required' => 'The password field is required.',
     'password_string'   => 'The password must be a valid string.',
@@ -254,6 +153,7 @@ return [
     'dashboard' => 'Dashboard',
     'login' => 'Login',
     'user_login' => 'User Login',
+    'user' => 'User',
     'user_name' => 'User Name',
     'email_or_phone_no' => 'Email or Phone Number',
     'forgot_password' => 'Forgot your password?',
@@ -295,7 +195,7 @@ return [
     'phone_no.max'    => 'The phone number may not be greater than 10 digits.',
     'phone_no.numeric'    => 'The phone number must be numeric.',
 
-     'profile_photo_image' => 'The profile photo must be a valid image file.',
+    'profile_photo_image' => 'The profile photo must be a valid image file.',
     'profile_photo_max'   => 'The profile photo may not be larger than 1MB.',
 
     'change_password'   => 'Change Password',
@@ -315,86 +215,187 @@ return [
     'password_symbol'         => 'Password must contain at least one symbol',
     // end profile validation---------------------
 
-    'leadership_board'         => 'Leadership Board',
+    // ---------start center cettings------------------
 
-    'articles_graph' => 'Articles (According to Graph)',
-    'my_articles_graph' => 'My Articles (According to Graph)',
-    'submitted'          => 'Submitted',
-    'screening'          => 'Screening',
-    'under_review'       => 'Under Review',
-    'revision_required'  => 'Revision Required',
-    'accepted'           => 'Accepted',
-    'rejected'           => 'Rejected',
-    'published'          => 'Published',
-    'unpublished'          => 'Unpublished',
-    'publish'   => 'Publish',
-    'unpublish' => 'Unpublish',
+    // branches-----------
+    'branch' => 'Branch',
+    'branch_name' => 'Branch Name',
+    'branch_code' => 'Code',
+    'branch_location' => 'Location',
+    'branch_name.required' => 'Branch name is required.',
+    'branch_name.string' => 'Branch name must be a string.',
+    'branch_name.max' => 'Brnahc name may not be greater than 255 characters.',
+    'branch_name.unique' => 'This Branch name has already been taken.',
+    'branch_code.unique' => 'This Branch code has already been taken.',
 
-    'pending'   => 'Pending',
-    'completed' => 'Completed',
-    'declined'  => 'Declined',
-    'my_assigned_papers_status' => 'Status of Papers Assigned to Me',
-    'my_articles' => 'My Articles',
-    'all_articles' => 'All Articles',
-    'latest_articles' => 'Latest Articles',
-    'similar_articles' => 'Similar Articles',
-    'official_journals' => 'Official Journals',
+    // programs-----------
+    'program' => 'Program',
+    'program_name' => 'Program Name',
+    'program_name.required' => 'Program name is required.',
+    'program_name.string' => 'Program name must be a string.',
+    'program_name.max' => 'Program name may not be greater than 255 characters.',
+    'program_name.unique' => 'This Program name has already been taken.',
 
-    'search_by_title' => 'Search by Article Title',
-    'search_by_author' => 'Search by Author',
-    'wardak_university' => [
-        'name' => 'Wardak University',
-        'email' => 'Email: info@wu.edu.af',
-        'website' => 'Website: www.wu.edu.af',
-        'facebook' => 'Facebook Page: Wardak University',
-        'contact' => 'Contact: +93 0781785612',
-        'address' => 'Address: Kabul-Kandahar Highway, Top Dasht, Syedabad District, Wardak, Afghanistan',
-    ],
-    'national_conference' => [
-        'name' => 'National Conference of Amir al-Mu’minin Orders, May Allah Protect Him',
-        'email' => 'Email: national.conference@wu.edu.af',
-        'website' => 'Website: ',
-        'facebook' => 'Facebook Page: Wardak University',
-        'contact' => 'Contacts: +93 0787052050 - +93 0773805403',
-        'address' => 'Address: Kabul-Kandahar Highway, Top Dasht, Syedabad District, Wardak, Afghanistan',
-    ],
+    // books-----------
+    'book' => 'Book',
+    'book_name' => 'Book Name',
+    'abbreviation' => 'Abbreviation',
+    'abbreviation.required' => 'Abbreviation is Required',
+    'book_name.required' => 'Book name is required.',
+    'book_name.string' => 'Book name must be a string.',
+    'book_name.max' => 'Book name may not be greater than 255 characters.',
+    'book_name.unique' => 'This Book name has already been taken.',
+    'program.required' => 'Program is required.',
 
-    'follow_us_on'=>'Follow us on',
-    'all_rights_reserved'=>'All rights reserved.',
-    'members' => 'Members',
-    'add_member' => 'Add Member',
-    'scientific_board_members' => 'Scientific Board Members',
-    'file_type_not_allowed' => 'This file type is not allowed',
+    
+     // -----------start classroom -----------------
+    'classroom' => 'Classroom',
+    'name.unique' => 'This name has already been taken.',
+    'name.required' => 'Name is requiredbranch_code',
 
-     'gazette' => 'Gazette',
-    'gazette_number' => 'Gazette Number',
-    'gazette_number.required' => 'The gazette number is required',
-    'gazette_number.unique' => 'The gazette number has already been taken',
-    'gazette.required' => 'The gazette is required',
-    'gazette_date' => 'Gazette Publication Date',
-    'gazette_date.required' => 'The gazette publication date is required',
-    'gazette_date.size' => 'The date format must be YYYY/MM/DD',
-    'gazette_date.regex' => 'The date format must be YYYY/MM/DD',
+    // --------start placement test-----------------------
+    'placement_test' => 'Placement Test',
+    'add_to_course' => 'Add to course',
+    'placement_test_settings' => 'Placement Test Settings',
+    'validity_months' => 'Validity Months',
+    'has_fee' => 'Has Fee',
+    'fee_amount' => 'Fee Amount',
+    'validity_months.required' => 'Validity Months feild is required',
+    'fee_amount.required' => 'Fee Amount feild is required',
+    'has_fee.required' => 'Has Fee feild is required',
+    'branch.unique' => 'This Branch has already been taken.',
+    'no_setting_found' => 'No placement test settings found. Please create the settings first.',
+    'setting_already_exists' => 'Setting Already Exists',
+    'no_course_found' => 'No course found',
+    'no_course_found_message' => 'Currently there are no courses available for this student',
+    'add_to_waiting_list' => 'Add to waiting list',
+    'student_already_exists_in_waiting_list' => 'This student is already in the waiting list.',
+    
 
-    'decree' => [
-        'decree_list' => 'Decree List',
-        'decree_number' => 'Decree Number',
-        'decree_date' => 'Decree Date',
-        'decree_number.required' => 'The decree number is required',
-        'decree_number.unique' => 'The decree number has already been taken',
-        'decree_date.required' => 'The decree date is required',
-        'decree_date.size' => 'The date format must be YYYY/MM/DD',
-        'decree_date.regex' => 'The date format must be YYYY/MM/DD',
-    ],
+    // ---------end center cettings--------------------
 
-    'ruling_order' => [
-        'order_list' => 'Order List',
-        'order_number' => 'Order Number',
-        'order_date' => 'Order Date',
-        'order_number.required' => 'The order number is required',
-        'order_number.unique' => 'The order number has already been taken',
-        'order_date.required' => 'The order date is required',
-        'order_date.size' => 'The date format must be YYYY/MM/DD',
-        'order_date.regex' => 'The date format must be YYYY/MM/DD',
-    ],
+    //----------------start visitors------------------
+    'visitor' => 'Visitor',
+    'name' => 'Name',
+    'last_name' => 'Last Name',
+    'father_name' => "Father's Name",
+    'phone_no' => 'Phone',
+    'visit_date' => 'Visit Date',
+    'visit_purpose' => 'Visit Purpose',
+    'referral_source' => 'Referral Source',
+
+    'name.required' => 'Name is required.',
+    'father_name.required' => "Father's Name is required.",
+    'phone_no.required' => "Phone is required",
+    'referral_source.required' => "Referral Source is required",
+    'visit_date.required' => "Visit Date is required",
+    'visit_purpose.required' => "Visit Purpose is required",
+    'branch.required' => "Branch is required",
+    //----------------end visitors--------------------
+
+    //----------------start meetings------------------
+    'meeting' => 'Meeting',
+    'date' => 'Date',
+    'subject' => 'Subject',
+    'meeting_reference' => 'Reference',
+
+    'subject.required' => "Subject is required",
+    'meeting_reference.required' => "Meeting Reference is required",
+    'date.required' => "Visit Date is required",
+    'branch.required' => "Branch is required",
+    //----------------end meetings--------------------
+
+    //----------------start students------------------
+    'student' => 'Student',
+    'student_code' => 'Student Code',
+    'registration_date' => 'Registration Date',
+    'address' => 'Address',
+    'tazkira_no' => 'Tazkira No',
+    'tazkira_no.unique' => 'This Tazkira number is already taken.',
+    'photo' => 'photo',
+
+    'new'=>'New',
+    'active'=>'Active',
+    'inactive'=>'Inactive',
+    'pending'=>'Pending',
+    'suspended'=>'Suspended',
+    'graduated'=>'Graduated',
+    'done'=>'Done',
+    'cancelled'=>'Cancelled',
+    'draft'=>'Draft',
+    'scheduled'=>'Scheduled',
+    'ongoing'=>'Ongoing',
+    'completed'=>'Completed',
+    'dropped'=>'Dropped',
+    'failed'=>'Failed',
+    'waiting'=>'Waiting',
+    'enrolled'=>'Enrolled',
+    //----------------end students--------------------
+
+     //----------------start course------------------
+    'course' => 'Course',
+    'course_name' => 'Course Name',
+    'shift' => 'Shift',
+    'course_type' => 'Course Type',
+    'course_details' => 'Course Details',
+    'course_students' => 'Course Students',
+    'courses' => 'Courses',
+    'total_teaching_days' => 'Total Teaching Days',
+    'capacity' => 'Capacity',
+    'min_capacity' => 'Min Capacity',
+    'max_capacity' => 'Max Capacity',
+    'start_date' => 'Start Date',
+    'end_date' => 'End Date',
+    'mid_exam_date' => 'Mid Exam Date',
+    'final_exam_date' => 'Final Exam Date',
+    'time' => 'Time',
+    'start_time' => 'Start Time',
+    'end_time' => 'End Time',
+    'teacher' => 'Teacher',
+    'students' => 'Students',
+    'registered_students' => 'Registered Students',
+    'available_seats' => 'Available Seats',
+    'image' => 'Image',
+    'course_image' => 'The Image must be a valid image file.',
+    'course_image_max'   => 'The Image may not be larger than 500KB.',
+    'course_capacity_full' => 'The course capacity is full. Registration is not allowed.',
+    'add_student_to_course' => 'Add Student to Course',
+
+    'branch.required' => 'Branch is required',
+    'program.required' => 'Program is required',
+    'book.required' => 'Book is required',
+    'course_type.required' => 'Course type is required',
+    'shift.required' => 'Shift is required',
+    'classroom.required' => 'Classroom is required',
+    'teacher.required' => 'Teacher is required',
+    'total_teaching_days.required' => 'Total teaching days are required',
+    'capacity.required' => 'Capacity is required',
+    'min_capacity.required' => 'Min Capacity is required',
+    'max_capacity.required' => 'Max Capacity is required',
+    'start_time.required' => 'Start time is required',
+    'end_time.required' => 'End time is required',
+    'start_date.required' => 'Start date is required',
+    'end_date.required' => 'End date is required',
+    'mid_exam_date.required' => 'Mid-term exam date is required',
+    'final_exam_date.required' => 'Final exam date is required',
+
+    'enrollment' => 'Enrollment',
+    'enrolled_date' => 'Enrolled Date',
+    'return_back' => 'Return Back',
+    'instractor' => 'Instructor',
+    'student.required' => 'Student is Required',
+    'student.unique' => 'This student arleady exists in this course',
+    //----------------end course--------------------
+
+    
+    // -----------start hr -----------------
+    'employee' => 'Employee',
+    'employee_code' => 'Employee Code',
+    'hire_date' => 'Hire Date',
+    'email' => 'Email',
+    'role' => 'Role',
+    // -----------end hr -------------------
+
+
+   
 ];

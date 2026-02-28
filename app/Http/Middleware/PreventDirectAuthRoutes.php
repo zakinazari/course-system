@@ -17,13 +17,13 @@ class PreventDirectAuthRoutes
     {
         
          // فقط GET login و GET register مسدود شوند
-        if ($request->isMethod('get') && ($request->is('login') || $request->is('register'))) {
+        if ($request->isMethod('get') && ($request->is('register'))) {
 
             if (auth()->check()) {
                 return redirect()->route('dashboard');
             }
 
-            return redirect('/');
+            return redirect('login');
         }
 
         return $next($request);

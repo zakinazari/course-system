@@ -55,3 +55,10 @@
 
 <!-- Page Styles -->
 @yield('page-style')
+
+<style>
+    .layout-wrapper.layout-content-navbar {
+  transform: none !important;
+  overflow: visible !important;
+}
+</style>

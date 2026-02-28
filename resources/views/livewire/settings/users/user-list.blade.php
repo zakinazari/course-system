@@ -50,13 +50,14 @@
                     <div class="col-md-3">
                         <input type="text" class="form-control" placeholder="{{ __('label.name') }}/{{ __('label.email') }}" wire:model="search.identity">
                     </div>
-                    <div class="col-md-3">
+                    
+                    <div class="col-md-3 col-md-3 d-flex flex-column" wire:ignor>
                         <label class="form-label">{{ __('label.access_role') }}</label>
-                        <select class="form-control" wire:model.live="search.role">
+                        <select class="form-control select2" wire:model.live="search.role" id="search_role_id">
                             <option value="">{{ __('label.all') }}</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Author">Author</option>
-                                <option value="Reviewer">Reviewer</option>
+                                @foreach($access_roles as $role)
+                                <option value="{{ $role->id }}">{{ $role->role_name }}</option>
+                                @endforeach
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -86,6 +87,10 @@
                             <th>{{ __('label.name') }}</th>
                             <th>{{ __('label.email') }}</th>
                             <th>{{ __('label.role_name') }}</th>
+                            <th>{{ __('label.status') }}</th>
+                            @if(!auth()->user()->branch_id)
+                            <th>{{ __('label.branch') }}</th>
+                            @endif
                             <th>{{ __('label.actions') }}</th>
                         </tr>
                     </thead>
@@ -95,8 +100,19 @@
                             <td>{{ ($users->currentPage() - 1) * $users->perPage() + $i + 1 }}</td>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>{{ $user->roles->pluck('role_name')->join(', ') }}</td>
+                            <td>{{ $user->role?->role_name }}</td>
                             <td>
+                                @if($user->is_active)
+                                <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.active') }}</span>
+                                @else
+                                <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ __('label.inactive') }}</span>
+                                @endif
+                            </td>
+                            @if(!auth()->user()->branch_id)
+                            <td>{{ $user->branch?->name }}</td>
+                            @endif
+                            <td>
+                                @if(!$user->isAdmin())
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
@@ -106,12 +122,13 @@
                                             <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $user->id }})"
                                             ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
-                                        @if(delete(Auth::user()->role_ids,$active_menu_id) && Auth::user()->isAdmin())
+                                        @if(delete(Auth::user()->role_ids,$active_menu_id))
                                             <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $user->id }},'{{$table_name}}')"
                                             ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
                                         @endif
                                     </div>
                                 </div>
+                                @endif
                             </td>
                         </tr>
                         @endforeach
@@ -139,13 +156,13 @@
 
             <form wire:submit.prevent="{{ $editMode ? 'update' : 'store' }}" autocomplete="off">
 
-                {{-- 🔒 Fake inputs to kill Chrome autofill --}}
+               
                 <input type="text" name="fake_user" style="display:none">
                 <input type="password" name="fake_pass" style="display:none">
 
                 <div class="modal-body">
 
-                    {{-- Name & Email --}}
+                   
                     <div class="row">
                         <div class="col mb-3">
                             <label class="form-label">{{ __('label.name') }}</label>
@@ -209,44 +226,68 @@
                         </div>
                     </div>
 
-                    {{-- Roles --}}
-                    <div class="table-responsive">
-                        <table class="table table-flush-spacing">
-                            <tbody>
-                                <tr>
-                                    <td class="fw-medium">{{ __('label.access_role') }}</td>
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            class="form-check-input"
-                                            wire:model="check_all"
-                                            wire:change="toggleSelectAll"
-                                        >
-                                        <label class="form-check-label">{{ __('label.all') }}</label>
-                                    </td>
-                                </tr>
-
+                    <div class="row">
+                        <div class="col mb-3" wire:ignore>
+                            <label class="form-label">{{ __('label.access_role') }} <span style="color:red;">*</span></label>
+                            <select class="form-select select2" wire:model="role_id" id ="role_id">
+                                <option value="">{{ __('label.select') }}</option>
                                 @foreach($access_roles as $role)
-                                    <tr wire:key="role-{{ $role->id }}">
-                                        <td>{{ $role->role_name }}</td>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                class="form-check-input"
-                                                wire:model.defer="role_ids"
-                                                value="{{ $role->id }}"
-                                            >
-                                        </td>
-                                    </tr>
+                                    <option value="{{ $role->id }}"  wire:key="role_id-add-edit-{{ $role->id }}">
+                                        {{ $role->role_name }}
+                                    </option>
                                 @endforeach
-                            </tbody>
-                        </table>
-
-                        @error('role_ids')
-                            <div class="text-danger mt-2">{{ $message }}</div>
+                            </select>
+                        </div>
+                        @error('role_id')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
+                        @if(!auth()->user()->branch_id)
+                         <div class="col mb-3">
+                            <label class="form-label">{{ __('label.branch') }}</label>
+                            <select class="form-select" wire:model="branch_id" id ="branch_id">
+                                <option value="">{{ __('label.all') }}</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}"  wire:key="branch_id-add-edit-{{ $branch->id }}">
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('branch_id')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                       @endif
                     </div>
+                    
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label class="form-label d-block">{{ __('label.status') }}</label>
 
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                    class="form-check-input"
+                                    value="1"
+                                    wire:model="is_active">
+                                <label class="form-check-label">
+                                    {{ __('label.active') }}
+                                </label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                    class="form-check-input"
+                                    value="0"
+                                    wire:model="is_active">
+                                <label class="form-check-label">
+                                    {{ __('label.inactive') }}
+                                </label>
+                            </div>
+
+                            @error('is_active')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -268,3 +309,48 @@
 </div>
 
 
+@script
+<script>
+document.addEventListener("livewire:initialized", function () {
+
+    function initVisitorSelect() {
+
+        $('.select2').each(function () {
+            const $select = $(this);
+            const $modal  = $select.closest('.modal');
+
+           
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            $select.select2({
+                width: '100%',
+                dropdownParent: $modal.length ? $modal : $(document.body)
+            });
+        });
+
+        $('#role_id').off('change').on('change', function () {
+            @this.set('role_id', $(this).val());
+        });
+        $('#search_role_id').off('change').on('change', function () {
+            @this.set('search.role', $(this).val());
+        });
+
+    }
+
+    initVisitorSelect();
+
+    Livewire.hook('morphed', () => {
+        initVisitorSelect();
+    });
+
+
+    $(document).on('shown.bs.modal', function () {
+        initVisitorSelect();
+    });
+
+});
+
+</script>
+@endscript

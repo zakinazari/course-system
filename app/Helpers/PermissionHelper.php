@@ -3,28 +3,39 @@ use App\Models\Settings\Menu;
 use App\Models\Settings\Permission;
 
 if (!function_exists('read')) {
-    function read($role=[], $menu_id=null) {
-		if (!is_array($role)) {
+    function read($role = [], $menu_id = null)
+    {
+        $currentUser = Auth::user();
+    
+        if ($currentUser && $currentUser->isDeveloper()) {
+            return true;
+        }
+
+        if (!is_array($role)) {
             $role = explode(',', $role);
         }
-    	if($menu_id != null){
-			$user_permission=Permission::whereIn('role_id',$role)
-			->where('menu_id',$menu_id)
-			->where('action_id',1)
-			->first();
-			if($user_permission != null){
-				return true;
-			}else{
-				return false;
-			}
-		}else{
-			return false;
-		}
+
+        if ($menu_id != null) {
+            $user_permission = Permission::whereIn('role_id', $role)
+                ->where('menu_id', $menu_id)
+                ->where('action_id', 1)
+                ->first();
+
+            return $user_permission != null;
+        }
+
+        return false;
     }
 }
 
 if (!function_exists('add')) {
     function add($role=[], $menu_id=null) {
+
+		$currentUser = Auth::user();
+    
+        if ($currentUser && $currentUser->isDeveloper()) {
+            return true;
+        }
 
 		if (!is_array($role)) {
             $role = explode(',', $role);
@@ -46,6 +57,12 @@ if (!function_exists('add')) {
 }
 if (!function_exists('edit')) {
     function edit($role=[], $menu_id=null) {
+		$currentUser = Auth::user();
+    
+        if ($currentUser && $currentUser->isDeveloper()) {
+            return true;
+        }
+
 		if (!is_array($role)) {
             $role = explode(',', $role);
         }
@@ -66,6 +83,12 @@ if (!function_exists('edit')) {
 }
 if (!function_exists('delete')) {
     function delete($role=[], $menu_id=null) {
+		$currentUser = Auth::user();
+    
+        if ($currentUser && $currentUser->isDeveloper()) {
+            return true;
+        }
+
 		if (!is_array($role)) {
             $role = explode(',', $role);
         }
@@ -86,6 +109,12 @@ if (!function_exists('delete')) {
 }
 if (!function_exists('confirm')) {
     function confirm($role=[], $menu_id=null) {
+		$currentUser = Auth::user();
+    
+        if ($currentUser && $currentUser->isDeveloper()) {
+            return true;
+        }
+
 		if (!is_array($role)) {
             $role = explode(',', $role);
         }
@@ -106,6 +135,12 @@ if (!function_exists('confirm')) {
 }
 if (!function_exists('unconfirm')) {
     function unconfirm($role=[], $menu_id=null) {
+		$currentUser = Auth::user();
+    
+        if ($currentUser && $currentUser->isDeveloper()) {
+            return true;
+        }
+		
 		if (!is_array($role)) {
             $role = explode(',', $role);
         }

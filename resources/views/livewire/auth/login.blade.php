@@ -46,14 +46,13 @@ new #[Layout('components.layouts.auth')] class extends Component {
             return;
         }
 
-        dd($user, $this->password);
         Auth::login($user, $this->remember);
 
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
         // $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-        $this->redirect(route('dashboard'));
+         $this->redirect(route('dashboard'));
     }
 
     /**
@@ -78,9 +77,12 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         protected function validateCredentials(): User
         {
-            $user = User::where('email', $this->user_name)
-                        ->orWhere('phone_no', $this->user_name)
-                        ->first();
+            $user = User::where(function ($query) {
+                    $query->where('email', $this->user_name)
+                        ->orWhere('phone_no', $this->user_name);
+                })
+                ->where('is_active', true)
+                ->first();
 
             if (! $user || ! Hash::check($this->password, $user->password)) {
                 RateLimiter::hit($this->throttleKey());

@@ -10,11 +10,12 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Models\Settings\AccessRole;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\Settings\Country;
-use App\Models\Settings\Province;
-use App\Models\Settings\EducationDegree;
-use App\Models\Settings\AcademicRank;
+use App\Models\CenterSettings\Branch;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
+use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -29,23 +30,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'name_fa',
-        'name_en',
-        'family_name_fa',
-        'family_name_en',
         'phone_no',
-        'affiliation_fa',
-        'affiliation_en',
-        'country_id',
-        'province_id',
-        'department_fa',
-        'department_en',
-        'preferred_research_area_fa',
-        'preferred_research_area_en',
-        'city_fa',
-        'city_en',
-        'education_degree_id',
-        'academic_rank_id',
+        'role_id',
+        'branch_id',
+        'is_active',
     ];
 
     /**
@@ -71,6 +59,10 @@ class User extends Authenticatable
         ];
     }
 
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
     /**
      * Get the user's initials
      */
@@ -83,53 +75,77 @@ class User extends Authenticatable
             ->implode('');
     }
 
-    public function roles(): BelongsToMany
+    // public function roles(): BelongsToMany
+    // {
+    //     return $this->belongsToMany(
+    //         AccessRole::class,    // مدل مرتبط
+    //         'access_role_user',   // جدول pivot
+    //         'user_id',            // کلید خارجی مدل جاری
+    //         'role_id'             // کلید خارجی مدل مرتبط
+    //     )->withTimestamps();      // اگر جدول pivot timestamps دارد
+    // }
+
+    // public function branches(): BelongsToMany
+    // {
+    //     return $this->belongsToMany(
+    //         Branch::class,    // مدل مرتبط
+    //         'branch_user',   // جدول pivot
+    //         'user_id',            // کلید خارجی مدل جاری
+    //         'branch_id'             // کلید خارجی مدل مرتبط
+    //     )->withTimestamps();      // اگر جدول pivot timestamps دارد
+    // }
+
+    public function role()
     {
-        return $this->belongsToMany(
-            AccessRole::class,    // مدل مرتبط
-            'access_role_user',   // جدول pivot
-            'user_id',            // کلید خارجی مدل جاری
-            'role_id'             // کلید خارجی مدل مرتبط
-        )->withTimestamps();      // اگر جدول pivot timestamps دارد
+        return $this->belongsTo(AccessRole::class, 'role_id');
     }
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+    
     public function getRoleIdsAttribute()
     {
-        return $this->roles->pluck('id')->toArray();
-    }
-    public function isAdmin()
-    {
-        return $this->roles->contains('role_name', 'Admin');
+        return $this->role_id ? [$this->role_id] : [];
     }
 
-    public function isReviewer()
+    public function getBranchIdsAttribute()
     {
-        return $this->roles->count() === 1 
-            && $this->roles->contains('role_name', 'Reviewer');
-    }
-    public function isAuthor()
-    {
-        return $this->roles->count() === 1 
-            && $this->roles->contains('role_name', 'Author');
+        return $this->branch_id ? [$this->branch_id] : [];
     }
 
-    public function hasRole(string $roleName): bool
+    public function isDeveloper(): bool
     {
-        return $this->roles()->where('name', $roleName)->exists();
+        return $this->role && $this->role->is_system;
     }
-    public function country()
+
+    public function isAdmin(): bool
     {
-        return $this->belongsTo(Country::class, 'country_id');
+        return $this->role && $this->role->role_name === 'Super Admin';
     }
-    public function province()
+
+    public function isRegularUser(): bool
     {
-        return $this->belongsTo(Province::class, 'province_id');
+        return !$this->isDeveloper() && !$this->isAdmin();
     }
-    public function educationDegree()
+
+    protected static function booted()
     {
-        return $this->belongsTo(EducationDegree::class, 'academic_rank_id');
+        static::deleting(function ($user) {
+            if ($user->isDeveloper()) {
+                throw new \Exception('System Developer cannot be deleted.');
+            }
+
+            if ($user->isAdmin()) {
+                throw new \Exception('Super Admin cannot be deleted.');
+            }
+        });
+
+        // static::addGlobalScope('hide_system_users', function (Builder $builder) {
+        //     $builder->whereHas('role', function ($q) {
+        //         $q->where('is_system', false);
+        //     });
+        // });
     }
-    public function academicRank()
-    {
-        return $this->belongsTo(AcademicRank::class, 'academic_rank_id');
-    }
+
 }

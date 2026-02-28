@@ -122,7 +122,7 @@
                                     </td>
                                     <td style="vertical-align: middle;">
                                         <div class="d-flex align-items-center flex-wrap">
-                                            @foreach($actions as $action)
+                                            @foreach($actions as $i=> $action)
                                                 
                                                 <div class="form-check me-3 mb-2 d-flex align-items-center" wire:key="menu-{{ $menu->id }}-action-{{ $action->id }}">
                                                     <input class="form-check-input option-input" type="checkbox" 
@@ -135,6 +135,9 @@
                                                         {{ $action->name_en }}
                                                     </label>
                                                 </div>
+                                                @if($menu->category==2 && $i==3)
+                                                   @php break; @endphp
+                                                @endif
                                                 @if($menu->category==1)
                                                    @php break; @endphp
                                                 @endif

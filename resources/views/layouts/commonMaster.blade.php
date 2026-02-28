@@ -31,6 +31,7 @@
   @include('layouts/sections/scriptsIncludes')
 </head>
 
+</style>
 <body>
   
   <!-- Layout Content -->

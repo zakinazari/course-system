@@ -57,7 +57,7 @@ class PermissionList extends Component
             ->orderBy('order', 'asc')
             ->get();
         $this->menu_types = MenuType::all();
-        $this->access_roles = AccessRole::all();
+        $this->access_roles = AccessRole::where('is_system',false)->get();
         $this->actions = Action::all();
         
     }

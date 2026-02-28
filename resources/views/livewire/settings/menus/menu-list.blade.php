@@ -100,7 +100,7 @@
                             <th>{{ __('label.NO') }}</th>
                             <th>{{ __('label.menu_name') }}</th>
                             <th>{{ __('label.url') }}</th>
-                            <th>{{ __('label.icon') }}</th>
+                            <!-- <th>{{ __('label.icon') }}</th> -->
                             <th>{{ __('label.menu_type') }}</th>
                             <th>{{ __('label.section') }}</th>
                             <th>{{ __('label.grand_parent') }}</th>
@@ -118,7 +118,7 @@
                                 {{ $menu->name }}
                             </td>
                             <td>{{ $menu->url }}</td>
-                            <td>{{ $menu->icon }}</td>
+                            <!-- <td>{{ $menu->icon }}</td> -->
                             <td>
                                 {{ $menu->type?->type_name }}
                             </td>

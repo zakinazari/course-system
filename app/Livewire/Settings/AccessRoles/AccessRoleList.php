@@ -8,12 +8,13 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AccessRolesExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Settings\Menu;
+use App\Models\Settings\SystemLog;
 use Auth;
 class AccessRoleList extends Component
 {
     // -------start generals--------------------
     use WithPagination;
-    public $perPage = 5;
+    public $perPage = 10;
     protected $paginationTheme = 'bootstrap';   
     public $editMode = false;
     public $active_menu_id;
@@ -77,10 +78,17 @@ class AccessRoleList extends Component
 
     public function render()
     {
-        
+        $currentUser = auth()->user();
+
         $roles = AccessRole::query()
+           
             ->when(!empty($this->search['role_name']), function ($query) {
                 $query->where('role_name', 'like', '%' . $this->search['role_name'] . '%');
+            })
+            
+            ->when(!$currentUser->isDeveloper(), function ($query) {
+
+                $query->where('is_system', false);
             })
             ->paginate($this->perPage);
 
@@ -110,9 +118,16 @@ class AccessRoleList extends Component
         if(add(Auth::user()->role_ids,$this->active_menu_id)){
             $this->validate();
             try{
-                AccessRole::create([
+                $role = AccessRole::create([
                     'role_name' => $this->role_name,
                 ]);
+                // ---start system log-----------
+                SystemLog::create([
+                    'user_id' => Auth::user()->id,
+                    'section' => __('label.access_role').' ('.$role->name.' ID:'.$role->id.')',
+                    'type_id' => 2,
+                ]);
+                // ---end system log-------------
                 $this->closeModal();
                 $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
             }catch (\Exception $e) {
@@ -140,9 +155,17 @@ class AccessRoleList extends Component
         if(edit(Auth::user()->role_ids,$this->active_menu_id)){
             $this->validate();
             try {
-                AccessRole::findOrFail($this->role_id)->update([
+                $role = AccessRole::findOrFail($this->role_id);
+                $role->update([
                     'role_name' => $this->role_name,
                 ]);
+                // ---start system log-----------
+                SystemLog::create([
+                    'user_id' => Auth::user()->id,
+                    'section' => __('label.access_role').' ('.$role->name.' ID:'.$role->id.')',
+                    'type_id' => 3,
+                ]);
+                // ---end system log-------------
                 $this->closeModal();
                 $this->dispatch('alert', type: 'success', message: __('label.successfully_updated'));
             } catch (\Exception $e) {
@@ -169,7 +192,18 @@ class AccessRoleList extends Component
     {
         if(delete(Auth::user()->role_ids,$this->active_menu_id)){
             try {
-                AccessRole::findOrFail($id)->delete();
+                $role=AccessRole::findOrFail($id);
+                $role->update([
+                    'role_name' => $this->role_name,
+                ]);
+                // ---start system log-----------
+                SystemLog::create([
+                    'user_id' => Auth::user()->id,
+                    'section' => __('label.access_role').' ('.$role->name.' ID:'.$role->id.')',
+                    'type_id' => 4,
+                ]);
+                // ---end system log-------------
+                $role->delete();
                 $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
             } catch (\Exception $e) {
                 $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
@@ -189,6 +223,8 @@ class AccessRoleList extends Component
          $pdf = Pdf::loadView('livewire.settings.access-roles.access_roles_pdf', compact('roles'));
         return response()->streamDownload(fn() => print($pdf->output()), 'access_roles.pdf');
     }
+
+    
     public function exportExcel()
     {
         return Excel::download(new AccessRolesExport($this->search), 'access_roles.xlsx');

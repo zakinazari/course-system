@@ -27,7 +27,7 @@
                           </li>
                           <li class="mb-2">
                             <span class="fw-bold me-2">{{__('label.access_role')}}:</span>
-                            <span class="text-muted">{{ Auth::user()->roles->pluck('role_name')->join(', ') }}</span>
+                            <span class="text-muted">{{ Auth::user()->role?->role_name }}</span>
                           </li>
                         </ul>
                     </div>
@@ -38,96 +38,12 @@
                 <form id="formAccountSettings" wire:submit.prevent="update">
                 <div class="row">
                     <div class="mb-3 col-md-6">
-                        <label for="name_fa" class="form-label">{{__('label.name')}}</label>
-                        <input class="form-control" type="text"id="name_fa"  wire:model.lazy ='name_fa'/>
+                        <label for="name" class="form-label">{{__('label.user_name')}}</label>
+                        <input class="form-control" type="text"id="name"  wire:model.lazy ='name'/>
                     </div>
+                    
                     <div class="mb-3 col-md-6">
-                        <label for="name_en" class="form-label">{{__('label.name')}} ({{__('label.en',locale:'en')}})</label>
-                        <input class="form-control" type="text"id="name_en" wire:model.lazy ='name_en'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="family_name_fa" class="form-label">{{__('label.family_name')}}</label>
-                        <input class="form-control" type="text"  id="family_name_fa" wire:model.lazy ='family_name_fa'/>
-                    </div>
-
-                    <div class="mb-3 col-md-6">
-                        <label for="family_name_en" class="form-label">{{__('label.family_name')}} ({{__('label.en',locale:'en')}})</label>
-                        <input class="form-control" type="text"  id="family_name_en" wire:model.lazy ='family_name_en'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label class="form-label" for="">{{ __('label.education_degree') }}</label>
-                        <select id="" class=" form-select" wire:model.lazy = "education_degree_id">
-                            <option value="">{{__('label.select')}}</option>
-                            @foreach($education_degrees as $degree)
-                            <option value="{{ $degree->id }}">@if(App::getLocale()==='en') {{ $degree->name_en }} @else {{ $degree->name_fa }} @endif</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label class="form-label" for="">{{ __('label.academic_rank') }}</label>
-                        <select id="" class=" form-select" wire:model.lazy = "academic_rank_id">
-                            <option value="">{{__('label.select')}}</option>
-                            @foreach($academic_ranks as $rank)
-                            <option value="{{ $rank->id }}">@if(App::getLocale()==='en') {{ $rank->name_en }} @else {{ $rank->name_fa }} @endif</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="department_fa" class="form-label">{{ __('label.department') }}</label>
-                        <input type="text" class="form-control" id="department_fa" wire:model.lazy = 'department_fa'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="department_en" class="form-label">{{ __('label.department') }} ({{__('label.en',locale:'en')}})</label>
-                        <input type="text" class="form-control" id="department_en" wire:model.lazy = 'department_en'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="preferred_research_area_fa" class="form-label">{{ __('label.preferred_research_area') }}</label>
-                        <input type="text" class="form-control" id="preferred_research_area_fa" wire:model.lazy = 'preferred_research_area_fa'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="preferred_research_area_en" class="form-label">{{ __('label.preferred_research_area') }} ({{__('label.en',locale:'en')}})</label>
-                        <input type="text" class="form-control" id="preferred_research_area_en" wire:model.lazy = 'preferred_research_area_en'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="affiliation_fa" class="form-label">{{ __('label.affiliation') }}</label>
-                        <input type="text" class="form-control" id="affiliation_fa" wire:model.lazy = 'affiliation_fa'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="affiliation_en" class="form-label">{{ __('label.affiliation') }} ({{__('label.en',locale:'en')}})</label>
-                        <input type="text" class="form-control" id="affiliation_en" wire:model.lazy = 'affiliation_en'/>
-                    </div>
-
-                    <div class="mb-3 col-md-6">
-                        <label class="form-label" for="country_id">{{ __('label.country') }}</label>
-                        <select id="country_id" class=" form-select" wire:model.lazy = "country_id">
-                            <option value="">{{__('label.select')}}</option>
-                            @foreach($countries as $country)
-                            <option value="{{ $country->id }}">@if(App::getLocale()==='en') {{ $country->country_name_en }} @else {{ $country->country_name_fa }} @endif</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    {{--
-                    <div class="mb-3 col-md-6">
-                        <label class="form-label" for="province_id">{{ __('label.province') }}</label>
-                        <select id="province_id" class=" form-select" wire:model.lazy = "province_id">
-                            <option value="">{{__('label.select')}}</option>
-                            @foreach($provinces as $province)
-                            <option value="{{ $province->id }}">@if(App::getLocale()==='en') {{ $province->name_en }} @else {{ $province->name_fa }} @endif</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    --}}
-                    <div class="mb-3 col-md-6">
-                        <label for="city_fa" class="form-label">{{ __('label.city') }}</label>
-                        <input type="text" class="form-control" id="city_fa" wire:model.lazy = 'city_fa'/>
-                    </div>
-                    <div class="mb-3 col-md-6">
-                        <label for="city_en" class="form-label">{{ __('label.city') }} ({{__('label.en',locale:'en')}})</label>
-                        <input type="text" class="form-control" id="city_en" wire:model.lazy = 'city_en'/>
-                    </div>
-
-                    <div class="mb-3 col-md-6">
-                        <label class="form-label" for="phone_no">{{ __('label.phone') }}</label>
+                        <label class="form-label" for="phone_no">{{ __('label.phone_no') }}</label>
                         <input type="text"id="phone_no" class="form-control @error('phone_no') is-invalid @enderror" wire:model.lazy ='phone_no'/>
                         @error('phone_no') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>

@@ -9,6 +9,7 @@
 body {
      font-family: "Vazirmatn" !important;
 }
+
 table>thead>tr>th,td{
 	text-align:center !important;
 	font-family: "Vazirmatn" !important;
@@ -118,4 +119,13 @@ g{
     }
 
 /*---------------end for input option ------------------------*/
+
+html, body {
+  height: auto;
+  overflow: auto;
+}
+
+.layout-wrapper {
+  overflow: visible !important;
+}
 

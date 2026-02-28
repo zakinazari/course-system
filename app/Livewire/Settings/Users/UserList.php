@@ -5,6 +5,7 @@ namespace App\Livewire\Settings\Users;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Settings\AccessRole;
+use App\Models\CenterSettings\Branch;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\User;
@@ -22,6 +23,7 @@ class UserList extends Component
     public $table_name='users';
     
     public $access_roles= [];
+    public $branches= [];
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
     public function closeModal(){
         $this->resetInputFields();
@@ -62,13 +64,15 @@ class UserList extends Component
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
         
-        $this->access_roles = AccessRole::all();
+        $this->access_roles = AccessRole::where('is_system',false)->get();
+        $this->branches = Branch::all();
     }
 
-    public $name, $user_id,$email, $role_ids=[],$check_all = false;
+    public $name, $user_id,$email, $role_id,$branch_id,$check_all = false,$check_all_branch = false;
     public $password, $confirm_password;
     public $show_password = false;
     public $show_confirm_password = false;
+    public $is_active = 1;
 
 
     public function resetInputFields(){
@@ -79,6 +83,7 @@ class UserList extends Component
             'modalId',
             'search',
             'access_roles',
+            'branches',
         ]);
     }
     public $search = [
@@ -88,15 +93,19 @@ class UserList extends Component
 
     public function render()
     {
-         $users = User::with('roles')
+         $users = User::with('role','branch')
+           ->whereHas('role', function ($q) {
+                $q->where('is_system',false);
+            })
+
             ->when(!empty($this->search['identity']), function ($query) {
                 $query->where('name', 'like', '%' . $this->search['identity'] . '%')
                 ->orWhere('email',$this->search['identity']);
             })
             ->when(!empty($this->search['role']), function ($query) {
-                $query->whereHas('roles', function ($q) {
+                $query->whereHas('role', function ($q) {
                         $searchTerm = $this->search['role'];
-                        $q->where('role_name',$searchTerm);
+                        $q->where('id',$searchTerm);
                     });
             })
             
@@ -121,7 +130,8 @@ class UserList extends Component
 
             'email' => 'required|email|unique:users,email,' . $this->user_id,
 
-            'role_ids' => 'required|array',
+            'role_id' => 'required',
+            'is_active' => 'required|boolean',
 
             // Password Rules
             'password' => [
@@ -177,13 +187,18 @@ class UserList extends Component
             $user = User::create([
                 'name'     => $this->name,
                 'email'    => $this->email,
+                'role_id'    => $this->role_id,
+                'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
                 'password' => bcrypt($this->password),
+                'is_active' => $this->is_active,
             ]);
 
-            if(!empty($this->role_ids)){
-                $user->roles()->sync($this->role_ids);
-            }
-
+            $user = SystemLog::create([
+                'user_id' => Auth::user()->id,
+                'section' => __('label.user').'('.$user->name.' ID: '.$user->id.')',
+                'type_id' => 2,
+            ]);
+        
             $this->closeModal();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
         }catch (\Exception $e) {
@@ -195,14 +210,14 @@ class UserList extends Component
     public function edit($id)
     {
         
-        $user = User::with('roles')->findOrFail($id);
+        $user = User::findOrFail($id);
 
         $this->user_id = $user->id;
         $this->name = $user->name;
         $this->email = $user->email;
-
-        $this->role_ids = $user->roles?->pluck('id')->toArray();
-        $this->check_all = count($this->role_ids) === $this->access_roles->count();
+        $this->role_id = $user->role_id;
+        $this->branch_id = $user->branch_id;
+        $this->is_active =$user->is_active;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -217,14 +232,22 @@ class UserList extends Component
             $data = [
                 'name'  => $this->name,
                 'email' => $this->email,
+                'role_id' => $this->role_id,
+                'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
+                'is_active' => $this->is_active,
             ];
 
             if (!empty($this->password)) {
                 $data['password'] = bcrypt($this->password);
             }
 
-            $user->update($data);
-            $user->roles()->sync($this->role_ids);
+            $user->update($data);   
+
+            SystemLog::create([
+                'user_id' => Auth::user()->id,
+                'section' => __('label.user').'('.$user->name.' ID: '.$user->id.')',
+                'type_id' => 3,
+            ]);
 
             $this->closeModal();
             $this->resetInputFields();
@@ -238,16 +261,7 @@ class UserList extends Component
     }
 
 
-    public function toggleSelectAll()
-    {
-        if ($this->check_all) {
-
-            $this->role_ids = $this->access_roles->pluck('id')->toArray();
-        } else {
-            $this->role_ids = [];
-        }
-    }
-
+   
     public function handleGlobalDelete($payload)
     {
 
@@ -262,12 +276,13 @@ class UserList extends Component
     {
         if(delete(Auth::user()->role_ids,$this->active_menu_id)){
             try {
-                User::findOrFail($id)->delete();
+                $user = User::findOrFail($id);
                 SystemLog::create([
                     'user_id' => Auth::user()->id,
-                    'section' => 'این کاربر توسط این کاربر حذف شده است. (ID: '.$id.')',
+                    'section' => __('label.user').'('.$user->name.' ID: '.$id.')',
                     'type_id' => 4,
                 ]);
+                $user->delete();
                 $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
             } catch (\Exception $e) {
                 $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
