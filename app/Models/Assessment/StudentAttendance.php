@@ -19,6 +19,10 @@ class StudentAttendance extends Model
         'recorded_by',
     ];
 
+    protected $casts = [
+        'attendance_date' => 'date',
+    ];
+
     public function student(): HasOne
     {
         return $this->hasOne(Student::class);

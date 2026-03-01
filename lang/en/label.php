@@ -387,6 +387,12 @@ return [
     'student.unique' => 'This student arleady exists in this course',
     //----------------end course--------------------
 
+
+    // -----------start Assessment------------------------
+    'student_attendance'=>'Student Attendance',
+    'save_attendance'=>'Save Attendance',
+    'attendance_date'=>'Attendance Date',
+    // -----------end Assessment--------------------------
     
     // -----------start hr -----------------
     'employee' => 'Employee',
