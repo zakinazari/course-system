@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
             $table->foreignId('course_id')->constrained()->cascadeOnDelete();
 
-            $table->decimal('midterm', 5, 2)->nullable();
-            $table->decimal('final', 5, 2)->nullable();
-            $table->decimal('cognitive', 5, 2)->nullable();
-            $table->decimal('attendance', 5, 2)->nullable();
-            $table->decimal('total', 5, 2)->nullable(); 
+            $table->decimal('midterm', 5, 1)->nullable();
+            $table->decimal('final', 5, 1)->nullable();
+            $table->decimal('cognitive', 5, 1)->nullable();
+            $table->decimal('attendance', 5, 1)->nullable();
+            $table->decimal('total', 5, 1)->nullable(); 
 
             $table->boolean('is_finalized')->default(false); 
             $table->foreignId('user_id')->nullable()->constrained('users');

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('student_course_result_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_course_result_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // چه کسی تغییر داده
+            $table->foreignId('user_id')->nullable()->constrained('users');
 
             // ستون‌های اصلی که تغییر می‌کنند
             $table->decimal('midterm_old', 5, 2)->nullable();

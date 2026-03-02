@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Assessment\Attendance;
+namespace App\Livewire\Assessment\MarkEntry;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,6 +18,8 @@ use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
 use App\Models\Hr\Employee;
 use App\Models\Assessment\StudentAttendance;
+use App\Models\Assessment\StudentCourseResult;
+use App\Jobs\SaveStudentResultsJob;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
@@ -25,13 +27,14 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use Illuminate\Support\Facades\Validator;
 use Auth;
 use Carbon\Carbon;
 use DB;
-class StudentAttendanceList extends Component
+class StudentCourseResultEntry extends Component
 {
-    
-     // -------start generals--------------------
+
+    // -------start generals--------------------
     use WithPagination;
     use WithFileUploads;
     public $perPage = 10;
@@ -39,8 +42,8 @@ class StudentAttendanceList extends Component
     public $editMode = false;
     public $active_menu_id;
     public $active_menu;
-    public $modalId = 'student-attnedance-list-addEditModal';
-    public $table_name='student_attendances';
+    public $modalId = 'student-course-result-entry-addEditModal';
+    public $table_name='student_course-result';
     public $selectedFields = [];
     public $pdfOrientation ='landscape';
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
@@ -72,6 +75,7 @@ class StudentAttendanceList extends Component
     {
         $this->resetPage();
         $this->loadCourseStudent();
+        $this->dispatch('$refresh');
     }
     
     // ---------------------------------end generals-------------
@@ -83,7 +87,8 @@ class StudentAttendanceList extends Component
     public $course_types=[];
     public $teachers=[];
     public $classrooms=[];
-    public $courses=[]; 
+    public $courses=[];
+    public $attendances = []; 
     public function mount($active_menu_id = null)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -131,43 +136,68 @@ class StudentAttendanceList extends Component
             'shift_id' => null,
             'teacher_id' => null,
             'course_id' => null,
-            'attendance_date' =>null,
         ];
+
     public $students=[];
-    public $attendances = [];
+    public $results=[];
+
     public function render()
     {
-       
-        return view('livewire.assessment.attendance.student-attendance-list',[
-             'students' => $this->students ?? collect()
+    
+        return view('livewire.assessment.mark-entry.student-course-result-entry',[
+            'students' => $this->students ?? collect()
         ]);
     }
 
-    protected function loadCourseStudent(){
-
+   protected function loadCourseStudent()
+    {
         $course_id = $this->search['course_id'] ?? null;
-        $date = $this->search['attendance_date'] ?? now()->toDateString();
-        if (!$course_id) {
-            $students = collect();
-        } else {
-            $students = CourseStudent::with('student')
-                ->where('course_id', $course_id)
-                ->get();
+        $this->results = [];
+        $this->students = collect();
 
-            foreach ($students as $i=>$cs) {
-                $record = StudentAttendance::where([
-                    'student_id' => $cs->student_id,
-                    'course_id' => $course_id,
-                    'attendance_date' => $date,
-                ])->first();
+        if (!$course_id) return;
 
-                $this->attendances[$cs->student_id] = $record->status ?? 'present';
-                $students[$i]->attendance_date = $record->attendance_date?? '';
-            }
+        $students = CourseStudent::with('student')
+            ->where('course_id', $course_id)
+            ->get();
+
+        $results = StudentCourseResult::where('course_id', $course_id)
+            ->whereIn('student_id', $students->pluck('student_id'))
+            ->get()
+            ->keyBy('student_id');
+
+        $filteredStudents = collect();
+        foreach ($students as $cs) {
+            $res = $results[$cs->student_id] ?? null;
+            $total = $res?->total ?? 0;
+
+            // status filter
+            $status = $this->search['status'] ?? null;
+            if ($status === 'excellent' && $total < 90) continue;
+            if ($status === 'accepted' && ($total < 75 || $total >= 90)) continue;
+            if ($status === 'week' && $total >= 75) continue;
+
+            $this->results[$cs->student_id] = [
+                'attendance' => $res?->attendance,
+                'cognitive'  => $res?->cognitive,
+                'midterm'    => $res?->midterm,
+                'final'      => $res?->final,
+                'total'      => $res?->total,
+            ];
+
+            $cs->result = (object) [
+                'attendance' => $res?->attendance,
+                'cognitive'  => $res?->cognitive,
+                'midterm'    => $res?->midterm,
+                'final'      => $res?->final,
+                'total'      => $res?->total,
+            ];
+
+            $filteredStudents->push($cs);
         }
-        $this->students =$students;
-    }
 
+        $this->students = $filteredStudents;
+    }
     protected function rules()
     {
         $rules =  [
@@ -225,15 +255,13 @@ class StudentAttendanceList extends Component
 
     public function updatedSearchCourseId()
     {
-        $this->resetErrorBag('search.attendance_date');
+        $this->results = [];
+        $this->students=collect();
     }
 
-    public function updatedSearchAttendanceDate()
+    public function saveMarks()
     {
-        $this->resetErrorBag('search.attendance_date');
-    }
-    public function saveAttendance()
-    {
+        
         if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
@@ -243,68 +271,96 @@ class StudentAttendanceList extends Component
 
         $course = Course::find($course_id);
         if (!$course) return;
-        $start = \Carbon\Carbon::parse($course->start_date)->toDateString(); 
-        $end   = \Carbon\Carbon::parse($course->end_date)->toDateString(); 
-       $this->validate(
-            [
-                'search.attendance_date' =>
-                    'required|date|after_or_equal:' . $start .
-                    '|before_or_equal:' . $end,
-            ],
-            [], 
-            [
-                'search.attendance_date' => __('label.attendance_date'), 
-            ]
-        );
+          $data = ['results' => $this->results];
 
+
+        $validator = Validator::make($data, [
+            'results' => 'required|array',
+            'results.*.cognitive'  => 'nullable|numeric|min:0|max:20',
+            'results.*.attendance' => 'nullable|numeric|min:0|max:20',
+            'results.*.midterm'    => 'nullable|numeric|min:0|max:30',
+            'results.*.final'      => 'nullable|numeric|min:0|max:30',
+            'results.*.total'      => 'nullable|numeric|min:0|max:100',
+        ], [], [
+            'results.*.cognitive'  => 'Cognitive',
+            'results.*.attendance' => 'Attendance',
+            'results.*.midterm'    => 'Midterm',
+            'results.*.final'      => 'Final',
+            'results.*.total'      => 'Total',
+        ]);
+
+        if ($validator->fails()) {
+            
+            $this->dispatch('alert', type: 'error', message: implode('<br>', $validator->errors()->all()));
+            return;
+        }
 
         try {
 
-            $date = $this->search['attendance_date'];
+            // foreach ($this->results as $student_id => $data) {
 
-            foreach ($this->attendances as $student_id => $status) {
-                StudentAttendance::updateOrCreate(
-                    [
-                        'student_id' => $student_id,
-                        'course_id' => $course_id,
-                        'attendance_date' => $date,
-                    ],
-                    [
-                        'status' => $status,
-                        'recorded_by' => Auth::id(),
-                    ]
-                );
-            }
+            //     $attendance = isset($data['attendance']) ? floatval($data['attendance']) : 0;
+            //     $cognitive = isset($data['cognitive']) ? floatval($data['cognitive']) : 0;
+            //     $midterm   = isset($data['midterm']) ? floatval($data['midterm']) : 0;
+            //     $final     = isset($data['final']) ? floatval($data['final']) : 0;
+            //     $total = min(100, $attendance + $cognitive + $midterm + $final);
 
+            //     StudentCourseResult::updateOrCreate(
+            //         [
+            //             'student_id' => $student_id,
+            //             'course_id'  => $course_id,
+            //         ],
+            //         [
+            //             'attendance' => $attendance,
+            //             'cognitive'  => $cognitive,
+            //             'midterm'    => $midterm,
+            //             'final'      => $final,
+            //             'total'      => $total,
+            //             'user_id'      => Auth::Id(),
+            //         ]
+            //     );
+            // }
+             // Dispatch Job برای ذخیره در پس‌زمینه
+            $user_id = Auth::user()->id;
+            SaveStudentResultsJob::dispatch($course_id, $this->results,$user_id);
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
 
         } catch (\Exception $e) {
             $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
         }
     }
+    
 
-     public function exportPdf()
+    public function exportPdf()
     {
         $data = $this->getReport();
         $students = $data['students'];
         $fields = $data['fields'];
         $course = Course::find($this->search['course_id']);
-        $date = $this->search['attendance_date'];
+        if($this->search['status']==='excellent'){
+            $status = __('label.excellent_student');
+        }elseif($this->search['status']==='accepted'){
+            $status = __('label.accepted_student');
+        }elseif($this->search['status']==='week'){
+            $status = __('label.week_student');
+        }else{
+            $status ='';
+        }
 
         $pdf = Pdf::loadView(
-            'livewire.assessment.attendance.student-attendance-list-pdf',
+            'livewire.assessment.mark-entry.student-course-result-entry-pdf',
             [
                 'students' => $students,
                 'fields' => $fields,
                 'course' => $course,
-                'date' => \Carbon\Carbon::parse($date)->format('Y/m/d'),
+                'status' => $status,
             ]
         )->setPaper('a4',$this->pdfOrientation)
         ->setOption('defaultFont', 'dejavusans');
 
         return response()->streamDownload(
             fn () => print($pdf->output()),
-            'student-attendance-' . Carbon::now()->format('Y-m-d -H-i-A') . '.pdf'
+            'student-course-marks-' . Carbon::now()->format('Y-m-d -H-i-A') . '.pdf'
         );
     }
 
@@ -314,22 +370,30 @@ class StudentAttendanceList extends Component
         $students = $data['students'];
         $fields = $data['fields'];
         $course = Course::find($this->search['course_id']);
-        $date = $this->search['attendance_date'];
+        if($this->search['status']==='excellent'){
+            $status = __('label.excellent_student');
+        }elseif($this->search['status']==='accepted'){
+            $status = __('label.accepted_student');
+        }elseif($this->search['status']==='week'){
+            $status = __('label.week_student');
+        }else{
+            $status ='';
+        }
+        
 
         return Excel::download(
-            new class($students, $fields,$course,$date) implements FromCollection, WithHeadings, WithEvents {
+            new class($students, $fields,$course,$status) implements FromCollection, WithHeadings, WithEvents {
 
                 protected $students;
                 protected $fields;
                 protected $course;
-                protected $date;
-
-                public function __construct($students, $fields,$course,$date)
+                protected $status;
+                public function __construct($students, $fields,$course,$status)
                 {
                     $this->students  = $students;
                     $this->fields = $fields;
                     $this->course = $course;
-                    $this->date = $date;
+                    $this->status = $status;
                 }
 
                 public function collection()
@@ -345,7 +409,11 @@ class StudentAttendanceList extends Component
                                 case 'name': $row[] = $sc->student?->name; break;
                                 case 'last_name': $row[] = $sc->student?->last_name; break;
                                 case 'father_name': $row[] = $sc->student?->father_name; break;
-                                case 'status': $row[] = $sc->att_status; break;
+                                case 'cognitive': $row[] = $sc->result?->cognitive; break;
+                                case 'attendance': $row[] = $sc->result?->attendance; break;
+                                case 'midterm': $row[] = $sc->result?->midterm; break;
+                                case 'final': $row[] = $sc->result?->final; break;
+                                case 'total': $row[] = $sc->result?->total; break;
                                 default: $row[] = '';
                             }
                         }
@@ -363,7 +431,11 @@ class StudentAttendanceList extends Component
                         'name'           => __('label.name'),
                         'last_name'      => __('label.last_name'),
                         'father_name'    => __('label.father_name'),
-                        'status'         => __('label.status'),
+                        'cognitive'         => __('label.cognitive_score'),
+                        'attendance'         => __('label.attendance_score'),
+                        'midterm'         => __('label.midterm_score'),
+                        'final'         => __('label.final_score'),
+                        'total'         => __('label.total_score'),
                     ];
 
                     $translatedFields = [];
@@ -374,9 +446,9 @@ class StudentAttendanceList extends Component
 
                     return [
                         [__('label.center_name')],
-                        [__('label.student_attendance')],
+                        [__('label.student_course_marks')],
                         [$this->course?->name],
-                        [__('label.date').':'.$this->date],
+                        [$this->status],
                         [],
                         $translatedFields
                     ];
@@ -446,7 +518,7 @@ class StudentAttendanceList extends Component
                 }
 
             },
-            'student-attendance-' . now()->format('Y-m-d-H-i') . '.xlsx'
+            'student-course-marks-' . now()->format('Y-m-d-H-i') . '.xlsx'
         );
     }
 
@@ -456,9 +528,12 @@ class StudentAttendanceList extends Component
             'no',
             'student_code',
             'name', 
-            'last_name',
             'father_name',
-            'status',
+            'cognitive',
+            'attendance',
+            'midterm',
+            'final',
+            'total',
         ];
 
         $fields = !empty($this->selectedFields)
@@ -471,31 +546,10 @@ class StudentAttendanceList extends Component
         //     }
         // }
 
-        $course_id = $this->search['course_id'] ?? null;
-        $date = $this->search['attendance_date'] ?? now()->toDateString();
-
-        if (!$course_id) {
-            $students = collect();
-        } else {
-           
-            $students = CourseStudent::with('student')
-                ->where('course_id', $course_id)
-                ->orderBy('id', 'asc') 
-                ->get();
-
-            foreach ($students as $i=> $cs) {
-                $record = StudentAttendance::where([
-                    'student_id' => $cs->student_id,
-                    'course_id' => $course_id,
-                    'attendance_date' => $date,
-                ])->first();
-
-                $students[$i]->att_status = $record->status ?? 'Not Taken';
-            }
-        }
+        $this->loadCourseStudent();
 
         return [
-            'students' => $students,
+            'students' => $this->students ?? collect(),
             'fields' => $fields,
         ];
     }

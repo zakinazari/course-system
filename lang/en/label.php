@@ -278,7 +278,7 @@ return [
     'visitor' => 'Visitor',
     'name' => 'Name',
     'last_name' => 'Last Name',
-    'father_name' => "Father's Name",
+    'father_name' => "F/Name",
     'phone_no' => 'Phone',
     'visit_date' => 'Visit Date',
     'visit_purpose' => 'Visit Purpose',
@@ -392,6 +392,18 @@ return [
     'student_attendance'=>'Student Attendance',
     'save_attendance'=>'Save Attendance',
     'attendance_date'=>'Attendance Date',
+
+    'student_course_marks'=>'Student Course Marks',
+    'cognitive_score'=>'Cognitive: 20%',
+    'attendance_score'=>'Attendance: 20%',
+    'midterm_score'=>'Midterm: 30%',
+    'final_score'=>'Final: 30% ',
+    'total_score'=>'Total: 100% ',
+
+
+    'excellent_student'=>'Excellent Student',
+    'accepted_student'=>'Accepted Student',
+    'week_student'=>'Week Student',
     // -----------end Assessment--------------------------
     
     // -----------start hr -----------------

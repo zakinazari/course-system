@@ -54,7 +54,7 @@ class Course extends Model
         return match ($this->status) {
             'draft'     => 'bg-secondary',
             'scheduled' => 'bg-info',
-            'ongoing'   => 'bg-primary',
+            'ongoing'   => 'bg-success',
             'completed' => 'bg-success',
             'cancelled' => 'bg-danger',
             default     => 'bg-dark',

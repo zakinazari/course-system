@@ -13,7 +13,7 @@
     <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme" >
     <div class="app-brand demo">
       <a href="{{ url('/') }}" class="app-brand-link">
-        <img src="{{ asset('favicon.png') }}" alt="Image" style="width:50px;">
+        <img src="{{ asset('logo.png') }}" alt="Image" style="width:50px;">
         <span class="app-brand-text demo menu-text fw-bold ms-2" style="font-size:15px;">{{ __('label.app_name') }}</span>
         
       </a>
@@ -29,9 +29,9 @@
     <ul class="menu-inner py-1">
         @foreach($menu_section as $section)
             @if($section->id !=1 && $section?->menu?->count() > 0)
-            <li class="menu-header small text-uppercase">
+            <!-- <li class="menu-header small text-uppercase">
               <span class="menu-header-text" data-i18n="Components"> {{ $section->section_name }} </span>
-            </li>
+            </li> -->
             @endif
             @foreach($section->menu as $m)
 

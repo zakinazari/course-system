@@ -140,7 +140,7 @@
 
                     <div class="col-md-4">
                         <label class="form-label">{{ __('label.course') }}</label>
-                        <select class="form-select " wire:model.lazy="search.course_id">
+                        <select class="form-select " wire:model="search.course_id">
                            <option value="">{{ __('label.all') }}</option>
                            @foreach($courses as $course)
                                  <option value="{{ $course->id }}"  wire:key="course-search-{{ $course->id }}">
@@ -149,12 +149,15 @@
                            @endforeach
                         </select>
                     </div>
-                    
-                    <div class="col-md-3">
-                        <label class="form-label">{{ __('label.date') }}</label>
-                        <input type="date" class="form-control @error('search.attendance_date') is-invalid @enderror" placeholder="" wire:model.lazy="search.attendance_date">
+                    <div class="col-md-2">
+                        <label class="form-label">{{ __('label.status') }}</label>
+                        <select class="form-select" wire:model="search.status">
+                           <option value="">{{ __('label.all') }}</option>
+                              <option value="excellent">{{ __('label.excellent_student') }}</option>
+                              <option value="accepted"> {{ __('label.accepted_student') }}</option>
+                              <option value="week"> {{ __('label.week_student') }}</option>
+                        </select>
                     </div>
-           
                     <div class="col-md-1">
                         <button type="submit" class="btn btn-primary">
                             {{ __('label.search') }}
@@ -164,12 +167,12 @@
                 </form>
             </div>
             <br>
-            @if(!empty( $students))
+            @if(!empty($students))
             <div class="table-responsive text-nowrap">
-                <table class="table">
-                    <thead class="table-dark">
+                <table class="table table-sm align-middle mb-0" >
+                    <thead class="table-dark table-border-bottom-0 small-table">
                         <tr>
-                            <th>
+                            <th style="width:15px;">
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="no">
                                 {{ __('label.NO') }}
                             </th>
@@ -184,22 +187,30 @@
                             </th>
 
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="last_name">
-                                {{ __('label.last_name') }}
-                            </th>
-
-                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_name">
                                 {{ __('label.father_name') }}
                             </th>
-
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
-                                {{ __('label.status') }}
+                              {{ __('label.cognitive_score') }}
                             </th>
                             <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
+                               {{ __('label.attendance_score') }}
+                            </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
+                                 {{ __('label.midterm_score') }}
+                            </th>
+                            
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
+                                 {{ __('label.final_score') }}
+                            </th>
+                           
+                            <th>
                                 
-                                {{ __('label.date') }}
+                               {{ __('label.total_score') }}
                             </th>
 
                         </tr>
@@ -208,29 +219,46 @@
                     
                     <tbody class="table-border-bottom-0">
                         @foreach($students as $i => $cs)
-                        <tr wire:key="student-{{ $cs->student_id }}">
-                            <td>{{ $i + 1 }}</td>
+                        <tr wire:key="course-{{ $search['course_id'] }}-student-{{ $cs->student_id }}">
+                            <td >{{ $i + 1 }}</td>
                             <td>{{ $cs->student?->student_code }}</td>
                             <td>{{ $cs->student?->name }}</td>
-                            <td>{{ $cs->student?->last_name }}</td>
                             <td>{{ $cs->student?->father_name }}</td>
                             <td>
-                                <div class="d-flex gap-2">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="present"> <span class="badge bg-success"> Present </span> </label>
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="absent" > <span class="badge bg-danger"> Absent </span></label>
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="late"> <span class="badge bg-warning"> Late </span></label>
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="excused" > <span class="badge bg-info"> Excused </span></label>
-                                </div>
-                            </td>
-                            <td>@if(!empty($cs?->attendance_date)) {{ $cs?->attendance_date?->format('Y/m/d') }} @endif</td>
+                              <input class="form-control " min="0" max="20" step="0.1" type="text" wire:model.live="results.{{ $cs->student_id }}.cognitive"  wire:key="cognitive-{{ $cs->student_id }}">
+                           </td>
+                           <td>
+                              <input class="form-control " min="0" max="20" step="0.1"  type="text" wire:model.live="results.{{ $cs->student_id }}.attendance"  wire:key="attendance-{{ $cs->student_id }}">
+                           </td>
+                          
+                           <td>
+                              <input class="form-control " min="0" max="30" step="0.1" type="text" wire:model.live="results.{{ $cs->student_id }}.midterm"  wire:key="midterm-{{ $cs->student_id }}">
+                           </td>
+                           <td>
+                              <input class="form-control " min="0" max="30" step="0.1" type="text" wire:model.live="results.{{ $cs->student_id }}.final"  wire:key="final-{{ $cs->student_id }}">
+                           </td>
+                          <td  wire:key="total-{{ $cs->student_id }}">
+                               {{
+                                 number_format(
+                                    min(
+                                       100,
+                                       (float)($results[$cs->student_id]['attendance'] ?? 0) +
+                                       (float)($results[$cs->student_id]['cognitive'] ?? 0) +
+                                       (float)($results[$cs->student_id]['midterm'] ?? 0) +
+                                       (float)($results[$cs->student_id]['final'] ?? 0)
+                                    ),
+                                    1
+                                 )
+                              }}
+                           </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
-                 @if(add(Auth::user()->role_ids,$active_menu_id) && !empty( $students))
+                 @if(add(Auth::user()->role_ids,$active_menu_id) && !empty($students))
                 <div class="d-flex justify-content-end mt-4 mb-3 px-3">
-                    <button type="button" class="btn btn-primary" wire:click="saveAttendance">
-                        <i class="bi bi-save me-1"></i> {{ __('label.save_attendance') }}
+                    <button type="button" class="btn btn-primary" wire:click="saveMarks">
+                        <i class="bi bi-save me-1"></i> {{ __('label.save') }}
                     </button>
                 </div>
                 @endif

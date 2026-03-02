@@ -256,10 +256,14 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.assessment.attendance.student-attendance-list-page', ['menu_id' => $menu_id]);
     })->whereNumber('menu_id')->name('student-attendance');
 
+    Route::get('mark-entry/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.assessment.mark-entry.student-course-result-entry-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('mark-entry');
+
     // -----------end assessment-------------------
-
-
-
 
 
     // -------start Hr----------------------
