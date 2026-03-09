@@ -21,8 +21,12 @@ return new class extends Migration
             $table->decimal('cognitive', 5, 1)->nullable();
             $table->decimal('attendance', 5, 1)->nullable();
             $table->decimal('total', 5, 1)->nullable(); 
-
+            $table->enum('status', ['passed', 'failed'])->nullable();
+            $table->integer('pass_mark_snapshot')->nullable();
+            $table->integer('excellent_mark_snapshot')->nullable();
             $table->boolean('is_finalized')->default(false); 
+            $table->timestamp('finalized_at')->nullable();
+            $table->foreignId('finalized_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('user_id')->nullable()->constrained('users');
             $table->timestamps();
 

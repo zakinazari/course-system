@@ -14,6 +14,9 @@ class Book extends Model
         'abbreviation',
         'status',
         'program_id',
+        'fee',
+        'pass_mark',
+        'excellent_mark',
     ];
 
     public function program(): BelongsTo

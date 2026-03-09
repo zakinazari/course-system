@@ -18,11 +18,19 @@ class StudentCourseResultLog extends Model
         'cognitive_old',
         'attendance_old',
         'total_old',
+        'status_old',
+        'pass_mark_snapshot_old',
+        'excellent_mark_snapshot_old',
+
+
         'midterm_new',
         'final_new',
         'cognitive_new',
         'attendance_new',
         'total_new',
+        'status_new',
+        'pass_mark_snapshot_new',
+        'excellent_mark_snapshot_new',
         'user_id', 
     ];
 

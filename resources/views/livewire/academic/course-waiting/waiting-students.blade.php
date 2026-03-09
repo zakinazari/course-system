@@ -19,49 +19,53 @@
 
     <div class="card">
        
-        <div class="card-header d-flex justify-content-between align-items-center">
-
-            <h5 class="card-title mb-0">@if(App::getLocale()=='en') {{ $active_menu?->name_en }} @else {{ $active_menu?->name }}  @endif</h5>
-
-            <div class="d-flex align-items-center gap-2">
-                <div class="btn-group">
-
-                    <button type="button" class="btn btn-secondary">
-                        <i class="fa fa-file-export"></i> {{ __('label.export') }}
-                    </button>
-
-                    <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="visually-hidden">Toggle Dropdown</span>
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                        <li class="px-3 py-2">
-                            <div class="d-flex align-items-center gap-3 mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" id="portraitRadio" wire:model="pdfOrientation" value="portrait">
-                                    <label class="form-check-label" for="portraitRadio">{{ __('label.portrait') }}</label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" id="landscapeRadio" wire:model="pdfOrientation" value="landscape">
-                                    <label class="form-check-label" for="landscapeRadio">{{ __('label.landscape') }}</label>
-                                </div>
-                            </div>
-
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportPdf">
-                                <i class="fa fa-file-pdf text-danger"></i> {{ __('label.export_to_pdf') }}
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                @if(add(Auth::user()->role_ids,$active_menu_id))
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }} 
+        <div class="card-header">
+      
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="card-title mb-2 mb-md-0">
+                    {{ $active_menu?->name }}
+                </h5>
+            
+                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                    <!-- Export Button -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary">
+                            <i class="fa fa-file-export"></i> {{ __('label.export') }}
                         </button>
-                    </div>
-                @endif
-            </div>
 
+                        <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+
+                        <ul class="dropdown-menu">
+                            <li class="px-3 py-2">
+                                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="portraitRadio" wire:model="pdfOrientation" value="portrait">
+                                        <label class="form-check-label" for="portraitRadio">(Portrait)</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="landscapeRadio" wire:model="pdfOrientation" value="landscape">
+                                        <label class="form-check-label" for="landscapeRadio">(Landscape)</label>
+                                    </div>
+                                </div>
+
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportPdf">
+                                    <i class="fa fa-file-pdf text-danger"></i> {{ __('label.export_to_pdf') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Add New Record Button -->
+                    @if(add(Auth::user()->role_ids,$active_menu_id))
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
+                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
+                        </button>
+                    @endif
+                </div>
+            </div>
         </div>
         <hr>
         <div class="table-responsive text-nowrap">
@@ -104,18 +108,6 @@
                            @foreach($books as $book)
                                  <option value="{{ $book->id }}"  wire:key="book-search-{{ $book->id }}">
                                     {{ $book->name }}
-                                 </option>
-                           @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">{{ __('label.course_type') }}</label>
-                        <select class="form-select" wire:model="search.course_type_id">
-                           <option value="">{{ __('label.all') }}</option>
-                           @foreach($course_types as $type)
-                                 <option value="{{ $type->id }}"  wire:key="type-search-{{ $type->id }}">
-                                    {{ $type->name }}
                                  </option>
                            @endforeach
                         </select>
@@ -211,11 +203,6 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
                             </th>
-
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="course_type_id">
-                                {{ __('label.course_type') }}
-                            </th>
                             <th>
                                 {{ __('label.enrollment') }}
                             </th>
@@ -249,8 +236,6 @@
                                     {{ __('label.' . $waiting->status) }}
                                 </span>
                             </td>
-
-                            <td>{{ $waiting->courseType?->name }}</td>
                             <td>
                                 <a class="btn btn-success"
                                     href="{{ route('special-course-list', [
@@ -337,18 +322,7 @@
                                 @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                            </div>
                            @endif
-                          <div class="col mb-3">
-                                <label for="course_type_id" class="form-label">{{ __('label.course_type') }} <span style="color:red;">*</span></label>
-                                <select class="form-select @error('course_type_id') is-invalid @enderror" wire:model.lazy="course_type_id" id ="waiting_type_id">
-                                 <option value="">{{ __('label.select') }}</option>
-                                  @foreach($course_types as $type)
-                                        <option value="{{ $type->id }}"  wire:key="type-{{ $type->id }}">
-                                            {{ $type->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('course_type_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
+                          
                         </div>
                         <div class="row">
                             <div class="col mb-3">

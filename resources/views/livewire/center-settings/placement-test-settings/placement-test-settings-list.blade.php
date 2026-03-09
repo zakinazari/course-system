@@ -20,21 +20,25 @@
 
     <div class="card">
        
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header">
+      
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="card-title mb-2 mb-md-0">
+                    {{ $active_menu?->name }}
+                </h5>
+            
+                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                    <!-- Export Button -->
+                 
 
-            <h5 class="card-title mb-0">@if(App::getLocale()=='en') {{ $active_menu?->name_en }} @else {{ $active_menu?->name }}  @endif</h5>
-
-            <div class="d-flex align-items-center gap-2">
-
-                @if(add(Auth::user()->role_ids,$active_menu_id))
-                    <div class="d-flex align-items-center gap-2">
+                    <!-- Add New Record Button -->
+                    @if(add(Auth::user()->role_ids,$active_menu_id))
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }} 
+                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
                         </button>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
-
         </div>
         <hr>
         <div class="table-responsive text-nowrap">

@@ -31,6 +31,16 @@ return new class extends Migration
 
             $table->decimal('total_old', 5, 2)->nullable();
             $table->decimal('total_new', 5, 2)->nullable();
+
+            $table->enum('status_new', ['passed', 'failed'])->nullable();
+            $table->enum('status_old', ['passed', 'failed'])->nullable();
+
+            $table->integer('pass_mark_snapshot_old')->nullable();
+            $table->integer('pass_mark_snapshot_new')->nullable();
+
+            $table->integer('excellent_mark_snapshot_old')->nullable();
+            $table->integer('excellent_mark_snapshot_new')->nullable();
+
             $table->timestamps();
         });
     }

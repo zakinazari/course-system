@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Assessment\StudentCourseResult;
 use App\Models\Assessment\StudentCourseResultLog;
+use App\Models\Academic\Course;
 class SaveStudentResultsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -26,6 +27,10 @@ class SaveStudentResultsJob implements ShouldQueue
 
     public function handle()
     {
+        $course = Course::with('book:id,pass_mark,excellent_mark')
+            ->findOrFail($this->course_id);
+        $book = $course->book;
+
         $rows = [];
         $logs = [];
 
@@ -35,6 +40,11 @@ class SaveStudentResultsJob implements ShouldQueue
             $midterm    = $data['midterm'] ?? 0;
             $final      = $data['final'] ?? 0;
             $total      = min(100, $attendance + $cognitive + $midterm + $final);
+            
+            $pass_mark_snapshot      = $book->pass_mark;
+            $excellent_mark_snapshot = $book->excellent_mark;
+            $status = $this->calculateStatus($total, $book);
+
 
             $existing = StudentCourseResult::where('student_id', $student_id)
                         ->where('course_id', $this->course_id)
@@ -54,11 +64,19 @@ class SaveStudentResultsJob implements ShouldQueue
                     'cognitive_old' => $existing->cognitive,
                     'attendance_old' => $existing->attendance,
                     'total_old' => $existing->total,
+                    'status_old' => $existing->status,
+                    'pass_mark_snapshot_old' => $existing->pass_mark_snapshot,
+                    'excellent_mark_snapshot_old' => $existing->excellent_mark_snapshot,
+
                     'midterm_new' => $midterm,
                     'final_new' => $final,
                     'cognitive_new' => $cognitive,
                     'attendance_new' => $attendance,
                     'total_new' => $total,
+                    'status_new' => $status,
+                    'pass_mark_snapshot_new' => $pass_mark_snapshot,
+                    'excellent_mark_snapshot_new' => $excellent_mark_snapshot,
+
                     'user_id' => $this->user_id,
                 ];
             }
@@ -71,6 +89,9 @@ class SaveStudentResultsJob implements ShouldQueue
                 'midterm'    => $midterm,
                 'final'      => $final,
                 'total'      => $total,
+                'status'      => $status,
+                'pass_mark_snapshot'   => $pass_mark_snapshot,
+                'excellent_mark_snapshot'   => $excellent_mark_snapshot,
                 'user_id' => $existing->user_id ?? $this->user_id,
             ];
         }
@@ -79,7 +100,7 @@ class SaveStudentResultsJob implements ShouldQueue
         StudentCourseResult::upsert(
             $rows,
             ['student_id','course_id'],
-            ['attendance','cognitive','midterm','final','total','user_id']
+            ['attendance','cognitive','midterm','final','total','user_id','status','pass_mark_snapshot','excellent_mark_snapshot']
         );
 
         foreach ($logs as $log) {
@@ -90,5 +111,16 @@ class SaveStudentResultsJob implements ShouldQueue
         //     'student_id' => $student_id,
         //     'existing' => $existing ? $existing->toArray() : null,
         // ]);
+    }
+
+    private function calculateStatus(float $total, $book): ?string
+    {
+      
+        if (!is_null($book->pass_mark) && $total >= $book->pass_mark) {
+            return 'passed';
+        }elseif(!is_null($book->pass_mark)){
+            return 'failed';
+        }
+        return null;
     }
 }

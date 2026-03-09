@@ -216,11 +216,18 @@
                             <td>{{ $cs->student?->father_name }}</td>
                             <td>
                                 <div class="d-flex gap-2">
+                                    <div class="form-check form-check-success">
                                     <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="present"> <span class="badge bg-success"> Present </span> </label>
+                                    </div>
+                                    <div class="form-check form-check-danger">
                                     <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="absent" > <span class="badge bg-danger"> Absent </span></label>
+                                    </div>
+                                    <div class="form-check form-check-warning">
                                     <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="late"> <span class="badge bg-warning"> Late </span></label>
+                                    </div>
+                                    <div class="form-check form-check-info">
                                     <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="excused" > <span class="badge bg-info"> Excused </span></label>
-                                </div>
+                                    </div>
                             </td>
                             <td>@if(!empty($cs?->attendance_date)) {{ $cs?->attendance_date?->format('Y/m/d') }} @endif</td>
                         </tr>

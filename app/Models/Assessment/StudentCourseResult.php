@@ -19,7 +19,12 @@ class StudentCourseResult extends Model
         'cognitive',
         'final',
         'total',
+        'status',
+        'pass_mark_snapshot',
+        'excellent_mark_snapshot',
         'is_finalized',
+        'finalized_at',
+        'finalized_by',
         'user_id',
     ];
 

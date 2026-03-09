@@ -32,7 +32,6 @@
         'last_name' => __('label.last_name'),
         'father_name' => __('label.father_name'),
         'phone_no' => __('label.phone_no'),
-        'course_type_id' => __('label.course_type'),
         'program_id' => __('label.program'),
         'book_id' => __('label.book'),
         'shift_id' => __('label.shift'),
@@ -83,8 +82,6 @@
                             {{ $waiting->book?->name }}
                         @elseif($field==='shift_id')
                             {{ $waiting->shift?->name }}
-                        @elseif($field==='course_type_id')
-                            {{ $waiting->courseType?->name }}
                         @elseif($field==='branch_id')
                             {{ $waiting->branch?->name }}
                         @elseif($field==='student_code')

@@ -20,21 +20,25 @@
 
     <div class="card">
        
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header">
+      
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="card-title mb-2 mb-md-0">
+                    {{ $active_menu?->name }}
+                </h5>
+            
+                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                    <!-- Export Button -->
+                    
 
-            <h5 class="card-title mb-0">@if(App::getLocale()=='en') {{ $active_menu?->name_en }} @else {{ $active_menu?->name }}  @endif</h5>
-
-            <div class="d-flex align-items-center gap-2">
-
-                @if(add(Auth::user()->role_ids,$active_menu_id))
-                    <div class="d-flex align-items-center gap-2">
+                    <!-- Add New Record Button -->
+                    @if(add(Auth::user()->role_ids,$active_menu_id))
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }} 
+                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
                         </button>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
-
         </div>
         <hr>
         <div class="table-responsive text-nowrap">
@@ -131,7 +135,7 @@
     
     <!--/ Bootstrap Table with Header Dark -->
     <div class="modal fade" id="{{$modalId}}" tabindex="-1" aria-hidden="true" wire:ignore.self> 
-        <div class="modal-dialog" branch="document">
+        <div class="modal-dialog modal-lg" branch="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@if($editMode) {{ __('label.editing') }}  @else {{ __('label.adding') }} @endif @if(App::getLocale() =='en') {{ $active_menu?->name_en }} @elseif(App::getLocale()=='fa') {{ $active_menu?->name }} @endif</h5>
@@ -145,14 +149,13 @@
                                 <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name">
                                 @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col mb-3">
+                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.abbreviation') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('abbreviation') is-invalid @enderror" wire:model.lazy="abbreviation">
                                 @error('abbreviation') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
+
                         <div class="row">
                            <div class="col mb-3" wire:ignore>
                               <label class="form-label">{{ __('label.program') }} <span style="color:red;">*</span></label>
@@ -168,6 +171,24 @@
                            @error('program_id')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                            @enderror
+
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.fee') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('fee') is-invalid @enderror" wire:model.lazy="fee">
+                                @error('fee') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.pass_mark') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('pass_mark') is-invalid @enderror" wire:model.lazy="pass_mark">
+                                @error('pass_mark') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.excellent_mark') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('excellent_mark') is-invalid @enderror" wire:model.lazy="excellent_mark">
+                                @error('excellent_mark') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col mb-3">

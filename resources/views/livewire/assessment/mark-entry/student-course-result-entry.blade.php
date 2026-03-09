@@ -149,15 +149,6 @@
                            @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">{{ __('label.status') }}</label>
-                        <select class="form-select" wire:model="search.status">
-                           <option value="">{{ __('label.all') }}</option>
-                              <option value="excellent">{{ __('label.excellent_student') }}</option>
-                              <option value="accepted"> {{ __('label.accepted_student') }}</option>
-                              <option value="week"> {{ __('label.week_student') }}</option>
-                        </select>
-                    </div>
                     <div class="col-md-1">
                         <button type="submit" class="btn btn-primary">
                             {{ __('label.search') }}

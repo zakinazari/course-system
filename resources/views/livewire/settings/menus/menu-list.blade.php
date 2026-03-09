@@ -24,16 +24,25 @@
     <!-- end header -->
 
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header">
+      
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="card-title mb-2 mb-md-0">
+                    {{ $active_menu?->name }}
+                </h5>
+            
+                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                    <!-- Export Button -->
+                 
 
-            <h5 class="card-title mb-0">{{ $active_menu?->name }} </h5>
-            @if(add(Auth::user()->role_ids,$active_menu_id))
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                    <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
-                </button>
+                    <!-- Add New Record Button -->
+                    @if(add(Auth::user()->role_ids,$active_menu_id))
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
+                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
+                        </button>
+                    @endif
+                </div>
             </div>
-            @endif
         </div>
         <hr>
         <div class="table-responsive text-nowrap">
@@ -181,16 +190,6 @@
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.menu_name',locale:'pa') }}</label>
-                                <input type="text" id="nameBasic" class="form-control @error('name_pa') is-invalid @enderror" wire:model.lazy="name_pa">
-                                @error('name_pa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.menu_name',locale:'fa') }}</label>
-                                <input type="text" id="nameBasic" class="form-control @error('name_fa') is-invalid @enderror" wire:model.lazy="name_fa">
-                                @error('name_fa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.menu_name',locale:'en') }}</label>
                                 <input type="text" id="nameBasic" class="form-control @error('name_en') is-invalid @enderror" wire:model.lazy="name_en">

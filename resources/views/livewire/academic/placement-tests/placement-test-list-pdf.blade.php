@@ -69,7 +69,7 @@
         @foreach($tests as $i => $test)
             <tr>
                 @foreach($fields as $field)
-
+                    
                     <td>
 
                         @if($field === 'no')

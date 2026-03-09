@@ -123,6 +123,13 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.center-settings.placement-test-settings.placement-test-settings-list-page',['menu_id' => $menu_id]);
     })->name('placement-test-settings');
 
+    Route::get('/discount-providers/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.discount-providers.discount-providers-list-page',['menu_id' => $menu_id]);
+    })->name('discount-providers');
+
     // -----start academic---------------------------
     Route::get('/visitors/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
@@ -263,8 +270,31 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.assessment.mark-entry.student-course-result-entry-page', ['menu_id' => $menu_id]);
     })->whereNumber('menu_id')->name('mark-entry');
 
+    Route::get('student-course-result-list/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.assessment.student-result.student-course-result-list-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('student-course-result-list');
+
     // -----------end assessment-------------------
 
+    // ----------start Financial-----------------------------
+    Route::get('student-fees/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.student-fees.student-fees-search-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('student-fees');
+
+    Route::get('student-financial-profile/{menu_id?}/{student_id?}', function ($menu_id = null,$student_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.student-fees.student-financial-profile-page', ['menu_id' => $menu_id,'student_id'=>$student_id]);
+    })->whereNumber('menu_id')->name('student-financial-profile');
+
+    // ----------end Financial-----------------------------
 
     // -------start Hr----------------------
     Route::get('/employees/{menu_id?}', function ($menu_id = null) {

@@ -21,7 +21,6 @@ class CourseWaitingList extends Model
         'program_id',
         'book_id',
         'shift_id',
-        'course_type_id',
         'status',
         'user_id',
     ];
@@ -52,10 +51,6 @@ class CourseWaitingList extends Model
         return $this->belongsTo(Book::class, 'book_id');
     }
 
-    public function courseType(): BelongsTo
-    {
-        return $this->belongsTo(CourseType::class, 'course_type_id');
-    }
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class, 'shift_id');

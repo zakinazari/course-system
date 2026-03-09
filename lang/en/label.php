@@ -36,6 +36,7 @@ return [
     'add' => 'Add',
     'edit' => 'Edit',
     'delete' => 'Delete',
+    'remove' => 'Remove',
     'save' => 'Save',
     'submit' => 'Submit',
     'update' => 'Update',
@@ -307,7 +308,7 @@ return [
 
     //----------------start students------------------
     'student' => 'Student',
-    'student_code' => 'Student Code',
+    'student_code' => 'Student ID',
     'registration_date' => 'Registration Date',
     'address' => 'Address',
     'tazkira_no' => 'Tazkira No',
@@ -403,9 +404,66 @@ return [
 
     'excellent_student'=>'Excellent Student',
     'accepted_student'=>'Accepted Student',
-    'week_student'=>'Week Student',
+    'weak_student'=>'Weak Student',
+
+    'pass_mark'=>'Pass Mark',
+    'excellent_mark'=>'Excellent Mark',
+    'fee'=>'Fee',
     // -----------end Assessment--------------------------
     
+    // ----------start Financial------------------------
+    'financial_profile'=>'Financial Profile',
+    'student_course'=>'Student Course',
+    'discount_type'=>'Discount Type',
+    'percentage'=>'Percentage',
+    'fixed'=>'Fixed',
+    'no_discount'=>'No Discount',
+    'discount_value'=>'Discount Value',
+    'note'=>'Note',
+    'fee_amount'=>'Fee Amount',
+    'total_amount'=>'Total Amount',
+    'paid_amount'=>'Paid Amount',
+    'remaining_amount'=>'Remaining Amount',
+
+    'payment_type'=>'Payment Type',
+    'full'=>'Full',
+    'installments'=>'Installments',
+    'installment'=>'Installment',
+    'installment_no'=>'Installment No',
+    'amount'=>'Amount',
+    'due_date'=>'Due Date',
+    'add_installment'=>'Add Installment',
+    'payment'=>'Payment',
+    'pay'=>'Pay',
+    'paid'=>'Paid',
+    'student_course_fee_receipt'=>' Student Course Fee Receipt',
+    'installment_paying_message'=>'Are you sure you want to pay this installment?',
+
+    'bill_no'=>'Bill No',
+    'payment_date'=>'Payment Date',
+    'print_date'=>'Print Date',
+    'total_course_fee'=>'Total Course Fee',
+    'total_paid'=>'Total Paid',
+    'remaining_balance'=>'Remaining Balance',
+    'cashier'=>'Cashier',
+    'signature'=>'Signature',
+
+    'discount_provider'=>'Discount Provider',
+    'monthly_discount_total'=>'Monthly Discount Total',
+    'monthly_discount_total.required'=>'Monthly Discount Total is required',
+
+    'course_id.required' => 'Course is required.',
+    'payment_type.required' => 'Payment type is required.',
+    'fee_amount.required' => 'Fee amount is required.',
+    'fee_amount.numeric' => 'Fee amount must be a number.',
+    'total_amount.required' => 'Total amount is required.',
+    'discount_reason' => 'Discount Reason',
+    'discount_reason.required' => 'Discount Reason is required',
+    
+    'installments.*.amount.required' => 'Installment amount is required.',
+    'installments.*.due_date.required' => 'Installment date is required.',
+    // ----------end Financial------------------------
+
     // -----------start hr -----------------
     'employee' => 'Employee',
     'employee_code' => 'Employee Code',

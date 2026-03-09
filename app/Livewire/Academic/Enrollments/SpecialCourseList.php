@@ -332,7 +332,6 @@ class SpecialCourseList extends Component
                     'program_id' => $this->program_id,
                     'book_id' => $this->book_id,
                     'shift_id' => $this->shift_id,
-                    'course_type_id' => 1,
                 ],
                 [
                     'status' => 'waiting',

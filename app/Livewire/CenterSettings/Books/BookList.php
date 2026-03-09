@@ -63,7 +63,7 @@ class BookList extends Component
         $this->programs = Program::all();
     }
 
-    public $name,$abbreviation,$book_id, $program_id,$status = 'active';
+    public $name,$abbreviation,$book_id, $program_id,$status = 'active',$fee,$pass_mark,$excellent_mark;
 
     public function resetInputFields(){
         $this->resetExcept([
@@ -132,6 +132,9 @@ class BookList extends Component
                 'abbreviation' => $this->abbreviation,
                 'program_id' => $this->program_id,
                 'status' => $this->status,
+                'fee' => $this->fee,
+                'pass_mark' => $this->pass_mark,
+                'excellent_mark' => $this->excellent_mark,
             ]);
             // ---start system log-----------
             SystemLog::create([
@@ -158,6 +161,9 @@ class BookList extends Component
         $this->abbreviation = $book->abbreviation;
         $this->program_id = $book->program_id;
         $this->status = $book->status;
+        $this->fee = $book->fee;
+        $this->pass_mark = $book->pass_mark;
+        $this->excellent_mark = $book->excellent_mark;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -176,6 +182,9 @@ class BookList extends Component
                 'abbreviation' => $this->abbreviation,
                 'program_id' => $this->program_id,
                 'status' => $this->status,
+                'fee' => $this->fee,
+                'pass_mark' => $this->pass_mark,
+                'excellent_mark' => $this->excellent_mark,
             ]);
 
             // ---start system log-----------

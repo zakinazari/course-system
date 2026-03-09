@@ -77,10 +77,9 @@ class WaitingStudents extends Component
         $this->branches =  Branch::all();
         $this->programs = Program::where('status','active')->get();
         $this->shifts = Shift::all();
-        $this->course_types = CourseType::all();
     }
 
-    public $waiting_id,$program_id,$book_id,$course_type_id,$shift_id,$branch_id,
+    public $waiting_id,$program_id,$book_id,$shift_id,$branch_id,
     $status = 'waiting';
     public $student_id;
     public function resetInputFields(){
@@ -103,14 +102,13 @@ class WaitingStudents extends Component
             'book_id' => null,
             'branch_id' => null,
             'status' => null,
-            'course_type_id' => null,
             'shift_id' => null,
             'student_id' => null,
         ];
 
     public function render()
     {
-        $waiting_students = CourseWaitingList::with('student','branch','courseType','program','book','shift')
+        $waiting_students = CourseWaitingList::with('student','branch','program','book','shift')
 
         ->when(!empty($this->search['identity']), function ($query) {
             $search = $this->search['identity'];
@@ -131,9 +129,7 @@ class WaitingStudents extends Component
         ->when(!empty($this->search['book_id']), function ($query) {
             $query->where('book_id',$this->search['book_id']);
         })
-        ->when(!empty($this->search['course_type_id']), function ($query) {
-            $query->where('course_type_id',$this->search['course_type_id']);
-        })
+
         ->when(!empty($this->search['shift_id']), function ($query) {
             $query->where('shift_id',$this->search['shift_id']);
         })
@@ -153,7 +149,6 @@ class WaitingStudents extends Component
             'branch_id' => 'required',
             'program_id' => 'required',
             'book_id' => 'required',
-            'course_type_id' => 'required',
             'shift_id' => 'required',
         ];
     }
@@ -166,7 +161,6 @@ class WaitingStudents extends Component
             'branch_id.required'   => __('label.branch.required'),
             'program_id.required'   => __('label.program.required'),
             'book_id.required'   => __('label.book.required'),
-            'course_type_id.required'   => __('label.course_type.required'),
             'shift_type_id.required'   => __('label.shift.required'),
         ];
     }
@@ -190,7 +184,6 @@ class WaitingStudents extends Component
                     'program_id' => $this->program_id,
                     'book_id' => $this->book_id,
                     'shift_id' => $this->shift_id,
-                    'course_type_id' => $this->course_type_id,
                 ],
                 [
                     'status' => 'waiting',
@@ -222,7 +215,6 @@ class WaitingStudents extends Component
         $this->waiting_id = $id;  
         $this->student_id = $waiting->student_id;
         $this->branch_id = $waiting->branch_id;
-        $this->course_type_id = $waiting->course_type_id;
         $this->program_id = $waiting->program_id;
         $this->loadProgramBook($this->program_id);
         $this->book_id = $waiting->book_id;
@@ -245,7 +237,6 @@ class WaitingStudents extends Component
                 ->where('program_id', $this->program_id)
                 ->where('book_id', $this->book_id)
                 ->where('shift_id', $this->shift_id)
-                ->where('course_type_id', $this->course_type_id)
                 ->where('id', '!=', $this->waiting_id)
                 ->exists();
 
@@ -262,7 +253,6 @@ class WaitingStudents extends Component
                 'program_id' => $this->program_id,
                 'book_id' => $this->book_id,
                 'shift_id' => $this->shift_id,
-                'course_type_id' => $this->course_type_id,
                 'status' => 'waiting',
                 'user_id' => Auth::id(),
             ]);
@@ -327,7 +317,6 @@ class WaitingStudents extends Component
             'last_name',
             'father_name',
             'phone_no',
-            'course_type_id',
             'program_id',
             'book_id',
             'shift_id',
@@ -344,7 +333,7 @@ class WaitingStudents extends Component
             }
         }
 
-        $query = CourseWaitingList::with('student','branch','courseType','program','book','shift')
+        $query = CourseWaitingList::with('student','branch','program','book','shift')
 
             ->when(!empty($this->search['identity']), function ($query) {
                 $search = $this->search['identity'];
@@ -363,9 +352,6 @@ class WaitingStudents extends Component
             })
             ->when(!empty($this->search['book_id']), function ($query) {
                 $query->where('book_id',$this->search['book_id']);
-            })
-            ->when(!empty($this->search['course_type_id']), function ($query) {
-                $query->where('course_type_id',$this->search['course_type_id']);
             })
             ->when(!empty($this->search['shift_id']), function ($query) {
                 $query->where('shift_id',$this->search['shift_id']);

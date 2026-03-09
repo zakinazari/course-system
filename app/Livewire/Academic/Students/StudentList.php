@@ -76,7 +76,7 @@ class StudentList extends Component
         $this->branches =  Branch::all();
     }
 
-     public $name,$last_name,$father_name,$phone_no,$tazkira_no,$registration_date,$address,
+    public $name,$last_name,$father_name,$phone_no,$tazkira_no,$registration_date,$address,
         $st_id, 
         $branch_id,
         $photo,
@@ -117,9 +117,6 @@ class StudentList extends Component
         })
         ->orderBy('id','desc')
         ->paginate($this->perPage);
-        if(!$this->editMode){
-            $this->registration_date = now()->format('Y-m-d\TH:i');
-        }
 
         return view('livewire.academic.students.student-list',compact('students'));
     }

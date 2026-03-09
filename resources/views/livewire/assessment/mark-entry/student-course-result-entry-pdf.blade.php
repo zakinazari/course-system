@@ -85,6 +85,29 @@
                             {{ $sc->result?->final }}
                         @elseif($field==='total')
                             {{ $sc->result?->total }}
+                        @elseif($field==='status')
+                            @php
+                                $status = $sc->result->status;
+
+                                $color = match($status) {
+                                    'passed' => '#198754',  // سبز
+                                    'failed'  => '#dc3545',  // قرمز
+                                    'late'    => '#ffc107',  // زرد
+                                    'excused' => '#0dcaf0',  // آبی
+                                    default   => '#6c757d',  // خاکستری
+                                };
+                            @endphp
+
+                            <span style="
+                                background-color: {{ $color }};
+                                color: #fff;
+                                padding: 4px 8px;
+                                border-radius: 4px;
+                                font-size: 12px;
+                                display: inline-block;
+                            ">
+                                {{ ucfirst($status) }}
+                            </span>
                         @else
                             {{ $sc->student?->$field }}
                         @endif

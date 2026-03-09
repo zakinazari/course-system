@@ -86,7 +86,7 @@ class ProgramList extends Component
         return view('livewire.center-settings.programs.program-list',compact('programs'));
     }
 
-     protected function rules()
+    protected function rules()
     {
         return [
             'name' => 'required|string|max:255|unique:programs,name,' . $this->program_id,

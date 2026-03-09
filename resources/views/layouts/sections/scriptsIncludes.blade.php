@@ -44,7 +44,27 @@
     // });
 }
 
-  </script>
+
+ function printDiv(id, header) {
+        var TitleText = '';
+        if ($('#' + header).val() != null) {
+            TitleText = '<h2 id="printHeader"><strong>' + $('#' + header).val() + '</strong></h2>';
+        }
+        $('#' + id).printThis({
+            debug: false, //* show the iframe for debugging
+            importCSS: true, //* import page CSS
+            importStyle: true, //* import style tags
+            printContainer: true, //* grab outer container as well as the contents of the selector
+            loadCSS: false,/* path to additional css file - us an array [] for multiple*/
+            pageTitle: "", //* add title to print page
+            removeInline: false, //* remove all inline styles from print elements
+            printDelay: 333, //* variable print delay; depending on complexity a higher value may be necessary
+            header: TitleText, // or null,               //* prefix to html
+            formValues: false
+        });
+    }
+    
+</script>
 
 
 
