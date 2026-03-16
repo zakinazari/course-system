@@ -10,6 +10,7 @@ class StudentCourseFeeInstallment extends Model
         'student_course_fee_id',
         'due_date',
         'amount',
+        'cancel_reason',
         'status',
     ];
 

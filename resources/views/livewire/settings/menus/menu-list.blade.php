@@ -56,11 +56,11 @@
                             wire:model.defer="search.identity">
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-3" wire:ignore>
                         <label class="form-label">{{ __('label.main_menu') }}</label>
-                        <select class="form-control"
+                        <select class="form-control select2"
                             wire:model.defer="search.main_menu"
-                            wire:change="loadSubMenus($event.target.value)">
+                            wire:change="loadSubMenus($event.target.value)" id="main_menu_search_id">
                             <option value="">{{ __('label.all') }}</option>
                             @foreach($main_menus as $mm)
                                 <option value="{{ $mm->id }}">
@@ -72,7 +72,7 @@
 
                     <div class="col-md-3">
                         <label class="form-label">{{ __('label.sub_menu') }}</label>
-                        <select class="form-control" wire:model.defer="search.sub_menu">
+                        <select class="form-control" wire:model.defer="search.sub_menu" id="sub_menu_search_id">
                             <option value="">{{ __('label.all') }}</option>
                             @foreach($sub_menus as $sm)
                                 <option value="{{ $sm->id }}">
@@ -212,7 +212,7 @@
                             @if($show_parent)
                                 <div class="col-md-12" id="div_parent">
                                     <label class="form-label">{{ __('label.parent') }}</label>
-                                    <select class="form-control @error('parent') is-invalid @enderror" wire:model="parent">
+                                    <select class="form-control select2 @error('parent') is-invalid @enderror" wire:model="parent" id="parent_menu_id">
                                         <option value="">{{ __('label.select') }}</option>
                                         @foreach($parents as $m)
                                             <option value="{{ $m->id }}">
@@ -256,7 +256,7 @@
                         <div class="row">
                             <div class="col mb-3">
                                 <label class="form-label" for="multicol-country1">{{ __('label.section') }}</label>
-                                <select id="multicol-country1" class="form-control select2 @error('menu_section') is-invalid @enderror"  wire:model.lazy="menu_section" >
+                                <select id="multicol-country1" class="form-control  @error('menu_section') is-invalid @enderror"  wire:model.lazy="menu_section" >
                                     <option value="">{{ __('label.select') }}</option>
                                     @foreach($menu_sections as $section)
                                         <option value="{{ $section->id }}">
@@ -303,3 +303,52 @@
         </div>
     </div>
 </div>
+@script
+<script>
+document.addEventListener("livewire:initialized", function () {
+        function initSelect2() {
+
+            $('.select2').each(function () {
+                const $select = $(this);
+                const $modal  = $select.closest('.modal');
+
+            
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.select2({
+                    width: '100%',
+                    dropdownParent: $modal.length ? $modal : $(document.body)
+                });
+            });
+
+            $('#main_menu_search_id').off('change').on('change', function () {
+                $wire.set('search.main_menu', $(this).val());
+                $wire.call('loadSubMenus', $(this).val());
+            });
+            $('#parent_menu_id').off('change').on('change', function () {
+                $wire.set('parent', $(this).val());
+            });
+
+        }
+
+        initSelect2();
+
+        Livewire.hook('morphed', () => {
+            initSelect2();
+        });
+
+        $(document).on('shown.bs.modal', function () {
+            initSelect2();
+        });
+
+
+    });
+
+    Livewire.on('show-print-preview', () => {
+        printDiv('printArea');
+    });
+    
+</script>
+@endscript

@@ -133,58 +133,52 @@
 
     <div class="card mt-3">
        
-        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-
-            <!-- عنوان کارت -->
-            <h5 class="card-title mb-0">
-                @if(App::getLocale()=='en')
-                    {{ $active_menu?->name_en }}
-                @else
+        <div class="card-header">
+      
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="card-title mb-2 mb-md-0">
                     {{ $active_menu?->name }}
-                @endif
-            </h5>
+                </h5>
+            
+                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                    <!-- Export Button -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary">
+                            <i class="fa fa-file-export"></i> {{ __('label.export') }}
+                        </button>
 
-            <!-- دکمه‌ها -->
-            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 w-100 w-md-auto">
+                        <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
 
-                <!-- Export Button -->
-                <div class="btn-group mb-2 mb-md-0">
-                    <button type="button" class="btn btn-secondary">
-                        <i class="fa fa-file-export"></i> {{ __('label.export') }}
-                    </button>
+                        <ul class="dropdown-menu">
+                            <li class="px-3 py-2">
+                                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="portraitRadio" wire:model="pdfOrientation" value="portrait">
+                                        <label class="form-check-label" for="portraitRadio">(Portrait)</label>
+                                    </div>
 
-                    <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="visually-hidden">Toggle Dropdown</span>
-                    </button>
-
-                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                        <li class="px-3 py-2">
-                            <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" id="portraitRadio" wire:model="pdfOrientation" value="portrait">
-                                    <label class="form-check-label" for="portraitRadio">(Portrait)</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="landscapeRadio" wire:model="pdfOrientation" value="landscape">
+                                        <label class="form-check-label" for="landscapeRadio">(Landscape)</label>
+                                    </div>
                                 </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" id="landscapeRadio" wire:model="pdfOrientation" value="landscape">
-                                    <label class="form-check-label" for="landscapeRadio">(Landscape)</label>
-                                </div>
-                            </div>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportPdf">
+                                    <i class="fa fa-file-pdf text-danger"></i> {{ __('label.export_to_pdf') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
 
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportPdf">
-                                <i class="fa fa-file-pdf text-danger"></i> {{ __('label.export_to_pdf') }}
-                            </a>
-                        </li>
-                    </ul>
+                    <!-- Add New Record Button -->
+                    @if(add(Auth::user()->role_ids,$active_menu_id))
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
+                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
+                        </button>
+                    @endif
                 </div>
-
-                <!-- Add New Record Button -->
-                @if(add(Auth::user()->role_ids,$active_menu_id))
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                        <i class="bi bi-plus-lg"></i> {{ __('label.add_student_to_course') }}
-                    </button>
-                @endif
-
             </div>
         </div>
         <hr>

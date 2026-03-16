@@ -30,10 +30,9 @@ return new class extends Migration
             $table->date('final_exam_date')->nullable();
             $table->enum('status', [
                 'draft',
-                'scheduled',
                 'ongoing',
-                'completed',
-                'cancelled'
+                'cancelled',
+                'archived',
             ])->default('draft');
 
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();

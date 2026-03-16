@@ -12,13 +12,13 @@ use DB;
 class StudentFinancialProfile extends Component
 {
     
-    // -------start generals--------------------
+    // -------start generals------------
 
     protected $paginationTheme = 'bootstrap';   
     public $active_menu_id;
     public $active_menu;
     public $student;
-    // ---------------------------------end generals-------------
+    // -------end generals-------------
     
     public function mount($active_menu_id = null, $student_id = null)
     {
@@ -32,7 +32,9 @@ class StudentFinancialProfile extends Component
     }
 
     public $activeTab = 'course_fee';
-
+    protected $queryString = [
+        'activeTab'
+    ];
     public function changeTab($tab)
     {
         $this->activeTab = $tab;
@@ -42,5 +44,4 @@ class StudentFinancialProfile extends Component
     {
         return view('livewire.financial.student-fees.student-financial-profile');
     }
-
 }

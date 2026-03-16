@@ -249,7 +249,7 @@
                                 @error('father_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.phone_no') }}</label>
+                                <label for="nameBasic" class="form-label">{{ __('label.phone_no') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('phone_no') is-invalid @enderror" wire:model.lazy="phone_no">
                                 @error('phone_no') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>

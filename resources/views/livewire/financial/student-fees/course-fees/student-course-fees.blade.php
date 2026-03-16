@@ -130,36 +130,29 @@
                     <thead class="table-dark">
                         <tr>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="no">
                                 {{ __('label.NO') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="course">
                                 {{ __('label.course') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="fee_amount">
                                 {{ __('label.fee_amount') }}
                             </th>
 
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="discount_value">
                                 {{ __('label.discount_value') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="total_amount">
                                 {{ __('label.total_amount') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="remaining_amount">
-                                {{ __('label.remaining_amount') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="paid_amount">
                                 {{ __('label.paid_amount') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
+                                {{ __('label.remaining_amount') }}
+                            </th>
+                          
+                            <th>
                                 {{ __('label.status') }}
                             </th>
                             <th>
@@ -177,10 +170,10 @@
                             <td>{{ ($course_fees->currentPage() - 1) * $course_fees->perPage() + $i + 1 }}</td>
                             <td>{{ $fee->course?->name }}</td>
                             <td>{{ $fee->fee_amount }}</td>
-                            <td>{{ $fee->discount_value }}</td>
+                            <td>{{ $fee->discount_value }} @if($fee->discount_type=='percentage') % @endif</td>
                             <td>{{ $fee->total_amount }}</td>
-                            <td>{{ $fee->remaining_amount }}</td>
                             <td>{{ $fee->paid_amount }}</td>
+                            <td>{{ $fee->remaining_amount }}</td>
 
                             <td>
                                 @if($fee->status=='unpaid')
@@ -238,20 +231,7 @@
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
                         <div class="row">
-                          @if(!auth()->user()->branch_id)
-                           <div class="col mb-3">
-                              <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
-                              <select class="form-select @error('branch_id') is-invalid @enderror" wire:model.lazy="branch_id" id ="branch_id">
-                                 <option value="">{{ __('label.select') }}</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}"  wire:key="branch-{{ $branch->id }}">
-                                            {{ $branch->name }}
-                                        </option>
-                                    @endforeach
-                              </select>
-                                @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                           </div>
-                           @endif
+                        
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.student_course') }}</label>
                                 <select  class="form-select @error('course_id') is-invalid @enderror" wire:model.lazy ="course_id">
@@ -284,27 +264,29 @@
                             </div>
                          
                         </div>
-                        <div class="row">
+                        <div class="row" >
                              @if(!empty($discount_type))
-                             <div class="col mb-3">
+                             <div class="col mb-3" >
                                 <label for="nameBasic" class="form-label">{{ __('label.discount_provider') }}: @if($discount_provider_id)
-                                    <span class="text-success mt-2">
+                                    <span class="@if($remaining_discount==0) text-danger @else text-success @endif mt-2">
                                         Remaining discount this month:
                                         <strong>{{ number_format($remaining_discount,2) }}</strong>
                                     </span>
                                     @endif
                                 </label>
-                                <select  class="form-select select2 @error('discount_provider_id') is-invalid @enderror" wire:model.lazy ="discount_provider_id" id="discount_provider_id">
-                                    <option value="">{{ __('label.select') }}</option>
-                                    @foreach($discount_providers as $provider)
-                                    <option value="{{ $provider->id }}">{{ $provider->name }} {{ $provider->last_name }}</option>
-                                    @endforeach
-                                </select>
+                                <div wire:ignore>
+                                    <select  class="form-select select2 @error('discount_provider_id') is-invalid @enderror" wire:model.lazy="discount_provider_id" id="discount_provider_id">
+                                        <option value="">{{ __('label.select') }}</option>
+                                        @foreach($discount_providers as $provider)
+                                        <option value="{{ $provider->id }}">{{ $provider->name }} {{ $provider->last_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 @if($discount_provider_id)
                                 <div class="mt-2">
 
                                     <div class="progress">
-                                        <div class="progress-bar bg-info"
+                                        <div class="progress-bar @if($remaining_discount==0) bg-danger @else bg-info @endif"
                                             role="progressbar"
                                             style="width: {{ $discount_progress }}%">
                                         </div>
@@ -335,7 +317,7 @@
                         <div class="row">
                             @if(!empty($discount_type))
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label" >{{ __('label.discount_value') }} </label>
+                                <label for="nameBasic" class="form-label" >{{ __('label.discount_value') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('discount_value') is-invalid @enderror" wire:model.lazy="discount_value">
                                 @error('discount_value') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 @if($discount_error)<div class="invalid-feedback d-block">{{ $discount_error }}</div>@endif
@@ -434,7 +416,6 @@
                                 <th>
                                     {{ __('label.payment') }}
                                 </th>
-                                
                             </tr>
 
                         </thead>
@@ -449,31 +430,35 @@
                                 <td>
                                     @if($installment->status=='unpaid')
                                     <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($installment->status) }}</span>
-                                    @elseif($installment->status=='partial')
-                                    <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ ucfirst($installment->status) }}</span>
+                                   
+                                    @elseif($installment->status=='cancelled')
+                                    <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($installment->status) }}</span>
                                     @elseif($installment->status=='paid')
                                     <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($installment->status) }}</span>
                                     @endif
                                 </td>
                                 <td>
-                                @if($installment->status != 'paid')
-
+                                @if($installment->status == 'unpaid')
+                                 <button
+                                    class="btn btn-danger btn-sm rounded-pill"
+                                    wire:click="openCancelModal({{ $installment->id }})">
+                                    <i class="bx bx-x"></i> {{ __('label.cancel') }}
+                                </button>
                                 <button
                                     class="btn btn-success btn-sm rounded-pill"
-                                    wire:click="payInstallment({{ $installment->id }})"
-                                    wire:confirm="{{ __('label.installment_paying_message') }}">
+                                    wire:click="openPayModal({{ $installment->id }})">
                                     <i class="bx bx-credit-card"></i> {{ __('label.pay') }}
                                 </button>
-
-                                @else
+                                @elseif($installment->status == 'cancelled')
+                                    {{ $installment->cancel_reason }}
+                                @elseif($installment->status == 'paid')
 
                                 <span class="badge bg-success">{{ __('label.paid') }}</span>
-                                <button class="btn btn-primary btn-sm" wire:click="loadInstallmentForPrint({{ $installment->id }})">
-                                <i class="bx bx-printer"></i> {{ __('label.print') }}
+                                    <button class="btn btn-primary btn-sm" wire:click="loadInstallmentForPrint({{ $installment->id }})">
+                                    <i class="bx bx-printer"></i> {{ __('label.print') }}
                                 </button>
                                 @endif
                                 </td>
-                                
                             </tr>
                             @endforeach
                         </tbody>
@@ -486,11 +471,69 @@
         </div>
     </div>
 
+    <div class="modal fade" id="cancelInstallmentModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.cancel_installment') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('label.cancel_reason') }} <span style="color:red;">*</span></label>
+                        <textarea class="form-control @error('cancel_reason') is-invalid @enderror" wire:model="cancel_reason"></textarea>
+                    </div>
+                    @error('cancel_reason') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">{{__('label.close')}}</button>
+
+                    <button class="btn btn-danger" wire:click="cancelInstallment">
+                        {{ __('label.confirm_cancel') }}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="payInstallmentModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.pay_installment') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="alert alert-solid-danger" role="alert">
+                       Are you sure you want to pay this installment?
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">{{__('label.close')}}</button>
+
+                    <button class="btn btn-success" wire:click="payInstallment">
+                        {{ __('label.pay') }}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- --------------for print-------------------------------- -->
    @if(!empty($installmentToPrint))
     <div id="printArea" style="display:none;">
+        <!----------- one-------- -->
         <div class="bill-container" style="width:700px;margin:auto;font-family:Arial;border:1px solid #ddd;padding:20px;border-radius:8px;">
-
             <!-- Logo -->
             <div style="text-align:center;margin-bottom:10px;">
                 <img src="{{ asset('logo.png') }}" alt="Logo" style="height:70px;">
@@ -571,7 +614,91 @@
                     {{ __('label.signature') }}
                 </div>
             </div>
+        </div>
+        <br>
+        <br>
+         <!----------- two-------- -->
+        <div class="bill-container" style="width:700px;margin:auto;font-family:Arial;border:1px solid #ddd;padding:20px;border-radius:8px;">
+            <!-- Logo -->
+            <div style="text-align:center;margin-bottom:10px;">
+                <img src="{{ asset('logo.png') }}" alt="Logo" style="height:70px;">
+            </div>
 
+            <!-- Title -->
+            <h2 style="text-align:center;font-weight:bold;margin-bottom:25px;">
+                {{ __('label.student_course_fee_receipt') }}
+            </h2>
+
+            <!-- Student Info -->
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                <tr>
+                    <td><b>{{ __('label.student') }}</b></td>
+                    <td>{{ $student->name ?? '' }} {{ $student->last_name ?? '' }}</td>
+
+                    <td><b>{{ __('label.print_date') }}</b></td>
+                    <td>{{ now()->format('Y/m/d H:i A') }}</td>
+                </tr>
+                <tr>
+                    <td><b>{{ __('label.course') }}</b></td>
+                    <td>{{ $studentCourseFee->course->name ?? '' }}</td>
+
+                    <td><b>{{ __('label.bill_no') }}</b></td>
+                    <td>#{{ $installmentToPrint?->payments?->id }}</td>
+                </tr>
+            </table>
+
+            <!-- Installment Info -->
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;border:1px solid #ddd;">
+                <thead style="background:#f5f5f5;">
+                    <tr>
+                        <th style="padding:8px;border:1px solid #ddd;">{{ __('label.payment_date') }}</th>
+                        <th style="padding:8px;border:1px solid #ddd;">{{ __('label.amount') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:8px;border:1px solid #ddd;">{{ $installmentToPrint?->payments?->payment_date->format('Y/m/d') }}</td>
+                        <td style="padding:8px;border:1px solid #ddd;">{{ $installmentToPrint?->payments?->amount }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Fee Summary -->
+            <table style="width:100%;border-collapse:collapse;">
+                <tr>
+                    <td style="text-align:right;"><b>{{ __('label.total_course_fee') }}:</b></td>
+                    <td style="width:150px;text-align:right;">
+                        {{ $studentCourseFee->total_amount ?? '' }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="text-align:right;"><b>{{ __('label.total_paid') }}:</b></td>
+                    <td style="text-align:right;">
+                        {{ $studentCourseFee->paid_amount }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="text-align:right;"><b>{{ __('label.remaining_balance') }}:</b></td>
+                    <td style="text-align:right;font-weight:bold;">
+                        {{ $studentCourseFee->remaining_amount }}
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Footer -->
+            <div style="margin-top:40px;display:flex;justify-content:space-between;">
+                <div>
+                    ____________________<br>
+                    {{ __('label.cashier') }}
+                </div>
+
+                <div>
+                    ____________________<br>
+                    {{ __('label.signature') }}
+                </div>
+            </div>
         </div>
     </div>
     @endif
@@ -580,44 +707,57 @@
 @script
 
 <script>
-    document.addEventListener("livewire:initialized", function () {
-        function initSelect2() {
+document.addEventListener("livewire:initialized", function () {
+    function initSelect2() {
+        $('.select2').each(function () {
+            const $select = $(this);
+            const $modal  = $select.closest('.modal');
 
-            $('.select2').each(function () {
-                const $select = $(this);
-                const $modal  = $select.closest('.modal');
+           
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
 
-            
-                if ($select.hasClass('select2-hidden-accessible')) {
-                    $select.select2('destroy');
-                }
-
-                $select.select2({
-                    width: '100%',
-                    dropdownParent: $modal.length ? $modal : $(document.body)
-                });
+            $select.select2({
+                width: '100%',
+                dropdownParent: $modal.length ? $modal : $(document.body)
             });
+        });
 
-            $('#discount_provider_id').off('change').on('change', function () {
-                $wire.set('discount_provider_id', $(this).val());
-            });
-        }
+        
+        $('#discount_provider_id').off('change').on('change', function () {
+            @this.set('discount_provider_id', $(this).val());
+        });
+    }
 
+    
+    initSelect2();
+
+    
+    Livewire.hook('morphed', () => {
         initSelect2();
-
-        Livewire.hook('morphed', () => {
-            initSelect2();
-        });
-
-        $(document).on('shown.bs.modal', function () {
-            initSelect2();
-        });
-
-
     });
 
-    Livewire.on('show-print-preview', () => {
+   
+    Livewire.hook('message.processed', function (message, component) {
+        const $modal = $('#{{$modalId}}');
+        if ($modal.is(':visible')) {
+            initSelect2();
+        }
+    });
+
+
+    $(document).on('shown.bs.modal', function () {
+        initSelect2();
+    });
+});
+</script>
+  
+
+@endscript
+
+<script>
+    window.addEventListener('show-print-preview', () => {
         printDiv('printArea');
     });
 </script>
-@endscript

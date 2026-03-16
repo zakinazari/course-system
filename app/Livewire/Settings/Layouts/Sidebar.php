@@ -72,6 +72,7 @@ class Sidebar extends Component
                     ->with([
                         'subMenu' => function($q) use ($role_ids) {
                             $q->where('status', 1)
+                            ->where('id','<>',4)// menu of Menus, it is hidden for all users except developer
                             ->whereHas('permission', fn($qq) => $qq->whereIn('role_id', $role_ids)->where('action_id', 1))
                             ->orderBy('order', 'ASC')
                             ->with([

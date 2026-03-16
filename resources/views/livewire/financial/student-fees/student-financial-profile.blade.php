@@ -59,12 +59,12 @@
                 <div class="d-flex align-items-center flex-column">
                     <img class="img-fluid rounded my-4" src="{{ $student->photo?->thumbnail_url ?? asset('default.png') }}" height="110" width="110" alt="User avatar">
                     <div class="user-info text-center">
-                    <h5 class="mb-2">{{ $student->name }} {{ $student->last_name }}</h5>
+                    <h5 class="mb-2"> {{ $student->name }} {{ $student->last_name }}</h5>
                     <span class="badge bg-label-secondary">{{ $student->student_code }}</span>
                     </div>
                 </div>
                 </div>
-                <div class="d-flex justify-content-around flex-wrap my-4 py-3">
+                <!-- <div class="d-flex justify-content-around flex-wrap my-4 py-3">
                 <div class="d-flex align-items-start me-4 mt-3 gap-3">
                     <span class="badge bg-label-primary p-2 rounded"><i class="bx bx-check bx-sm"></i></span>
                     <div>
@@ -79,33 +79,33 @@
                     <span>Projects Done</span>
                     </div>
                 </div>
-                </div>
-                <h5 class="pb-2 border-bottom mb-4">Fees</h5>
+                </div> -->
+                <h5 class="pb-2 border-bottom mb-4">{{ __('label.fees') }}</h5>
                 <div class="info-container">
                     <ul class="nav nav-pills flex-column mb-3 fee-menu">
                         <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'course_fee' ? 'active' : '' }}" wire:click="changeTab('course_fee')">
-                                <i class="bx bx-user me-2 text-primary"></i> Course Fee
+                                <i class="bx bx-user me-2 text-primary"></i> {{ __('label.course_fee') }}
                             </a>
                         </li>
                         <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'book_fee' ? 'active' : '' }}" wire:click="changeTab('book_fee')">
-                                <i class="bx bx-book me-2 text-success"></i> Book Fee
+                                <i class="bx bx-book me-2 text-success"></i> {{ __('label.book_fee') }}
                             </a>
                         </li>
                         <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'registration_fee' ? 'active' : '' }}" wire:click="changeTab('registration_fee')">
-                                <i class="bx bx-detail me-2 text-warning"></i> Registration Fee
+                                <i class="bx bx-detail me-2 text-warning"></i> {{ __('label.registration_fee') }}
                             </a>
                         </li>
                         <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'card_fee' ? 'active' : '' }}" wire:click="changeTab('card_fee')">
-                                <i class="bx bx-id-card me-2 text-info"></i> Card Fee
+                                <i class="bx bx-id-card me-2 text-info"></i> {{ __('label.card_fee') }}
                             </a>
                         </li>
                         <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'exam_fee' ? 'active' : '' }}" wire:click="changeTab('exam_fee')">
-                                <i class="bx bx-file me-2 text-danger"></i> Exam Fee
+                                <i class="bx bx-file me-2 text-danger"></i> {{ __('label.exam_fee') }}
                             </a>
                         </li>
                     </ul>
@@ -129,22 +129,67 @@
 
                     <div wire:loading wire:target="changeTab" class="text-center my-5">
                         <div class="spinner-border" role="status"></div>
-                        <p class="mt-2 mb-0"> Loading...</p>
+                        <p class="mt-2 mb-0"> {{ __('label.loading') }}</p>
                     </div>
 
                     <div wire:loading.remove wire:target="changeTab" class="w-100">
-                        @if($activeTab == 'course_fee')
-                           @livewire('financial.student-fees.student-course-fees', ['active_menu_id' => $active_menu_id,'student_id'=>$student->id])
-                        @elseif($activeTab == 'book_fee')
-                            <h5> Book Fee</h5>
-                        
-                        @elseif($activeTab == 'registration_fee')
-                            <h5> Registration Fee</h5>
-                        @elseif($activeTab == 'card_fee')
-                            <h5> Card Fee</h5>
-                        @elseif($activeTab == 'exam_fee')
-                            <h5> Exam Fee</h5>
-                        @endif
+
+                        <!-- Course Fee Tab -->
+                        <div style="{{ $activeTab == 'course_fee' ? '' : 'display:none' }}">
+                            @livewire(
+                                'financial.student-fees.course-fees.student-course-fees', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'student_id' => $student->id
+                                ],
+                                key('course_fee_'.$student->id)
+                            )
+                        </div>
+
+                        <!-- Book Fee Tab -->
+                        <div style="{{ $activeTab == 'book_fee' ? '' : 'display:none' }}">
+                           Book Fee 
+                        </div>
+
+                        <!-- Registration Fee Tab -->
+                        <div style="{{ $activeTab == 'registration_fee' ? '' : 'display:none' }}">
+                            @livewire(
+                                'financial.student-fees.other-fees.student-other-fees', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'student_id' => $student->id,
+                                    'fee_type' =>'registration',
+                                ],
+                                key('registration_fee_'.$student->id)
+                            )
+                        </div>
+
+                        <!-- Card Fee Tab -->
+                        <div style="{{ $activeTab == 'card_fee' ? '' : 'display:none' }}">
+                            @livewire(
+                                'financial.student-fees.other-fees.student-other-fees', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'student_id' => $student->id,
+                                    'fee_type' =>'card',
+                                ],
+                                key('card_fee_'.$student->id)
+                            )
+                        </div>
+
+                        <!-- Exam Fee Tab -->
+                        <div style="{{ $activeTab == 'exam_fee' ? '' : 'display:none' }}">
+                             @livewire(
+                                'financial.student-fees.other-fees.student-other-fees', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'student_id' => $student->id,
+                                    'fee_type' =>'exam',
+                                ],
+                                key('exam_fee_'.$student->id)
+                            )
+                        </div>
+
                     </div>
 
                 </div>

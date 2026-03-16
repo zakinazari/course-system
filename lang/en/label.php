@@ -174,17 +174,23 @@ return [
 
     // start dashboard labels-----------------------
     
-    'articles' => 'Articles',
-    'articles_overview' => 'Overall Articles Status',
+    'students' => 'Students',
+    'students_overview' => 'Overall Students Status',
 
-    'submitted_articles'       => 'Submitted Articles',
-    'initial_review_articles'  => 'Articles in Initial Screening',
-    'under_review_articles'    => 'Articles Under Peer Review',
-    'revised_articles'         => 'Articles Requiring Revision',
+    'new_students'       => 'New Students',
+    'active_students'  => 'Active Students',
+    'suspended_students'    => 'Suspended Students',
+    'inactive_students'         => 'Inactive Students',
     'accepted_articles'        => 'Accepted Articles',
-    'rejected_articles'        => 'Rejected Articles',
-    'published_articles'       => 'Published Articles',
+    'graduated_students'        => 'Graduated Students',
 
+    'branch_students'        => 'Branch Students',
+    'staffs'=>'Staffs',
+    'teachers'=>'Teachers',
+    'teachers_only'=>'Teachers Only',
+    'staffs_only'=>'ُStaffs Only',
+    'teacher_and_staff'=>'Teacher and  Staff',
+    'all_employees'=>'All Employees',
     'admins_count'      => 'Number of Administrators',
     'reviewers_count'   => 'Number of Reviewers',
     'authors_count'     => 'Number of Authors',
@@ -413,15 +419,24 @@ return [
     
     // ----------start Financial------------------------
     'financial_profile'=>'Financial Profile',
+    'fees'=>'Fees',
+    'loading'=>'Loading...',
+    'course_fee'=>'Course Fee',
+    'book_fee'=>'Book Fee',
+    'registration_fee'=>'Registration Fee',
+    'card_fee'=>'Card Fee',
+    'exam_fee'=>'Exam Fee',
     'student_course'=>'Student Course',
     'discount_type'=>'Discount Type',
     'percentage'=>'Percentage',
     'fixed'=>'Fixed',
     'no_discount'=>'No Discount',
     'discount_value'=>'Discount Value',
+    'discount_amount'=>'Discount Amount',
     'note'=>'Note',
     'fee_amount'=>'Fee Amount',
     'total_amount'=>'Total Amount',
+    'total'=>'Total',
     'paid_amount'=>'Paid Amount',
     'remaining_amount'=>'Remaining Amount',
 
@@ -436,10 +451,12 @@ return [
     'payment'=>'Payment',
     'pay'=>'Pay',
     'paid'=>'Paid',
+    'bill'=>'Bill',
     'student_course_fee_receipt'=>' Student Course Fee Receipt',
     'installment_paying_message'=>'Are you sure you want to pay this installment?',
 
     'bill_no'=>'Bill No',
+    'student_fee_receipt'=>' Student Fee Receipt',
     'payment_date'=>'Payment Date',
     'print_date'=>'Print Date',
     'total_course_fee'=>'Total Course Fee',
@@ -462,16 +479,22 @@ return [
     
     'installments.*.amount.required' => 'Installment amount is required.',
     'installments.*.due_date.required' => 'Installment date is required.',
+
+    'cancel_installment'=>'Cancel Installment',
+    'pay_installment'=>'Pay Installment',
+    'confirm_cancel'=>'Confirm Cancel',
+    'cancel_reason'=>'Cancel Reason',
+
+    'amount.required'=>'Amount is required',
+    'note.required'=>'Note is required',
+    'fee_type'=>'Fee Type',
     // ----------end Financial------------------------
 
     // -----------start hr -----------------
     'employee' => 'Employee',
-    'employee_code' => 'Employee Code',
+    'employee_code' => 'Employee ID',
     'hire_date' => 'Hire Date',
     'email' => 'Email',
     'role' => 'Role',
     // -----------end hr -------------------
-
-
-   
 ];

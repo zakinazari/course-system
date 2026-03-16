@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Financial\StudentFees;
+namespace App\Livewire\Financial\StudentFees\CourseFees;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -76,7 +76,7 @@ class StudentCourseFees extends Component
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
 
-        $this->student =Student::with('photo')->findOrFail($student_id);
+        $this->student =Student::findOrFail($student_id);
         $this->discount_providers =DiscountProvider::where('status',true)->get();
     
         $this->branches =  Branch::all();
@@ -88,6 +88,7 @@ class StudentCourseFees extends Component
         public $fee_amount;        
         public $discount_type=null;    
         public $discount_value;  
+        public $discount_amount;  
         public $discount_reason;  
         public $total_amount;     
         public $payment_type; 
@@ -127,13 +128,10 @@ class StudentCourseFees extends Component
 
         $course_fees = StudentCourseFee::with('course')
         ->where('student_id',$this->student->id)
-        ->when(!empty($this->search['name']), function ($query) {
-            $query->where('name', 'like', '%' . $this->search['name'] . '%');
-        })
         ->orderBy('id','desc')
         ->paginate($this->perPage);
 
-        return view('livewire.financial.student-fees.student-course-fees',compact('course_fees'));
+        return view('livewire.financial.student-fees.course-fees.student-course-fees',compact('course_fees'));
     }
 
     public function updatedCourseId($courseId)
@@ -175,9 +173,14 @@ class StudentCourseFees extends Component
         $this->total_amount = $fee;
 
         if ($this->discount_type == 'percentage') {
-            $this->total_amount -= ($fee * $discount / 100);
-        }elseif ($this->discount_type == 'fixed') {
-            $this->total_amount -= $discount;
+
+            $this->discount_amount = ($fee * $discount / 100);
+            $this->total_amount -= $this->discount_amount;
+
+        } elseif ($this->discount_type == 'fixed') {
+
+            $this->discount_amount = $discount;
+            $this->total_amount -= $this->discount_amount;
         }
 
         $this->recalculateInstallments();
@@ -288,11 +291,8 @@ class StudentCourseFees extends Component
             'total_amount' => 'required|numeric',
         ];
 
-        if (!Auth::user()->branch_id) {
-            $rules['branch_id'] = 'required';
-        }
-
         if($this->discount_type !=''){
+            $rules['discount_value'] = 'required|numeric|gt:0';
             $rules['discount_reason'] = 'required';
         }
 
@@ -374,13 +374,13 @@ class StudentCourseFees extends Component
                 'discount_type' => $this->discount_type ?: null,
                 'discount_provider_id' => $this->discount_provider_id ?: null,
                 'discount_value' => $this->discount_value ?? 0,
+                'discount_amount' => $this->discount_amount,
                 'discount_reason' => $this->discount_reason,
                 'total_amount' => $this->total_amount,
                 'paid_amount' => 0,
                 'remaining_amount' => $this->total_amount,
                 'status' => 'unpaid',
-                'notes' => $this->notes ?? null,
-                'branch_id' => Auth::user()->branch_id ?: $this->branch_id,
+                'branch_id' => $this->student->branch_id,
                 'user_id' => auth()->id(),
             ]);
 
@@ -453,8 +453,8 @@ class StudentCourseFees extends Component
         $this->used_discount = StudentCourseFee::where('discount_provider_id',$provider->id)
             ->whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
-            ->sum('discount_value');
-
+            ->sum('discount_amount');
+        
         // مقدار باقی مانده
         $this->remaining_discount = $provider->monthly_discount_total - $this->used_discount;
 
@@ -508,7 +508,13 @@ class StudentCourseFees extends Component
         $this->dispatch('open-modal', id: $this->installmentModalId);
     }
 
-    public function payInstallment($id)
+    public function openPayModal($id)
+    {
+        $this->installment_id = $id;
+        $this->dispatch('open-modal', id: "payInstallmentModal");
+    }
+
+    public function payInstallment()
     {
         if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
@@ -517,7 +523,7 @@ class StudentCourseFees extends Component
         DB::beginTransaction();
        try {
 
-            $installment = StudentCourseFeeInstallment::find($id);
+            $installment = StudentCourseFeeInstallment::find($this->installment_id);
 
             if (!$installment) {
                 return;
@@ -529,14 +535,16 @@ class StudentCourseFees extends Component
 
             $fee = StudentCourseFee::find($installment->student_course_fee_id);
 
-            StudentCourseFeePayment::create([
-                'student_course_fee_id' => $installment->student_course_fee_id,
-                'installment_id' => $installment->id,
-                'amount' => $installment->amount,
-                'payment_date' => now(),
-                'notes' => 'Installment payment',
-                'user_id' => auth()->id(),
-            ]);
+            StudentCourseFeePayment::firstOrCreate(
+                ['installment_id' => $installment->id],
+                [
+                    'student_course_fee_id' => $installment->student_course_fee_id,
+                    'amount' => $installment->amount,
+                    'payment_date' => now(),
+                    'notes' => 'Installment payment',
+                    'user_id' => auth()->id(),
+                ]
+            );
 
             $installment->update([
                 'status' => 'paid'
@@ -554,13 +562,13 @@ class StudentCourseFees extends Component
             $fee->save();
 
             DB::commit();
-            $this->dispatch('close-modal', id: $this->installmentModalId);
-
+            $this->dispatch('close-modal', id: "payInstallmentModal");
+            $this->showInstallments($installment->student_course_fee_id);
             $this->dispatch('alert',
                 type: 'success',
                 message: __('label.successfully_done')
             );
-
+            
         } catch (\Exception $e) {
 
             DB::rollBack();
@@ -611,4 +619,53 @@ class StudentCourseFees extends Component
         $this->studentCourseFee = $this->installmentToPrint->studentCourseFee;
         $this->dispatch('show-print-preview');
     }
+
+    public $cancel_reason;
+    public $installment_id;
+
+    public function openCancelModal($id)
+    {
+        $this->installment_id = $id;
+        $this->dispatch('open-modal', id: "cancelInstallmentModal");
+    }
+
+    public function cancelInstallment()
+    {
+        $this->validate([
+            'cancel_reason' => 'required|string|max:255'
+        ]);
+
+        DB::beginTransaction();
+       try {
+
+            $installment = StudentCourseFeeInstallment::find($this->installment_id);
+
+            $installment->update([
+                'status' => 'cancelled',
+                'cancel_reason' => $this->cancel_reason
+            ]);
+
+            $this->cancel_reason = null;
+            
+           // ---start system log-----------
+            SystemLog::create([
+                'st_id' => $this->student->id,
+                'user_id' => Auth::user()->id,
+                'section' => 'Installment Cancelled ('.$installment->course?->name.' ID:'.$installment->id.')',
+                'type_id' => 3,
+            ]);
+            // ---end system log-------------
+            $this->showInstallments($installment->student_course_fee_id);
+            DB::commit();
+            $this->dispatch('close-modal', id: 'cancelInstallmentModal');
+            $this->dispatch('alert',type: 'success',message: __('label.successfully_done'));
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+            $this->dispatch('alert',type: 'error',message: __('label.store_error') . ': ' . $e->getMessage()
+            );
+        }
+    }
+
 }

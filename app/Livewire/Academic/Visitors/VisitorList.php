@@ -131,7 +131,7 @@ class VisitorList extends Component
         $rules = [
             'name' => 'required',
             'father_name' => 'required',
-            'phone_no' => 'nullable|string|max:10',
+            'phone_no' => 'required|string|max:10',
             'visit_date' => 'required',
             'visit_purpose_id' => 'required',
             'referral_source_id' => 'required',

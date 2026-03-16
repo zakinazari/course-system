@@ -24,7 +24,7 @@ return new class extends Migration
             $table->enum('discount_type', ['percentage', 'fixed'])->nullable();
             $table->decimal('discount_value', 10, 2)->default(0);
             $table->text('discount_reason')->nullable();
-
+            $table->decimal('discount_amount',10,2)->default(0);
             $table->decimal('total_amount', 10, 2);
             $table->decimal('paid_amount',10,2)->default(0);
             $table->decimal('remaining_amount',10,2)->default(0);

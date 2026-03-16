@@ -260,7 +260,15 @@ class SpecialCourseList extends Component
                 PlacementTest::find($this->placement_test_id)->update([
                     'status'=>'enrolled',
                 ]);
-            }   
+            } 
+            
+            // --------active course-----------
+            $course->status= 'ongoing';
+            $course->save();
+            // -------active student----------------
+            Student::find($this->student_id)->update([
+                'status'=>'active',
+            ]);
 
             DB::commit();
 

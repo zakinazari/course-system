@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('student_course_fee_id')->constrained()->cascadeOnDelete();
             $table->decimal('amount', 10, 2);
             $table->date('due_date');
-            $table->enum('status', ['unpaid', 'paid'])->default('unpaid');
+            $table->enum('status', ['unpaid', 'paid','cancelled'])->default('unpaid');
+            $table->text('cancel_reason')->nullable();
             $table->timestamps();
         });
     }

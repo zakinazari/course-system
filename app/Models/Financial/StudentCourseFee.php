@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\CenterSettings\Branch;
 use App\Models\Academic\Student;
 use App\Models\Academic\Course;
+use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 class StudentCourseFee extends Model
 {
     protected $fillable = [
@@ -20,6 +23,7 @@ class StudentCourseFee extends Model
         'discount_provider_id',
         'discount_value',
         'discount_reason',
+        'discount_amount',
         'total_amount',
         'paid_amount',
         'remaining_amount',
@@ -65,5 +69,24 @@ class StudentCourseFee extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(StudentCourseFeePayment::class);
+    }
+
+     // شرط شعبه، سکوپ
+    protected static function booted()
+    {
+        static::addGlobalScope('branch', function (Builder $builder) {
+
+            if (!Auth::check()) {
+                return;
+            }
+
+            $user = Auth::user();
+
+            if ($user->isDeveloper() || $user->isAdmin()) {
+                return;
+            }
+ 
+            $builder->where('branch_id', $user->branch_id);
+        });
     }
 }

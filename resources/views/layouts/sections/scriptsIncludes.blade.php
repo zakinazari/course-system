@@ -45,7 +45,7 @@
 }
 
 
- function printDiv(id, header) {
+    function printDiv(id, header) {
         var TitleText = '';
         if ($('#' + header).val() != null) {
             TitleText = '<h2 id="printHeader"><strong>' + $('#' + header).val() + '</strong></h2>';

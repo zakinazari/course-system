@@ -198,6 +198,7 @@ class StudentCourseResultEntry extends Component
 
         $this->students = $filteredStudents;
     }
+    
     protected function rules()
     {
         $rules =  [

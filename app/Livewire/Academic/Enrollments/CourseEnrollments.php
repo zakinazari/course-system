@@ -171,7 +171,6 @@ class CourseEnrollments extends Component
                 ->lockForUpdate()
                 ->firstOrFail();
 
-          
             $is_full = DB::table('course_student')
                 ->where('course_id', $course->id)
                 ->where('status', 'active')
@@ -187,6 +186,13 @@ class CourseEnrollments extends Component
             $course->students()->attach($this->student_id, [
                 'status' => 'active',
                 'enrolled_at' => now(),
+            ]);
+            // --------active course-----------
+            $course->status= 'ongoing';
+            $course->save();
+            // -------active student----------------
+            Student::find($this->student_id)->update([
+                'status'=>'active',
             ]);
 
             DB::commit();

@@ -208,7 +208,8 @@ Route::middleware(['auth'])->group(function () {
             ->select('id','name','last_name','father_name','phone_no')
              ->where(function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('phone_no', 'like', "%{$q}%");
+                    ->orWhere('phone_no', 'like', "%{$q}%")
+                    ->orWhere('student_code', 'like', "%{$q}%");
             })
             ->limit(20)
             ->get()
@@ -293,10 +294,31 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.financial.student-fees.student-financial-profile-page', ['menu_id' => $menu_id,'student_id'=>$student_id]);
     })->whereNumber('menu_id')->name('student-financial-profile');
+    
+    Route::get('course-fees-report/{menu_id?}/{student_id?}', function ($menu_id = null,$student_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.student-fees.reports.course-fees-report-page', ['menu_id' => $menu_id,'student_id'=>$student_id]);
+    })->whereNumber('menu_id')->name('course-fees-report');
+
+    Route::get('other-fees-report/{menu_id?}/{student_id?}', function ($menu_id = null,$student_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.student-fees.reports.other-fees-report-page', ['menu_id' => $menu_id,'student_id'=>$student_id]);
+    })->whereNumber('menu_id')->name('other-fees-report');
+
+    Route::get('course-fees-discount-report/{menu_id?}/{student_id?}', function ($menu_id = null,$student_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.student-fees.reports.course-fees-discount-report-page', ['menu_id' => $menu_id,'student_id'=>$student_id]);
+    })->whereNumber('menu_id')->name('course-fees-discount-report');
 
     // ----------end Financial-----------------------------
 
-    // -------start Hr----------------------
+    // -------start Hr-------------------------------------
     Route::get('/employees/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
@@ -305,7 +327,6 @@ Route::middleware(['auth'])->group(function () {
     })->name('employees');
     
     // -------end Hr------------------------
-
 });
 // -----------------------end admin panel routes-------------------------------
 require __DIR__.'/auth.php';

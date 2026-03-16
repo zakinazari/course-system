@@ -234,7 +234,7 @@
                         @endforeach
                     </tbody>
                 </table>
-                 @if(add(Auth::user()->role_ids,$active_menu_id) && !empty( $students))
+                 @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
                 <div class="d-flex justify-content-end mt-4 mb-3 px-3">
                     <button type="button" class="btn btn-primary" wire:click="saveAttendance">
                         <i class="bi bi-save me-1"></i> {{ __('label.save_attendance') }}

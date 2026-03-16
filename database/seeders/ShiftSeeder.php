@@ -12,7 +12,7 @@ class ShiftSeeder extends Seeder
      */
     public function run(): void
     {
-         $shifts = [
+        $shifts = [
             ['name' => 'Morning'],
             ['name' => 'Afternoon'],
             ['name' => 'Evening'],

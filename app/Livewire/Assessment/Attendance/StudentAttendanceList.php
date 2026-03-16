@@ -283,7 +283,7 @@ class StudentAttendanceList extends Component
         }
     }
 
-     public function exportPdf()
+    public function exportPdf()
     {
         $data = $this->getReport();
         $students = $data['students'];

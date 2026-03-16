@@ -1,11 +1,6 @@
 <?php
 
 namespace Database\Seeders;
-
-use App\Models\User;
-use App\Models\Hr\EmployeeRole;
-use App\Models\CenterSettings\Shift;
-use App\Models\Academic\CourseType;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -28,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ShiftSeeder::class,
             CourseTypeSeeder::class,
             UserSeeder::class,
+            FeeTypeSeeder::class,
         ]);
     }
 }
