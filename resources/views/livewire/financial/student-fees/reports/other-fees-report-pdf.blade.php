@@ -40,7 +40,7 @@
 <div id="printArea" >
       <!-- Logo -->
         <div style="text-align:center;margin-bottom:10px;">
-            <img src="{{ public_path('logo.png') }}" alt="Logo" style="height:70px;">
+            <img src="{{ getLogo() }}" alt="Logo" style="height:70px;">
         </div>
         <!-- Title -->
         <h2 style="text-align:center;">

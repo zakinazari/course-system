@@ -151,7 +151,7 @@ class CourseFeesDiscountReport extends Component
     {
         
         $pdf = Pdf::loadView(
-            'livewire.financial.student-fees.reports.course-fees-report-pdf',
+            'livewire.financial.student-fees.reports.course-fees-discount-report-pdf',
             [
                 'fees' => $this->fees,
                 'selectedFields' => $this->selectedFields,
@@ -163,7 +163,7 @@ class CourseFeesDiscountReport extends Component
 
         return response()->streamDownload(
             fn () => print($pdf->output()),
-            'student-course-fees-' . Carbon::now()->format('Y-m-d -H-i-A') . '.pdf'
+            __('student_course_fee_discount_report').'-' . Carbon::now()->format('Y-m-d -H-i-A') . '.pdf'
         );
     }
 

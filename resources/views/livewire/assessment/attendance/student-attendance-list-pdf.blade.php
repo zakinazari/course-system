@@ -38,7 +38,7 @@
 <table width="100%">
     <tr>
         <td width="20%">
-            <img src="{{ public_path('logo.png') }}" width="80">
+            <img src="{{ getLogo() }}" width="80">
         </td>
         <td width="60%" style="text-align:center;">
             <p style="font-size:20px; font-weight:bold; margin:0;">{{ __('label.center_name') }}</p>

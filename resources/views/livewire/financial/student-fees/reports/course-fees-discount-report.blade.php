@@ -33,7 +33,7 @@
 
                         <ul class="dropdown-menu">
                             <li class="px-3 py-2">
-                                <!-- <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-2">
+                                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-2">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" id="portraitRadio" wire:model="pdfOrientation" value="portrait">
                                         <label class="form-check-label" for="portraitRadio">(Portrait)</label>
@@ -47,7 +47,7 @@
 
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportPdf">
                                     <i class="fa fa-file-pdf text-danger"></i> {{ __('label.export_to_pdf') }}
-                                </a> -->
+                                </a>
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="print">
                                     <i class="fa fa-print text-secondary" ></i> {{ __('label.print') }}
                                 </a>
@@ -185,7 +185,7 @@
         </div>
         <!-- Title -->
         <h2 style="text-align:center;">
-            Student Course Fees Report
+            {{ __('label.student_course_fee_discount_report') }}
         </h2>
 
         <!-- Date range, aligned left, close to table -->
@@ -200,7 +200,7 @@
                     @if(in_array('branch', $selectedFields)) <th>{{ __('label.branch') }}</th> @endif
                     @if(in_array('program', $selectedFields)) <th>{{ __('label.program') }}</th> @endif
                     @if(in_array('course', $selectedFields)) <th>{{ __('label.course') }}</th> @endif
-                    @if(in_array('amount', $selectedFields)) <th>{{ __('label.amount') }}</th> @endif
+                    @if(in_array('amount', $selectedFields)) <th>{{ __('label.discount_amount') }}</th> @endif
                     @if(in_array('payment_date', $selectedFields)) <th>{{ __('label.payment_date') }}</th> @endif
                 </tr>
             </thead>

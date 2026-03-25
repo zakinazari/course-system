@@ -88,7 +88,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3 d-flex flex-column">
+                    <div class="@if(!auth()->user()->branch_id) col-md-6 @else col-md-3  @endif d-flex flex-column">
                         <label class="form-label">{{ __('label.course') }}</label>
                         <select class="form-select select2" wire:model="search.course_id" id="search_course_id">
                            <option value="">{{ __('label.all') }}</option>
@@ -99,7 +99,14 @@
                            @endforeach
                         </select>
                     </div>
-
+                    <div class="col-md-2">
+                        <label class="form-label">{{ __('label.payment_type') }}</label>
+                        <select class="form-select" wire:model.defer="search.payment_type" id ="">
+                           <option value="">{{ __('label.all') }}</option>
+                            <option value="full">{{ __('label.full') }}</option>
+                            <option value="installment">{{ __('label.installment') }}</option>
+                        </select>
+                     </div>
                     <div class="col-md-4">
                         <label class="form-label">{{ __('label.from_date') }}</label>
                         <div class="input-group input-daterange" id="bs-datepicker-daterange">
@@ -118,7 +125,15 @@
             </div>
             <div class="table-responsive text-nowrap">
                 @if(count($fees) > 0)
+
+                <!-- Title -->
                
+                @if(!empty($search['payment_type']))
+                <h5 style="text-align:center;">
+                {{ __('label.payment_type') }}: {{ ucfirst($search['payment_type']) }}
+                </h5>
+                @endif
+        
                 <table class="table">
                     <thead class="table-dark">
                         <tr>
@@ -185,8 +200,13 @@
         </div>
         <!-- Title -->
         <h2 style="text-align:center;">
-            Student Course Fees Report
+            {{ __('label.student_course_fee_report') }}
         </h2>
+        @if(!empty($search['payment_type']))
+        <h2 style="text-align:center;">
+           {{ __('label.payment_type') }}: {{ ucfirst($search['payment_type']) }}
+        </h2>
+        @endif
 
         <!-- Date range, aligned left, close to table -->
         <div style="margin-bottom:3px; font-size:12px; text-align:left;">

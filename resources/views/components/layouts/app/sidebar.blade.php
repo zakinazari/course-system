@@ -22,7 +22,7 @@
         <!-- <script src="{{ asset('assets/template-customizer.js') }}"></script> -->
         <!-- <script src="{{ asset('assets/config.js') }}"></script> -->
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
+    <body class="min-h-screen bg-white dark:bg-zinc-800" >
         <div class="layout-wrapper layout-content-navbar">
             <div class="layout-container">
         

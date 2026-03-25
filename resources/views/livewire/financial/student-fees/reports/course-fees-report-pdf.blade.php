@@ -40,12 +40,17 @@
 <div id="printArea">
     <!-- Logo -->
     <div style="text-align:center;margin-bottom:10px;">
-        <img src="{{ public_path('logo.png') }}" alt="Logo" style="height:70px;">
+        <img src="{{ getLogo() }}" alt="Logo" style="height:70px;">
     </div>
     <!-- Title -->
     <h2 style="text-align:center;">
-        Student Course Fees Report
+        {{ __('label.student_course_fee_report') }}
     </h2>
+    @if(!empty($search['payment_type']))
+    <h2 style="text-align:center;">
+        {{ __('label.payment_type') }}: {{ ucfirst($search['payment_type']) }}
+    </h2>
+    @endif
 
     <!-- Date range, aligned left, close to table -->
     <div style="margin-bottom:3px; font-size:12px; text-align:left;">

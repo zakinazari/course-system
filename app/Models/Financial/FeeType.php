@@ -11,7 +11,7 @@ class FeeType extends Model
         'code',
         'fee_amount'
     ];
-
+    
     public function studentFees()
     {
         return $this->hasMany(StudentOtherFee::class);

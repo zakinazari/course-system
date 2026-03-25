@@ -130,6 +130,34 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.center-settings.discount-providers.discount-providers-list-page',['menu_id' => $menu_id]);
     })->name('discount-providers');
 
+    Route::get('/fee-types/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.fee-types.fee-type-list-page',['menu_id' => $menu_id]);
+    })->name('fee-types');
+
+    Route::get('/units/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.units.unit-list-page',['menu_id' => $menu_id]);
+    })->name('units');
+
+    Route::get('/warehouse-categories/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.warehouse.category.warehouse-category-list-page',['menu_id' => $menu_id]);
+    })->name('warehouse-categories');
+
+    Route::get('/warehouse-list/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.warehouse.warehouse-list-page',['menu_id' => $menu_id]);
+    })->name('warehouse-list');
+
     // -----start academic---------------------------
     Route::get('/visitors/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
@@ -325,6 +353,24 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.hr.employees.employee-list-page',['menu_id' => $menu_id]);
     })->name('employees');
+    
+    // -------end Hr------------------------
+
+
+    // -------start Hr-------------------------------------
+    Route::get('/book-inventory/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.warehouse.book-inventory.book-inenvtory-list-page',['menu_id' => $menu_id]);
+    })->name('book-inventory');
+
+    Route::get('/book-purchase-list/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.warehouse.book-inventory.book-purchase-list-page',['menu_id' => $menu_id]);
+    })->name('book-purchase-list');
     
     // -------end Hr------------------------
 });

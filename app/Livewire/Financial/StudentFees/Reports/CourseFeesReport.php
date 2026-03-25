@@ -100,6 +100,7 @@ class CourseFeesReport extends Component
             'program_id' => null,
             'book_id' => null,
             'course_id' => null,
+            'payment_type' => null,
             'from' => null,
             'to' => null,
         ];
@@ -117,28 +118,25 @@ class CourseFeesReport extends Component
     public $total_payments=0;
     public function loadFeesPayment(){
 
-        $this->fees= StudentCourseFeePayment::with('studentCourseFee','studentCourseFee.branch','studentCourseFee.course')
-        ->when(!empty($this->search['branch_id']), function ($query) {
-            $query->whereHas('studentCourseFee',function($q){
-                $q->where('branch_id',$this->search['branch_id']);
-            });
-        })
-        ->when(!empty($this->search['course_id']), function ($query) {
-            $query->whereHas('studentCourseFee',function($q){
-                $q->where('course_id',$this->search['course_id']);
-            });
-        })
-        ->when(!empty($this->search['program_id']), function ($query) {
-            $query->whereHas('studentCourseFee.course',function($q){
-                $q->where('program_id',$this->search['program_id']);
-            });
-        })
-
-        ->whereHas('installment',function($query){  
-            $query->where('status','paid');
-        })
-        ->whereBetween('payment_date',[$this->search['from'],$this->search['to']])
-        ->get();
+        $search = $this->search;
+        $this->fees = StudentCourseFeePayment::with('studentCourseFee','studentCourseFee.branch','studentCourseFee.course')
+            ->when(!empty($search['branch_id']), function ($query) use ($search) {
+                $query->whereHas('studentCourseFee', fn($q) => $q->where('branch_id', $search['branch_id']));
+            })
+            ->when(!empty($search['course_id']), function ($query) use ($search) {
+                $query->whereHas('studentCourseFee', fn($q) => $q->where('course_id', $search['course_id']));
+            })
+            ->when(!empty($search['program_id']), function ($query) use ($search) {
+                $query->whereHas('studentCourseFee.course', fn($q) => $q->where('program_id', $search['program_id']));
+            })
+            ->when(!empty($search['payment_type']), function ($query) use ($search) {
+                $query->whereHas('studentCourseFee', fn($q) => $q->where('payment_type', $search['payment_type']));
+            })
+            ->whereHas('installment', fn($q) => $q->where('status','paid'))
+            ->when(!empty($search['from']) && !empty($search['to']), function($q) use ($search){
+                $q->whereBetween('payment_date', [$search['from'],$search['to']]);
+            })
+            ->get();
         $this->total_payments=$this->fees->sum('amount');
     }
 

@@ -415,7 +415,7 @@ return [
     'pass_mark'=>'Pass Mark',
     'excellent_mark'=>'Excellent Mark',
     'fee'=>'Fee',
-    // -----------end Assessment--------------------------
+    // -----------end Assessment------------------------
     
     // ----------start Financial------------------------
     'financial_profile'=>'Financial Profile',
@@ -488,6 +488,11 @@ return [
     'amount.required'=>'Amount is required',
     'note.required'=>'Note is required',
     'fee_type'=>'Fee Type',
+    'code'=>'Code',
+    'code.required'=>'Code is required',
+    'student_course_fee_report'=>'Student Course Fee Report',
+    'student_course_fee_discount_report'=>'Student Course Fee Discount Report',
+
     // ----------end Financial------------------------
 
     // -----------start hr -----------------
@@ -497,4 +502,15 @@ return [
     'email' => 'Email',
     'role' => 'Role',
     // -----------end hr -------------------
+
+    //  -----------------------start Warehouse ------------------------
+    'unit'=>'Unit',
+    'warehouse_category'=>'Warehouse Category',
+    'warehouse'=>'Warehouse',
+    'quantity'=>'Quantity',
+    'balance_after'=>'Balance After',
+    'no_change_made'=>'No change made',
+    'book_inventory_list'=>'Book Inventory List',
+    'book_purchase_list'=>'Book Purchase List',
+    // -----------------------end Warehouse --------------------------
 ];

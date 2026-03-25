@@ -194,4 +194,19 @@ if (!function_exists('getImage')) {
 
         return null;
     }
+
+    if (!function_exists('getLogo')) {
+        function getLogo() {
+            $path = public_path('logo.png');
+
+            if(file_exists($path)){
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            } else {
+                $base64 = null;
+            }
+            return $base64;
+        }
+    }
 }

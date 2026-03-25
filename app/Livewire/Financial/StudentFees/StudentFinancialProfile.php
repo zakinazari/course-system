@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Settings\Menu;
 use App\Models\Academic\Student;
 use App\Models\Academic\Course; 
+use App\Models\Financial\FeeType; 
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -18,6 +19,7 @@ class StudentFinancialProfile extends Component
     public $active_menu_id;
     public $active_menu;
     public $student;
+    public $fee_types;
     // -------end generals-------------
     
     public function mount($active_menu_id = null, $student_id = null)
