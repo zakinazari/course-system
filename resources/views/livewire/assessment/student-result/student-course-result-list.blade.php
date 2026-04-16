@@ -51,9 +51,9 @@
                                 <i class="fa fa-file-pdf text-danger"></i> {{ __('label.export_to_pdf') }}
                             </a>
 
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportExcel">
+                            <!-- <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportExcel">
                                 <i class="fa fa-file-excel text-success"></i> {{ __('label.export_to_excel') }}
-                            </a>
+                            </a> -->
 
                         </li>
                     </ul>
@@ -104,7 +104,7 @@
                            @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3 col-md-2 d-flex flex-column" wire:ignore>
+                    <div class="col-md-3 col-md-2 d-flex flex-column">
                         <label class="form-label">{{ __('label.teacher') }}</label>
                         <select class="form-select select2" wire:model.lazy="search.teacher_id" id ="search_teacher_id">
                            <option value="">{{ __('label.all') }}</option>
@@ -138,9 +138,10 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                
+                    <div class="col-md-4 d-flex flex-column">
                         <label class="form-label">{{ __('label.course') }}</label>
-                        <select class="form-select " wire:model="search.course_id">
+                        <select class="form-select select2" id="search_course_id">
                            <option value="">{{ __('label.all') }}</option>
                            @foreach($courses as $course)
                                  <option value="{{ $course->id }}"  wire:key="course-search-{{ $course->id }}">
@@ -190,24 +191,17 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_name">
                                 {{ __('label.father_name') }}
                             </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="cognitive">
-                              {{ __('label.cognitive_score') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="attendance">
-                               {{ __('label.attendance_score') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="midterm">
-                                 {{ __('label.midterm_score') }}
-                            </th>
                             
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="final">
-                                 {{ __('label.final_score') }}
-                            </th>
-                           
+                            @foreach($exam_types as $type)
+                                @php $field = 'exam_'.$type->id; @endphp
+                                <th>
+                                    <input class="form-check-input" type="checkbox"
+                                        wire:model="selectedFields"
+                                        value="{{ $field }}"
+                                        {{ in_array($field, $selectedFields ?? []) ? 'checked' : '' }}>
+                                    {{ $type->name }} ({{ $exam_percentages[$type->id] ?? 0 }}%)
+                                </th>
+                            @endforeach
                             <th>
                              <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="total">
                                {{ __('label.total_score') }}
@@ -223,23 +217,26 @@
                     
                     <tbody >
                         @foreach($students as $i => $cs)
-                        <tr wire:key="course-{{ $search['course_id'] }}-student-{{ $cs->student_id }}">
+                        <tr wire:key="course-{{ $course_id }}-student-{{ $cs->student_id }}">
                             <td >{{ $i + 1 }}</td>
                             <td>{{ $cs->student?->student_code }}</td>
                             <td>{{ $cs->student?->name }}</td>
                             <td>{{ $cs->student?->father_name }}</td>
-                            <td>{{ $cs->result?->cognitive }}</td>
-                            <td>{{ $cs->result?->attendance }}</td>
-                            <td>{{ $cs->result?->midterm }}</td>
-                            <td>{{ $cs->result?->final }}</td>
-                            <td>{{ $cs->result?->total }}</td>
+                            @foreach($exam_types as $type)
+                                <td>{{ $cs->result->{$type->id} ?? '-' }}</td>
+                            @endforeach
+                            <td>{{ $cs->result?->total ?? '-' }}</td>
                             <td>
-                                @if($cs->result?->status==='passed')
-                                <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($cs->result?->status) }}</span>
-                                @elseif($cs->result?->status==='failed')
-                                <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($cs->result?->status) }}</span>
+                                @if($cs->result?->status === 'passed')
+                                    <span class="badge bg-label-success me-1" style="font-size:10px;">
+                                        {{ ucfirst($cs->result?->status) }}
+                                    </span>
+                                @elseif($cs->result?->status === 'failed')
+                                    <span class="badge bg-label-danger me-1" style="font-size:10px;">
+                                        {{ ucfirst($cs->result?->status) }}
+                                    </span>
                                 @else
-                                &nbsp;
+                                    &nbsp;
                                 @endif
                             </td>
                         </tr>
@@ -306,6 +303,9 @@ document.addEventListener("livewire:initialized", function () {
         $('#search_teacher_id').off('change').on('change', function () {
             $wire.set('search.teacher_id', $(this).val());
         });
+         $('#search_course_id').off('change').on('change', function () {
+            $wire.set('course_id', $(this).val());
+        });
     }
 
     initSelect2();
@@ -318,6 +318,9 @@ document.addEventListener("livewire:initialized", function () {
         initSelect2();
     });
 
+    Livewire.on('reset-select2', () => {
+        $('#search_course_id').val(null).trigger('change');        
+    });
 
 });
 </script>

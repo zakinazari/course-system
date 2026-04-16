@@ -14,6 +14,7 @@ use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
 use App\Models\Hr\Employee;
+use App\Models\Assessment\TeacherAttendance;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Auth;
@@ -133,34 +134,53 @@ class CourseList extends Component
         
     public function render()
     {
-        $courses = Course::with('branch','courseType','program','book','classroom','shift')
-        ->when(!empty($this->search['name']), function ($query) {
-            $query->where('name', 'like', '%' . $this->search['name'] . '%');
-        })
-        ->when(!empty($this->search['branch_id']), function ($query) {
-            $query->where('branch_id',$this->search['branch_id']);
-        })
-        ->when(!empty($this->search['program_id']), function ($query) {
-            $query->where('program_id',$this->search['program_id']);
-        })
-        ->when(!empty($this->search['book_id']), function ($query) {
-            $query->where('book_id',$this->search['book_id']);
-        })
-        ->when(!empty($this->search['course_type_id']), function ($query) {
-            $query->where('course_type_id',$this->search['course_type_id']);
-        })
-        ->when(!empty($this->search['shift_id']), function ($query) {
-            $query->where('shift_id',$this->search['shift_id']);
-        })
-        ->when(!empty($this->search['teacher_id']), function ($query) {
-            $query->whereHas('teachers',function($q){
-                $q->where('teacher_id',$this->search['teacher_id']);
-            });
-        })
-        ->orderBy('id','desc')
-        ->paginate($this->perPage);
+        $today = now()->toDateString();
 
-        return view('livewire.academic.enrollments.course-list',compact('courses'));
+        $courses = Course::with('branch','courseType','program','book','classroom','shift','teacher','time')
+            ->whereIn('status',['ongoing','draft'])
+            // =========================
+            // total_days (DISTINCT)
+            // =========================
+            ->withCount([
+                'teacherAttendances as total_days' => function ($q) {
+                    $q->select(DB::raw('count(distinct attendance_date)'));
+                }
+            ])
+
+            // =========================
+            // today attendance (exists)
+            // =========================
+            ->withExists([
+                'teacherAttendances as today_attendance' => function ($q) use ($today) {
+                    $q->where('attendance_date', $today);
+                }
+            ])
+
+            ->when(!empty($this->search['name']), function ($query) {
+                $query->where('name', 'like', '%' . $this->search['name'] . '%');
+            })
+            ->when(!empty($this->search['branch_id']), function ($query) {
+                $query->where('branch_id',$this->search['branch_id']);
+            })
+            ->when(!empty($this->search['program_id']), function ($query) {
+                $query->where('program_id',$this->search['program_id']);
+            })
+            ->when(!empty($this->search['book_id']), function ($query) {
+                $query->where('book_id',$this->search['book_id']);
+            })
+            ->when(!empty($this->search['course_type_id']), function ($query) {
+                $query->where('course_type_id',$this->search['course_type_id']);
+            })
+            ->when(!empty($this->search['shift_id']), function ($query) {
+                $query->where('shift_id',$this->search['shift_id']);
+            })
+            ->when(!empty($this->search['teacher_id']), function ($query) {
+                $query->where('teacher_id',$this->search['teacher_id']);
+            })
+            ->orderBy('id','desc')
+            ->paginate($this->perPage);
+
+        return view('livewire.academic.enrollments.course-list', compact('courses'));
     }
 
     protected function rules()
@@ -183,8 +203,10 @@ class CourseList extends Component
         $this->classrooms = Classroom::where('status', 'active')
             ->where('branch_id', $branch_id)->get();
 
-        $this->teachers = Employee::where('status','new')->get();
-        
-        $this->teacher_ids = [];
+        $this->teachers = Employee::whereHas('employeeRoles', function($query) {
+            $query->where('name', 'Teacher');
+        })->get();
+
+        $this->teacher_id =null;
     }
 }

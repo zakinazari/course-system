@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('student_attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained();
+            $table->foreignId('course_id')->constrained();
 
             $table->date('attendance_date');
 
@@ -26,7 +26,7 @@ return new class extends Migration
             ]);
 
             $table->text('note')->nullable();
-
+            
             $table->foreignId('recorded_by')->nullable()->constrained('users');
 
             $table->timestamps();

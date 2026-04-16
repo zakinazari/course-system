@@ -94,6 +94,11 @@
                             </a>
                         </li>
                         <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'exam_fine' ? 'active' : '' }}" wire:click="changeTab('exam_fine')">
+                                <i class="bx bx-file me-2 text-danger"></i> {{ __('label.exam_fine') }}
+                            </a>
+                        </li>
+                        <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'registration_fee' ? 'active' : '' }}" wire:click="changeTab('registration_fee')">
                                 <i class="bx bx-detail me-2 text-warning"></i> {{ __('label.registration_fee') }}
                             </a>
@@ -101,11 +106,6 @@
                         <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'card_fee' ? 'active' : '' }}" wire:click="changeTab('card_fee')">
                                 <i class="bx bx-id-card me-2 text-info"></i> {{ __('label.card_fee') }}
-                            </a>
-                        </li>
-                        <li class="nav-item mb-1">
-                            <a class="nav-link {{ $activeTab == 'exam_fee' ? 'active' : '' }}" wire:click="changeTab('exam_fee')">
-                                <i class="bx bx-file me-2 text-danger"></i> {{ __('label.exam_fee') }}
                             </a>
                         </li>
                     </ul>
@@ -148,7 +148,25 @@
 
                         <!-- Book Fee Tab -->
                         <div style="{{ $activeTab == 'book_fee' ? '' : 'display:none' }}">
-                           Book Fee 
+                           @livewire(
+                                'financial.student-fees.book-fees.student-book-fees', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'student_id' => $student->id
+                                ],
+                                key('book_fee_'.$student->id.'_'.$activeTab)
+                            )
+                        </div>
+
+                        <div style="{{ $activeTab == 'exam_fine' ? '' : 'display:none' }}">
+                           @livewire(
+                                'financial.student-fees.exam-fine.exam-fine-list', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'student_id' => $student->id
+                                ],
+                                key('exam_fine_'.$student->id.'_'.$activeTab)
+                            )
                         </div>
 
                         <!-- Registration Fee Tab -->
@@ -160,7 +178,7 @@
                                     'student_id' => $student->id,
                                     'fee_type' =>'registration',
                                 ],
-                                key('registration_fee_'.$student->id)
+                                key('registration_fee_'.$student->id.'_'.$activeTab)
                             )
                         </div>
 
@@ -173,7 +191,7 @@
                                     'student_id' => $student->id,
                                     'fee_type' =>'card',
                                 ],
-                                key('card_fee_'.$student->id)
+                                key('card_fee_'.$student->id.'_'.$activeTab)
                             )
                         </div>
 
@@ -186,7 +204,7 @@
                                     'student_id' => $student->id,
                                     'fee_type' =>'exam',
                                 ],
-                                key('exam_fee_'.$student->id)
+                                key('exam_fee_'.$student->id.'_'.$activeTab)
                             )
                         </div>
 

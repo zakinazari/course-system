@@ -10,11 +10,15 @@ use App\Models\CenterSettings\Branch;
 use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Shift;
+use App\Models\CenterSettings\Time;
 use App\Models\CenterSettings\Classroom;
 use App\Models\Hr\Employee;
+use App\Models\Assessment\CourseUnit;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Assessment\TeacherAttendance;
+
 class Course extends Model
 {
      protected $fillable = [
@@ -26,8 +30,7 @@ class Course extends Model
         'book_id',
         'classroom_id',
         'shift_id',
-        'start_time',
-        'end_time',
+        'time_id',
         'total_teaching_days',
         'min_capacity',
         'max_capacity',
@@ -36,6 +39,7 @@ class Course extends Model
         'mid_exam_date',
         'final_exam_date',
         'status',
+        'teacher_id',
         'image',
         'user_id',
     ];
@@ -45,8 +49,6 @@ class Course extends Model
         'end_date' => 'date',
         'mid_exam_date' => 'date',
         'final_exam_date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
     ];
 
     public function getStatusBadgeClassAttribute()
@@ -87,6 +89,15 @@ class Course extends Model
     {
         return $this->belongsTo(Shift::class, 'shift_id');
     }
+    public function time(): BelongsTo
+    {
+        return $this->belongsTo(Time::class, 'time_id');
+    }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'teacher_id');
+    }
 
     public function teachers()
     {
@@ -104,6 +115,13 @@ class Course extends Model
                     ->withPivot(['id','status', 'enrolled_at'])
                     ->withTimestamps();
     }
+
+    
+    public function teacherAttendances()
+    {
+        return $this->hasMany(TeacherAttendance::class, 'course_id');
+    }
+
     // شرط شعبه، سکوپ
     protected static function booted()
     {

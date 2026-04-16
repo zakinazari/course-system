@@ -88,7 +88,7 @@
                         </select>
                     </div>
                     <div class="col-md-3 d-flex flex-column" wire:ignore>
-                        <label class="form-label">{{ __('label.book') }}</label>
+                        <label class="form-label">{{ __('label.physical_book') }}</label>
                         <select  class="form-select select2" id ="search_book_id">
                            <option value="">{{ __('label.all') }}</option>
                            @foreach($books as $book)
@@ -139,7 +139,7 @@
                             </th>
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="book_id">
-                                {{ __('label.book') }}
+                                {{ __('label.physical_book') }}
                             </th>
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="quantity_change">
@@ -148,6 +148,10 @@
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="balance_after">
                                 {{ __('label.balance_after') }}
+                            </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="unit_price">
+                                {{ __('label.unit_price') }}
                             </th>
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="created_at">
@@ -164,6 +168,7 @@
                             <td>{{ $purchase->inventory?->book?->name }}</td>
                             <td>{{ $purchase->quantity_change }}</td>
                             <td>{{ $purchase->balance_after }}</td>
+                            <td>{{ $purchase->unit_price }}</td>
                             <td>{{ $purchase->created_at->format('Y/m/d H:i:A') }}</td>
                             <td>
                                 
@@ -225,7 +230,7 @@
                             </div>
 
                             <div class="mb-3" >
-                                <label>{{ __('label.book') }}<span style="color:red;">*</span></label>
+                                <label>{{ __('label.physical_book') }}<span style="color:red;">*</span></label>
                                 <select class="form-select select2"  wire:model.lazy="book_id" id="book_id">
                                     <option value="">{{ __('label.select') }}</option>
                                     @foreach($books as $book)
@@ -237,15 +242,24 @@
                                 @error('book_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         @endif
-                            <div class="mb-3">
-                                <label>{{ __('label.quantity') }}<span style="color:red;">*</span></label>
-                                <input type="number" wire:model.lazy="quantity" class="form-control" min="0">
-                                @error('quantity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>{{ __('label.quantity') }}<span style="color:red;">*</span></label>
+                                    <input type="number" wire:model.lazy="quantity" class="form-control" min="0">
+                                    @error('quantity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>{{ __('label.unit_price') }}<span style="color:red;">*</span></label>
+                                    <input type="number" wire:model.lazy="unit_price" class="form-control" min="0">
+                                    @error('unit_price') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label>{{ __('label.note') }}</label>
-                                <textarea type="text" wire:model="note" class="form-control"></textarea>
-                            </div> 
+                            <div class="row">
+                                <div class="mb-3">
+                                    <label>{{ __('label.note') }}</label>
+                                    <textarea type="text" wire:model="note" class="form-control"></textarea>
+                                </div>
+                            </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>

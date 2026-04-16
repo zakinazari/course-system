@@ -5,7 +5,7 @@ use Livewire\WithPagination;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Branch;
-use App\Models\CenterSettings\Book;
+use App\Models\CenterSettings\PhysicalBook;
 use App\Models\Warehouse\WarehouseCategory;
 use App\Models\Warehouse\Warehouse;
 use App\Models\Warehouse\BookInventory;
@@ -84,7 +84,7 @@ class BookPurchaseList extends Component
         // -------------start for activing menu in sidebar ----------------------
 
         $this->warehouses =  Warehouse::all();
-        $this->books =  Book::all();
+        $this->books =  PhysicalBook::all();
         $this->search['from'] = now()->format('Y-m-d');
         $this->search['to'] = now()->format('Y-m-d');
     }
@@ -94,6 +94,8 @@ class BookPurchaseList extends Component
     public $warehouse_id;
     public $book_id;
     public $quantity;
+    public $unit_price;
+    public $old_unit_price;
     public $old_quantity;
     public $type = 'purchase';
     public $note;
@@ -169,6 +171,7 @@ class BookPurchaseList extends Component
     {
         $rules =  [
             'quantity' => 'required|integer|min:1',
+            'unit_price' => 'required|numeric|min:0',
         ];
 
         if(!$this->editMode){
@@ -182,9 +185,10 @@ class BookPurchaseList extends Component
     protected function messages()
     {
         return [
-            'name.required' => __('label.name.required'),
-            'branch_id.required' => __('label.branch.required'),
-            'category_id.required' => __('label.category.required'),
+            'quantity.required' => __('label.quantity.required'),
+            'unit_price.required' => __('label.unit_price.required'),
+            'warehouse_id.required' => __('label.warehouse.required'),
+            'book_id.required' => __('label.book.required'),
         ];
     }
     
@@ -228,6 +232,7 @@ class BookPurchaseList extends Component
                 'quantity_before' => $before,
                 'quantity_change' => $change,
                 'balance_after' => $new_quantity,
+                'unit_price' => $this->unit_price,
                 'type' => 'purchase',
                 'note' => $this->note,
                 'user_id' => auth()->id(),
@@ -262,6 +267,8 @@ class BookPurchaseList extends Component
         $this->quantity = $purchase->quantity_change;
         $this->old_quantity = $purchase->quantity_change; 
         $this->book_inventory_id = $purchase->book_inventory_id;
+        $this->unit_price = $purchase->unit_price;
+        $this->old_unit_price = $purchase->unit_price;
 
         $this->editMode = true;
 
@@ -287,8 +294,10 @@ class BookPurchaseList extends Component
            
             $quantity_change = (int) $this->quantity;
 
-            
-            if ($quantity_change === 0 || ($this->quantity ==$this->old_quantity)) {
+            if (
+                ($this->quantity == $this->old_quantity) &&
+                ($this->unit_price == $this->old_unit_price)
+            ) {
                 DB::commit();
                 $this->closeModal();
                 $this->dispatch('alert', type: 'info', message: __('label.no_change_made'));
@@ -309,6 +318,7 @@ class BookPurchaseList extends Component
             $book_movement = BookInventoryMovement::findOrFail($this->purchase_id);
             $book_movement->balance_after = $new_inventory_qty;
             $book_movement->quantity_change = $this->quantity;
+            $book_movement->unit_price = $this->unit_price;
             $book_movement->save();
             
             // ثبت system log

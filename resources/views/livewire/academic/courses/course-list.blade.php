@@ -151,7 +151,6 @@
                         <select class="form-select" wire:model.defer="search.status" id ="">
                            <option value="">{{ __('label.all') }}</option>
                             <option value="draft">{{ __('label.draft') }}</option>
-                            <option value="scheduled">{{ __('label.scheduled') }}</option>
                             <option value="ongoing">{{ __('label.ongoing') }}</option>
                             <option value="completed">{{ __('label.completed') }}</option>
                             <option value="cancelled">{{ __('label.cancelled') }}</option>
@@ -204,17 +203,8 @@
                             </th>
 
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="shift_id">
-                                {{ __('label.shift') }}
-                            </th>
-
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="start_time">
-                                {{ __('label.start_time') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="end_time">
-                                {{ __('label.end_time') }}
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="time_id">
+                                {{ __('label.time') }}
                             </th>
 
                             <th>
@@ -229,16 +219,7 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="total_teaching_days">
                                 {{ __('label.total_teaching_days') }}
                             </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="start_date">
-                                {{ __('label.start_date') }}
-                            </th>
-
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="end_date">
-                                {{ __('label.end_date') }}
-                            </th>
-
+                        
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="mid_exam_date">
                                 {{ __('label.mid_exam_date') }}
@@ -254,7 +235,7 @@
                                 {{ __('label.classroom') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="teacher_ids">
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="teacher_id">
                                 {{ __('label.teacher') }}
                             </th>
 
@@ -286,23 +267,15 @@
                             <td>{{ $course->name }}</td>
                             <td>{{ $course->program?->name }}</td>
                             <td>{{ $course->book?->name }}</td>
-                            <td>{{ $course->shift?->name }}</td>
-                            <td>{{ $course->start_time->format('h:i A') }}</td>
-                            <td>{{ $course->end_time->format('h:i A') }}</td>
+                            <td>{{ $course->time?->start_time?->format('h:i A') }} - {{ $course->time?->end_time?->format('h:i A') }}</td>
+    
                             <td>{{ $course->min_capacity }}</td>
                             <td>{{ $course->max_capacity }}</td>
                             <td>{{ $course->total_teaching_days }}</td>
-                            <td>{{ $course->start_date->format('Y/m/d') }}</td>
-                            <td>{{ $course->end_date->format('Y/m/d') }}</td>
                             <td>{{ $course->mid_exam_date->format('Y/m/d') }}</td>
                             <td>{{ $course->final_exam_date->format('Y/m/d') }}</td>
                             <td>{{ $course->classroom?->name }}</td>
-                            <td>
-                                {{ $course->teachers
-                                    ->map(fn($teacher) => $teacher->name . ' ' . $teacher->last_name)
-                                    ->join(', ')
-                                }}
-                            </td>
+                            <td>{{ $course->teacher?->name }} {{ $course->teacher?->last_name }}</td>
                             <td>
                                 <span class="badge rounded-pill {{ $course->status_badge_class }}">
                                     {{ __('label.' . $course->status) }}
@@ -411,6 +384,12 @@
                                 @error('book_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                        @if(!$editMode)
+                            @error('total_teaching_days') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            @error('min_capacity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            @error('max_capacity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        @endif
+                        @if($editMode)
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.min_capacity') }} <span style="color:red;">*</span></label>
@@ -423,15 +402,20 @@
                                 @error('max_capacity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                        @endif
                         <div class="row">
+                            @if($editMode)
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.total_teaching_days') }} <span style="color:red;">*</span></label>
                                 <input type="number" min="1" id="nameBasic" class="form-control @error('total_teaching_days') is-invalid @enderror" wire:model.lazy="total_teaching_days">
                                 @error('total_teaching_days') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
+                            @endif
                             <div class="col mb-3">
                               <label class="form-label">{{ __('label.shift') }} <span style="color:red;">*</span></label>
-                              <select class="form-select @error('shift_id') is-invalid @enderror" wire:model.lazy="shift_id" id ="shift_id">
+                              <select class="form-select @error('shift_id') is-invalid @enderror"
+                               wire:model.lazy="shift_id" id ="shift_id"
+                               wire:change="loadShiftTime($event.target.value)">
                                  <option value="">{{ __('label.select') }}</option>
                                     @foreach($shifts as $shift)
                                         <option value="{{ $shift->id }}"  wire:key="shift-{{ $shift->id }}">
@@ -441,21 +425,20 @@
                               </select>
                                 @error('shift_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                            </div>
+                           <div class="col mb-3">
+                              <label class="form-label">{{ __('label.time') }} <span style="color:red;">*</span></label>
+                              <select class="form-select @error('time_id') is-invalid @enderror" wire:model.lazy="time_id" id ="time_id">
+                                 <option value="">{{ __('label.select') }}</option>
+                                    @foreach($times as $time)
+                                        <option value="{{ $time->id }}"  wire:key="time-{{ $time->id }}">
+                                            {{ $time->start_time->format('h:i A') }} - {{ $time->end_time->format('h:i A') }}
+                                        </option>
+                                    @endforeach
+                              </select>
+                                @error('time_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                           </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.start_time') }} <span style="color:red;">*</span></label>
-                                <input type="time" id="nameBasic" class="form-control @error('start_time') is-invalid @enderror" wire:model.lazy="start_time">
-                                @error('start_time') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.end_time') }} <span style="color:red;">*</span></label>
-                                <input type="time" id="nameBasic" class="form-control @error('end_time') is-invalid @enderror" wire:model.lazy="end_time">
-                                @error('end_time') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.start_date') }} <span style="color:red;">*</span></label>
@@ -483,15 +466,15 @@
                         <div class="row">
                             <div class="col mb-3" wire:key="teacher-select-{{ $branch_id }}" wire:ignore.self>
                               <label class="form-label">{{ __('label.teacher') }} <span style="color:red;">*</span></label>
-                              <select class="form-select select2 @error('teacher_ids') is-invalid @enderror" multiple wire:model.lazy="teacher_ids" id ="teacher_ids">
-                                 <option value="" disabled>{{ __('label.select') }}</option>
+                              <select class="form-select select2 @error('teacher_id') is-invalid @enderror" wire:model.lazy="teacher_id" id ="teacher_id">
+                                 <option value="" >{{ __('label.select') }}</option>
                                     @foreach($teachers as $teacher)
                                         <option value="{{ $teacher->id }}"  wire:key="teacher-{{ $teacher->id }}">
                                             {{ $teacher->name }} {{ $teacher->last_name }}
                                         </option>
                                     @endforeach
                               </select>
-                                @error('teacher_ids') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                @error('teacher_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                            </div>
                            <div class="col mb-3" wire:key="classroom-select-{{ $branch_id }}">
                               <label class="form-label">{{ __('label.classroom') }} <span style="color:red;">*</span></label>
@@ -506,7 +489,8 @@
                                 @error('classroom_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                            </div>
                         </div>
-                         <div class="row">
+                        {{--
+                        <div class="row">
                             <div class="col mb-3">
                                 @if($existing_image)
                                     <div class="mb-2 text-center">
@@ -520,7 +504,7 @@
                                 @error('image') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
-                        
+                        --}}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
@@ -558,6 +542,10 @@ document.addEventListener("livewire:initialized", function () {
 
         $('#teacher_ids').off('change').on('change', function () {
              $wire.set('teacher_ids', $(this).val());
+        });
+
+        $('#teacher_id').off('change').on('change', function () {
+             $wire.set('teacher_id', $(this).val());
         });
 
         $('#program_id').off('change').on('change', function () {

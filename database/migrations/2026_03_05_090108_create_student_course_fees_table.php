@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('student_course_fees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->nullable()->constrained('students')->nullOnDelete();
-            $table->foreignId('course_id')->nullable()->constrained('courses')->nullOnDelete();
-            $table->foreignId('discount_provider_id')->nullable()->constrained('discount_providers')->nullOnDelete();
+            $table->foreignId('student_id')->constrained('students');
+            $table->foreignId('course_id')->constrained('courses');
+            $table->foreignId('discount_provider_id')->constrained('discount_providers');
 
             $table->enum('payment_type', ['full', 'installment']);
 
@@ -25,12 +25,14 @@ return new class extends Migration
             $table->decimal('discount_value', 10, 2)->default(0);
             $table->text('discount_reason')->nullable();
             $table->decimal('discount_amount',10,2)->default(0);
+            $table->decimal('g_discount_value', 10, 2)->default(0);
+            $table->decimal('g_discount_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2);
             $table->decimal('paid_amount',10,2)->default(0);
             $table->decimal('remaining_amount',10,2)->default(0);
 
             $table->enum('status',['unpaid','partial','paid'])->default('unpaid');
-            $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
+            $table->foreignId('branch_id')->constrained('branches');
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 

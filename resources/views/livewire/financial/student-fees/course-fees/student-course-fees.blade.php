@@ -143,6 +143,9 @@
                                 {{ __('label.discount_value') }}
                             </th>
                             <th>
+                                {{ __('label.g_discount_amount') }}
+                            </th>
+                            <th>
                                 {{ __('label.total_amount') }}
                             </th>
                             <th>
@@ -171,6 +174,7 @@
                             <td>{{ $fee->course?->name }}</td>
                             <td>{{ $fee->fee_amount }}</td>
                             <td>{{ $fee->discount_value }} @if($fee->discount_type=='percentage') % @endif</td>
+                            <td>{{ $fee->g_discount_amount }}</td>
                             <td>{{ $fee->total_amount }}</td>
                             <td>{{ $fee->paid_amount }}</td>
                             <td>{{ $fee->remaining_amount }}</td>
@@ -192,7 +196,7 @@
                                 </a>
                             </td>
                             <td>
-                                @if($fee->status ==='unpaid')
+                                
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
@@ -203,12 +207,14 @@
                                             ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a> -->
                                         @endif
                                         @if(delete(Auth::user()->role_ids,$active_menu_id))
+                                            @if(Auth::user()->isAdmin() || Auth::user()->isDeveloper())
                                             <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $fee->id }},'{{$table_name}}')"
                                             ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
-                                @endif
+                                
                             </td>
                         </tr>
                         @endforeach
@@ -228,10 +234,11 @@
                     <h5 class="modal-title">@if($editMode) {{ __('label.editing') }}  @else {{ __('label.adding') }} @endif @if(App::getLocale() =='en') {{ $active_menu?->name_en }} @elseif(App::getLocale()=='fa') {{ $active_menu?->name }} @endif</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
                 </div>
+                
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
                         <div class="row">
-                        
+
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.student_course') }}</label>
                                 <select  class="form-select @error('course_id') is-invalid @enderror" wire:model.lazy ="course_id">
@@ -243,6 +250,63 @@
                                 @error('course_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                        
+                        <!-- ---------physical Books------------------ -->
+                        @if(count($selected_physical_books) > 0)
+                            <div class="card mt-4 shadow-sm border-info mb-4">
+                                
+                                <div class="card-header bg-info text-white">
+                                    {{ __('label.physical_book') }}
+                                </div>
+
+                                <div class="card-body">
+
+                                    @foreach($selected_physical_books as $index => $book)
+                                        <div wire:key="physical-book-{{ $index }}" class="row mb-2 mt-2 align-items-center border-bottom pb-2">
+                                            
+                                            <div class="col">
+                                                {{ $book['name'] ?? '' }}
+                                            </div>
+
+                                            <div class="col text-center">
+                                                <span class="text-primary fw-bold">
+                                                    {{ number_format($book['price'] ?? 0) }}
+                                                </span>
+                                            </div>
+
+                                            <div class="col-auto">
+                                                @if(($book['status'] ?? 'paid') === 'requested_exemption')
+                                                    <!-- فقط کنسل معافیت -->
+                                                    <button type="button" class="btn btn-secondary btn-sm"
+                                                        wire:click="cancelExemption({{ $index }})">
+                                                        {{ __('label.cancel_exemption') }}
+                                                    </button>
+                                                @else
+                                                    <!-- فقط درخواست معافیت -->
+                                                    <button type="button" class="btn btn-warning btn-sm"
+                                                        wire:click="requestExemption({{ $index }})">
+                                                        {{ __('label.request_exemption') }}
+                                                    </button>
+                                                @endif
+                                            </div>
+
+                                        </div>
+                                    @endforeach
+
+                                    <div class="mt-3 text-end border-top pt-2">
+                                        <strong class="text-dark">
+                                            {{ __('label.total') }}: 
+                                            <span class="text-success">
+                                                {{ number_format($physical_books_total) }}
+                                            </span>
+                                        </strong>
+                                    </div>
+
+                                </div>
+                            </div>
+                            @endif
+                        <!-- ---------physical Books------------------ -->
+
                         <div class="row">
 
                             <div class="col mb-3">
@@ -264,7 +328,7 @@
                             </div>
                          
                         </div>
-                        <div class="row" >
+                     <div class="row" >
                              @if(!empty($discount_type))
                              <div class="col mb-3" >
                                 <label for="nameBasic" class="form-label">{{ __('label.discount_provider') }}: @if($discount_provider_id)
@@ -323,6 +387,15 @@
                                 @if($discount_error)<div class="invalid-feedback d-block">{{ $discount_error }}</div>@endif
                             </div>
                             @endif
+                            @if(!empty($g_discount_amount))
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.g_discount_amount') }}</label>
+                                <div class="form-control bg-light">
+                                    {{ $g_discount_amount }}&nbsp;
+                                </div>
+                                 @error('g_discount_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                            @endif
                             <div class="col mb-3">
                                 <label class="form-label">{{ __('label.total_amount') }}</label>
                                 <div class="form-control bg-light">
@@ -343,39 +416,10 @@
                                 @error('payment_type') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                              @if($payment_type === 'installment')
-                            <div class="col mb-3">
-                                <label for="nameBasic" class="form-label"></label>
-                                <button type="button" class="btn btn-primary form-control" wire:click="addInstallment()">{{ __('label.add_installment') }}</button>
-                            </div>
-                            @endif
-                        </div>
-                        <div class="row">
-                            @if($payment_type === 'installment')
-                                <div>
-                                    @foreach($installments as $index => $installment)
-                                        <div class="row mb-2 align-items-end">
-                                            <div class="col">
-                                                <label class="form-label">{{ __('label.installment') }} #{{ $index+1 }} {{ __('label.date') }}</label>
-                                                <input type="date" class="form-control @error('installments.'.$index.'.due_date') is-invalid @enderror" wire:model.lazy="installments.{{ $index }}.due_date">
-                                                @error('installments.'.$index.'.due_date')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <div class="col">
-                                                <label class="form-label">{{ __('label.amount') }}</label>
-                                                <input type="number" min="0" class="form-control @error('installments.'.$index.'.amount') is-invalid @enderror"  wire:model.lazy="installments.{{ $index }}.amount">
-                                                @error('installments.'.$index.'.amount')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <div class="col-auto">
-                                                <button type="button" class="btn btn-danger" wire:click="removeInstallment({{ $index }})">{{ __('label.remove') }}</button>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                     @if($installment_error)
-                                        <div class="text-danger mt-1">{{ $installment_error }}</div>
-                                    @endif
+                                <div class="col mb-3">
+                                    <label for="nameBasic" class="form-label" >{{ __('label.amount') }} <span style="color:red;">*</span></label>
+                                    <input type="text" id="nameBasic" class="form-control @error('installment_amount') is-invalid @enderror" wire:model.lazy="installment_amount">
+                                    @error('installment_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 </div>
                             @endif
                         </div>
@@ -393,10 +437,22 @@
         <div class="modal-dialog modal-lg" branch="document">
             <div class="modal-content">
                 <div class="modal-header">
+                    
                     <h5 class="modal-title">{{__('label.installments')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                    
                 </div>
+                
                 <div class="modal-body">
+                    @if($course_fee?->payment_type=='installment')
+                     <div class="text-end">
+                        <button
+                            class="btn btn-primary btn-sm mb-2"
+                            wire:click="openPaymentModal({{ $selected_fee_id }})">
+                            <i class="bx bx-x"></i> {{ __('label.add_new_record') }}
+                        </button>
+                    </div>
+                    @endif
                     <table class="table">
                         <thead class="table-dark">
                             <tr>
@@ -439,7 +495,7 @@
                                 </td>
                                 <td>
                                 @if($installment->status == 'unpaid')
-                                 <button
+                                <button
                                     class="btn btn-danger btn-sm rounded-pill"
                                     wire:click="openCancelModal({{ $installment->id }})">
                                     <i class="bx bx-x"></i> {{ __('label.cancel') }}
@@ -453,7 +509,7 @@
                                     {{ $installment->cancel_reason }}
                                 @elseif($installment->status == 'paid')
 
-                                <span class="badge bg-success">{{ __('label.paid') }}</span>
+                                <!-- <span class="badge bg-success">{{ __('label.paid') }}</span> -->
                                     <button class="btn btn-primary btn-sm" wire:click="loadInstallmentForPrint({{ $installment->id }})">
                                     <i class="bx bx-printer"></i> {{ __('label.print') }}
                                 </button>
@@ -518,9 +574,9 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">{{__('label.close')}}</button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">{{__('label.close')}}</button>
 
-                    <button class="btn btn-success" wire:click="payInstallment">
+                    <button class="btn btn-success" type="button" wire:click="payInstallment">
                         {{ __('label.pay') }}
                     </button>
                 </div>
@@ -529,6 +585,37 @@
         </div>
     </div>
 
+    <div class="modal fade" id="openPaymentModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.pay') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form  wire:submit.prevent="storeInstallment">
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ __('label.amount') }} <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control @error('install_amount') is-invalid @enderror" wire:model.lazy="install_amount"/>
+                             @error('install_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                        
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('label.close')}}</button>
+                        <button type="submit" class="btn btn-success" >
+                            {{ __('label.pay') }}
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
     <!-- --------------for print-------------------------------- -->
    @if(!empty($installmentToPrint))
     <div id="printArea" style="display:none;">
@@ -724,7 +811,7 @@ document.addEventListener("livewire:initialized", function () {
             });
         });
 
-        
+
         $('#discount_provider_id').off('change').on('change', function () {
             @this.set('discount_provider_id', $(this).val());
         });
@@ -753,7 +840,6 @@ document.addEventListener("livewire:initialized", function () {
 });
 </script>
   
-
 @endscript
 
 <script>

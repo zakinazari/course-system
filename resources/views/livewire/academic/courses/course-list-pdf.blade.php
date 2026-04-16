@@ -32,6 +32,7 @@
         'program_id' => __('label.program'),
         'book_id' => __('label.book'),
         'shift_id' => __('label.shift'),
+        'time_id' => __('label.time'),
         'min_capacity' => __('label.min_capacity'),
         'max_capacity' => __('label.max_capacity'),
         'total_teaching_days' => __('label.total_teaching_days'),
@@ -41,7 +42,7 @@
         'end_date' => __('label.end_date'),
         'mid_exam_date' => __('label.mid_exam_date'),
         'final_exam_date' => __('label.final_exam_date'),
-        'teacher_ids' => __('label.teacher'),
+        'teacher_id' => __('label.teacher'),
         'classroom_id' => __('label.classroom'),
         'status' => __('label.status'),
         'branch_id' => __('label.branch'),
@@ -84,10 +85,8 @@
                             {{ $i + 1 }}
                         @elseif($field === 'status')
                             {{ ucfirst($course->status) }}
-                        @elseif($field === 'start_time')
-                            {{ $course->start_time->format('h:i A') }}
-                        @elseif($field === 'end_time')
-                            {{ $course->end_time->format('h:i A') }}
+                        @elseif($field === 'time_id')
+                            {{ $course->time?->start_time->format('h:i A') }} - {{ $course->time?->end_time->format('h:i A') }} 
                         @elseif($field === 'start_date')
                             {{ $course->start_date->format('Y/m/d') }}
                         @elseif($field === 'end_date')
@@ -108,8 +107,8 @@
                             {{ $course->classroom?->name }}
                         @elseif($field==='branch_id')
                             {{ $course->branch?->name }}
-                        @elseif($field==='teacher_ids')
-                            {{ $course->teachers->pluck('name')->join(', ') }} {{ $course->teachers->pluck('last_name')->join(', ') }} 
+                        @elseif($field==='teacher_id')
+                            {{ $course->teacher?->name }} {{ $course->teacher?->last_name }}
                         @else
                             {{ $course->$field }}
                         @endif

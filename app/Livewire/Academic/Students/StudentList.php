@@ -81,6 +81,7 @@ class StudentList extends Component
         $branch_id,
         $photo,
         $status = 'new';
+    public $student_code;
     public $visitor_id;
     public function resetInputFields(){
         $this->resetExcept([
@@ -106,7 +107,8 @@ class StudentList extends Component
 
                 $q->where(function ($qq) use ($search) {
                     $qq->where('name', 'like', "%{$search}%")
-                    ->orWhere('student_code', 'like', "%{$search}%");
+                    ->orWhere('student_code', 'like', "%{$search}%")
+                    ->orWhere('phone_no', 'like', "%{$search}%");
                 });
             })
         ->when(!empty($this->search['status']), function ($query) {
@@ -124,10 +126,10 @@ class StudentList extends Component
     protected function rules()
     {
         $rules = [
+            'student_code' => 'required|string|unique:students,student_code,' . $this->st_id . ',id',
             'name' => 'required',
             'father_name' => 'required',
-            // 'phone_no' => 'nullable|string|max:16|unique:visitors,phone_no,' . $this->meeting_id,
-            'phone_no' => 'nullable|string|max:10',
+            'phone_no' => 'required|string|max:16|unique:students,phone_no,' . $this->st_id . ',id',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048'
         ];
 
@@ -141,6 +143,7 @@ class StudentList extends Component
     protected function messages()
     {
         return [
+            'student_code.required' => __('label.student_code.required'),
             'name.required' => __('label.name.required'),
             'father_name.string'   => __('label.father_name.required'),
             'phone_no.max'   => __('label.phone_no.max'),
@@ -161,6 +164,7 @@ class StudentList extends Component
         try {
 
             $student = Student::create([
+                'student_code'      => $this->student_code,
                 'name'              => $this->name,
                 'last_name'         => $this->last_name,
                 'father_name'       => $this->father_name,
@@ -265,6 +269,7 @@ class StudentList extends Component
         $this->resetValidation(); 
         $this->st_id = $id;    
         $student = Student::find($id);
+        $this->student_code = $student->student_code;
         $this->name = $student->name;
         $this->last_name = $student->last_name;
         $this->father_name = $student->father_name;
@@ -290,6 +295,7 @@ class StudentList extends Component
             $student = Student::find($this->st_id);
 
             $student->update([
+                'student_code'      => $this->student_code,
                 'name' => $this->name,
                 'last_name' => $this->last_name,
                 'father_name' => $this->father_name,

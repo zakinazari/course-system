@@ -117,6 +117,7 @@ class BranchList extends Component
         try {
 
             $branch = Branch::create([
+                'code' => $this->code,
                 'name' => $this->name,
                 'location' => $this->location,
                 'status' => $this->status,

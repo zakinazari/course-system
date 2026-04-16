@@ -109,6 +109,20 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.center-settings.books.book-list-page',['menu_id' => $menu_id]);
     })->name('books');
 
+    Route::get('/physical-books/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.physical-books.physical-book-list-page',['menu_id' => $menu_id]);
+    })->name('physical-books');
+
+    Route::get('/exam-types/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.exam-types.exam-type-list-page',['menu_id' => $menu_id]);
+    })->name('exam-types');
+
     Route::get('/classrooms/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
@@ -136,6 +150,27 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.center-settings.fee-types.fee-type-list-page',['menu_id' => $menu_id]);
     })->name('fee-types');
+
+    Route::get('/general-discounts/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.physical-books.physical-book-list-page',['menu_id' => $menu_id]);
+    })->name('general-discounts');
+        
+    Route::get('/time-list/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.times.time-list-page',['menu_id' => $menu_id]);
+    })->name('time-list');
+
+    Route::get('/shift-list/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.shifts.shift-list-page',['menu_id' => $menu_id]);
+    })->name('shift-list');
 
     Route::get('/units/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
@@ -225,9 +260,10 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.academic.enrollments.course-enrollments-page', ['menu_id' => $menu_id,'course_id'=>$course_id,'student_id'=>$student_id]);
     })->whereNumber('menu_id')->name('course-enrollments');
 
-    Route::get('/search-students{menu_id?}', function (Request $request,$menu_id=null) {
+    Route::get('/search-students', function (Request $request) {
 
-        if (!read(Auth::user()->role_ids, $menu_id)) {
+        //34 لیست دانشجویان
+        if (!read(Auth::user()->role_ids,34)) {
             abort(403, __('label.permission_message'));
         }
         $q = $request->q;  
@@ -249,6 +285,7 @@ Route::middleware(['auth'])->group(function () {
             ]);
     });
 
+    
     Route::get('waiting-list/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
@@ -305,6 +342,13 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.assessment.student-result.student-course-result-list-page', ['menu_id' => $menu_id]);
     })->whereNumber('menu_id')->name('student-course-result-list');
+
+    Route::get('exam-attendance/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.assessment.exam-attendance.exam-attendance-list-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('exam-attendance');
 
     // -----------end assessment-------------------
 

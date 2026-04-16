@@ -87,6 +87,7 @@
                             <th>{{ __('label.book_name') }}</th>
                             <th>{{ __('label.abbreviation') }}</th>
                             <th>{{ __('label.program') }}</th>
+                            <th>{{ __('label.level_number') }}</th>
                             <th>{{ __('label.status') }}</th>
                             <th>{{ __('label.actions') }}</th>
                         </tr>
@@ -98,6 +99,7 @@
                             <td>{{ $book->name }}</td>
                             <td>{{ $book->abbreviation }}</td>
                             <td>{{ $book->program?->name }}</td>
+                            <td>{{ $book->level_number }}</td>
                             <td>
                                 @if($book->status ==='active' ) 
                                     <span class="badge rounded-pill bg-success">{{ __('label.active') }}</span>
@@ -173,21 +175,117 @@
                            @enderror
 
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.fee') }} </label>
+                                <label for="nameBasic" class="form-label">{{ __('label.fee') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('fee') is-invalid @enderror" wire:model.lazy="fee">
                                 @error('fee') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row">
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.pass_mark') }} </label>
+                                <label for="nameBasic" class="form-label">{{ __('label.pass_mark') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('pass_mark') is-invalid @enderror" wire:model.lazy="pass_mark">
                                 @error('pass_mark') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.excellent_mark') }} </label>
-                                <input type="text" id="nameBasic" class="form-control @error('excellent_mark') is-invalid @enderror" wire:model.lazy="excellent_mark">
-                                @error('excellent_mark') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                <label for="nameBasic" class="form-label">{{ __('label.total_teaching_days') }} <span style="color:red;">*</span></label>
+                                <input type="number" min="1" id="nameBasic" class="form-control @error('total_teaching_days') is-invalid @enderror" wire:model.lazy="total_teaching_days">
+                                @error('total_teaching_days') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                          
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.min_capacity') }} <span style="color:red;">*</span></label>
+                                <input type="number" min="1" id="nameBasic" class="form-control @error('min_capacity') is-invalid @enderror" wire:model.lazy="min_capacity">
+                                @error('min_capacity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.max_capacity') }} <span style="color:red;">*</span></label>
+                                <input type="number" min="1" id="nameBasic" class="form-control @error('max_capacity') is-invalid @enderror" wire:model.lazy="max_capacity">
+                                @error('max_capacity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            
+                        </div>
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.exam_fine_amount') }} <span style="color:red;">*</span></label>
+                                <input type="number" min="1" id="nameBasic" class="form-control @error('exam_fine_amount') is-invalid @enderror" wire:model.lazy="exam_fine_amount">
+                                @error('exam_fine_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.level_number') }} <span style="color:red;">*</span></label>
+                                <input type="number" min="1" id="nameBasic" class="form-control @error('level_number') is-invalid @enderror" wire:model.lazy="level_number">
+                                @error('level_number') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.drop_days') }} <span style="color:red;">*</span></label>
+                                <input type="number" min="1" id="nameBasic" class="form-control @error('drop_days') is-invalid @enderror" wire:model.lazy="drop_days">
+                                @error('drop_days') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="card mb-3 ">
+                            <div class="card-header">
+                                <strong>{{ __('label.exam_type') }}</strong> <span style="color:red;">*</span>
+                            </div>
+
+                            <div class="card-body ">
+                                <table class="table table-bordered mb-0 align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 60px;">#</th>
+                                            <th>{{ __('label.exam_type') }}</th>
+                                            <th style="width: 150px;">{{ __('label.percentage') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($exam_types as $type)
+                                            <tr>
+                                                <!-- Checkbox -->
+                                                <td class="text-center">
+                                                    <input class="form-check-input"
+                                                        type="checkbox"
+                                                        wire:model.lazy="exam_type_ids"
+                                                        value="{{ $type->id }}">
+                                                </td>
+
+                                                <!-- Name -->
+                                                <td>
+                                                    {{ $type->name }}
+                                                </td>
+
+                                                <!-- Percentage -->
+                                                <td>
+                                                    <input type="number"
+                                                        class="form-control"
+                                                        placeholder="%"
+                                                        min="0" max="100"
+                                                        wire:model.lazy="percentages.{{ $type->id }}">
+                                                    
+                                                    @error("percentages.{$type->id}")
+                                                        <div class="text-danger small">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+
+                                <!-- Errors -->
+                                <div class="p-3">
+                                    @error('exam_type_ids')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+
+                                    <div class="mt-2">
+                                        <strong>{{ __('label.total') }}: {{ array_sum($percentages ?? []) }}%</strong>
+                                    </div>
+
+                                    @if($errors->has('percentages_total'))
+                                        <div class="invalid-feedback d-block">
+                                            {{ $errors->first('percentages_total') }}
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -218,6 +316,7 @@
                             </div>
                         </div>
                     </div>
+                      
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
                         <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>

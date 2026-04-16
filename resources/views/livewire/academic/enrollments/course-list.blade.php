@@ -120,13 +120,8 @@
           <div class="card-header d-flex flex-column flex-md-row justify-content-between gap-3">
             <div class="card-title mb-0 me-1">
                 <h5 class="card-title mb-0">
-                    @if(App::getLocale()=='en') 
-                        {{ $active_menu?->name_en }} 
-                    @else 
-                        {{ $active_menu?->name }}  
-                    @endif
+                    {{ __('label.courses') }}
                 </h5>
-                
             </div>
             <div class="d-flex align-items-center gap-1 mt-3 mt-md-0 justify-content-end flex-wrap">
                 <span>{{ __('label.show') }}</span>
@@ -143,8 +138,9 @@
             <div class="card-body">
                 <div class="row gy-4 mb-4">
                     @foreach($courses as $i => $course)
-                    <div class="col-sm-6 col-lg-4 ">
+                    <div class="col-sm-6 col-lg-3">
                         <div class="card p-2 h-100">
+                            {{--
                             <div class="rounded-2 text-center mb-3">
                                 <a href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id]) }}">
 
@@ -161,26 +157,61 @@
                                     </div>
                                 </a>
                             </div>
-
+                            --}}
                             <div class="card-body p-3 pt-2">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="badge bg-label-primary">{{ $course->program?->name }}</span>
-                                <h6 class="d-flex align-items-center justify-content-center gap-1 mb-0">
-                                4.4 <span class="text-warning"><i class="bx bxs-star me-1"></i></span><span class="text-muted">(1.23k)</span>
-                                </h6>
-                            </div>
-                            <a href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id]) }}" class="h5">{{ $course->book?->name }}</a>
-                            <p class="mt-2">{{ $course->name }}</p>
-                            <p class="d-flex align-items-center"><i class="bx bx-time-five me-2"></i>{{ $course->start_time->format('h:i A') }} - {{ $course->end_time->format('h:i A') }}</p>
-                            <p class="d-flex align-items-center"><i class="bx bx bx-task bx-sm me-2"></i>
-                            <span class="badge  {{ $course->status_badge_class }}">
-                                    {{ __('label.' . $course->status) }}
-                            </span></p>
-                            
-                            <a class="app-academy-md-50 btn btn-label-primary d-flex align-items-center" href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id]) }}">
-                            <span class="me-2">{{ __('label.enrollment') }}</span><i class="bx bx-chevron-right lh-1 scaleX-n1-rtl"></i>
-                            </a>
-                       
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge bg-label-info small">{{ $course->program?->name }}</span>
+                                    
+                                </div>
+                                <a href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id]) }}" class="mt-2 small" >{{ $course->book?->name }}</a>
+                                <p class="mt-2 small" style="font-size:10px">{{ $course->name }}</p>
+                                <p class="d-flex align-items-center small"><i class="bx bx-time-five me-2"></i>{{ $course->time?->start_time->format('h:i A') }} - {{ $course->time?->end_time->format('h:i A') }}</p>
+                                <p class="d-flex align-items-center small"><i class="bx bx bx-task bx-sm me-2"></i>
+                                <span class="badge small {{ $course->status_badge_class }}">
+                                        {{ __('label.' . $course->status) }}
+                                </span></p>
+                                <p class="text-nowrap mb-1 small">
+                                    <i class="bx bx-group bx-sm me-2 text-primary"></i>
+                                    {{ __('label.registered_students') }}:
+                                    <strong>{{ $course->students()->count() }}</strong>
+                                </p>
+
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-chair bx-sm me-2 text-warning"></i>
+                                    {{ __('label.available_seats') }}:
+                                    <strong>
+                                        {{ max(($course->max_capacity ?? 0) - $course->students()->count(), 0) }}
+                                    </strong>
+                                </p>
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-user me-2 text-info"></i>
+                                    {{ __('label.teacher') }}:
+                                    <strong>
+                                        {{ $course->teacher?->name }} {{ $course->teacher?->last_name }}
+                                    </strong>
+                                </p>
+
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-calendar me-2 text-primary"></i>
+                                    {{ __('label.teaching_days') }}:
+                                    <strong>{{ $course->total_days ?? 0 }}</strong>
+                                </p>
+
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-check-circle me-2"></i>
+                                    {{ __('label.today_attendance') }}:
+
+                                    @if($course->today_attendance)
+                                        <span class="badge bg-success">Taken</span>
+                                    @else
+                                        <span class="badge bg-danger">Not Taken</span>
+                                    @endif
+                                </p>
+                                
+                                <a class="app-academy-md-50 btn btn-label-primary d-flex align-items-center" href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id]) }}">
+                                <span class="me-2 small">{{ __('label.enrollment') }}</span><i class="bx bx-chevron-right lh-1 scaleX-n1-rtl"></i>
+                                </a>
+                                
                             </div>
                         </div>
                     </div>

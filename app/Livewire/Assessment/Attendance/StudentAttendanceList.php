@@ -18,6 +18,10 @@ use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
 use App\Models\Hr\Employee;
 use App\Models\Assessment\StudentAttendance;
+use App\Models\Assessment\CourseUnit;
+use App\Models\Assessment\CourseUnitDay;
+use App\Models\Assessment\TeacherAttendance;
+use App\Models\Financial\StudentCourseFee;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
@@ -31,7 +35,7 @@ use DB;
 class StudentAttendanceList extends Component
 {
     
-     // -------start generals--------------------
+    // -------start generals--------------------
     use WithPagination;
     use WithFileUploads;
     public $perPage = 10;
@@ -95,15 +99,28 @@ class StudentAttendanceList extends Component
         $this->programs = Program::where('status','active')->get();
         $this->shifts = Shift::all();
         $this->course_types = CourseType::all();
-        $this->search['attendance_date'] = now()->toDateString();
+        $this->attendance_date = now()->toDateString();
         $branch_id = Auth::user()->branch_id ?: $this->search['branch_id'];
         $this->loadClassroomAndTeacher($branch_id);
     }
     public
         $student_id,
         $course_id,
+        $course,
         $attendance_date,
         $status;
+    
+
+
+        public $teacher_status = 'present'; // پیشفرض
+        public $teacher_note = null;
+
+        // UNIT SYSTEM
+        public $total_days = 0;
+        public $current_unit_status = 'finished';
+        public $current_unit_number = 1;
+        // برای radio در UI
+        public $unit_status = 'finished';
 
      public function resetInputFields(){
         $this->resetExcept([
@@ -130,48 +147,142 @@ class StudentAttendanceList extends Component
             'course_type_id' => null,
             'shift_id' => null,
             'teacher_id' => null,
-            'course_id' => null,
-            'attendance_date' =>null,
         ];
     public $students=[];
     public $attendances = [];
     public function render()
     {
-       
+       if (empty($this->course_id)) {
+            $this->students = collect();
+        }
         return view('livewire.assessment.attendance.student-attendance-list',[
-             'students' => $this->students ?? collect()
+             'students' => $this->students ?? collect(),
+             'course' => $this->course,
         ]);
     }
 
-    protected function loadCourseStudent(){
+    protected function loadCourseStudent()
+    {
+        $this->students = collect();
+        $this->course = null;
+        $course_id = $this->course_id;
+        $date = $this->attendance_date ?? now()->toDateString();
 
-        $course_id = $this->search['course_id'] ?? null;
-        $date = $this->search['attendance_date'] ?? now()->toDateString();
         if (!$course_id) {
-            $students = collect();
-        } else {
-            $students = CourseStudent::with('student')
-                ->where('course_id', $course_id)
-                ->get();
-
-            foreach ($students as $i=>$cs) {
-                $record = StudentAttendance::where([
-                    'student_id' => $cs->student_id,
-                    'course_id' => $course_id,
-                    'attendance_date' => $date,
-                ])->first();
-
-                $this->attendances[$cs->student_id] = $record->status ?? 'present';
-                $students[$i]->attendance_date = $record->attendance_date?? '';
-            }
+            $this->students = collect();
+            return;
         }
-        $this->students =$students;
+
+        // =========================
+        // 1. Load Course with Teacher
+        // =========================
+        $course = Course::with('teacher')
+            ->where('id', $course_id)
+            ->first();
+
+        $this->course = $course;
+
+        // =========================
+        // 1. تعداد روزها (Day)
+        // =========================
+        $this->total_days = TeacherAttendance::where('course_id', $course_id)
+            ->distinct('attendance_date')
+            ->count('attendance_date');
+
+        // =========================
+        // 2. رکارد امروز
+        // =========================
+        $today = TeacherAttendance::where('course_id', $course_id)
+            ->where('attendance_date', $date)
+            ->first();
+
+        // =========================
+        // 3. رکارد قبلی (قبل از امروز)
+        // =========================
+        $previous = TeacherAttendance::where('course_id', $course_id)
+            ->where('attendance_date', '<', $date)
+            ->orderByDesc('attendance_date')
+            ->first();
+
+        if ($today) {
+
+            // اگر امروز ثبت شده → همان را نشان بده
+            $this->current_unit_number = $today->unit_number ?? 1;
+            $this->unit_status = $today->lesson_status ?? 'finished';
+            $this->teacher_note = $today->note ?? null;
+            $this->teacher_status = $today->status ?? 'present';
+
+        } else {
+
+            // اگر امروز هنوز ثبت نشده → پیش‌بینی کن
+
+            if (!$previous) {
+                $this->current_unit_number = 1;
+            } else {
+
+                if ($previous->lesson_status === 'ongoing') {
+                    $this->current_unit_number = $previous->unit_number;
+                } else {
+                    $this->current_unit_number = $previous->unit_number + 1;
+                }
+            }
+
+            // پیشفرض‌ها برای روز جدید
+            $this->unit_status = 'finished';
+            $this->teacher_status = 'present';
+            $this->teacher_note = null;
+        }
+
+        // =========================
+        // 3. Load Students
+        // =========================
+        $students = CourseStudent::with([
+                'student',
+                'course:id,book_id',
+                'course.book:id,drop_days'
+            ])
+            ->where('course_id', $course_id)
+            ->get();
+
+        $fees = StudentCourseFee::where('course_id', $course_id)
+            ->get()
+            ->keyBy('student_id');
+
+        foreach ($students as $i => $cs) {
+
+            $record = StudentAttendance::where([
+                'student_id' => $cs->student_id,
+                'course_id' => $course_id,
+                'attendance_date' => $date,
+            ])->first();
+
+            $this->attendances[$cs->student_id] = $record->status ?? 'present';
+            $students[$i]->attendance_date = $record->attendance_date ?? null;
+
+            // absent days
+            $absent_days = StudentAttendance::where('student_id', $cs->student_id)
+                ->where('course_id', $course_id)
+                ->where('status', 'absent')
+                ->count();
+
+            $students[$i]->absent_days = $absent_days;
+
+            // payment
+            $fee = $fees[$cs->student_id] ?? null;
+
+            $students[$i]->remaining_amount = $fee?->remaining_amount ?? 0;
+            $students[$i]->payment_status = !$fee
+                ? 'not_registered'
+                : ($fee->remaining_amount == 0 ? 'paid' : 'due');
+        }
+
+        $this->students = $students;
     }
 
     protected function rules()
     {
         $rules =  [
-            'search.course_id' => 'required',
+            'course_id' => 'required',
 
         ];
         return $rules;
@@ -179,6 +290,10 @@ class StudentAttendanceList extends Component
 
     public function updatedSearch()
     {
+        $this->dispatch('reset-select2');
+        $this->students = collect();
+        $this->course_id = null;
+        $this->courses = [];
         $this->courses = Course::with('branch','courseType','program','book','classroom','shift')
         ->where('status','ongoing')
         ->when(!empty($this->search['name']), function ($query) {
@@ -205,6 +320,7 @@ class StudentAttendanceList extends Component
                 $q->where('teacher_id',$this->search['teacher_id']);
             });
         })->get();
+
     }
 
     public function loadProgramBook($program_id)
@@ -219,50 +335,56 @@ class StudentAttendanceList extends Component
         $this->classrooms = Classroom::where('status', 'active')
             ->where('branch_id', $branch_id)->get();
 
-        $this->teachers = Employee::where('status','new')->get();
+        $this->teachers = Employee::whereHas('employeeRoles', function($query) {
+            $query->where('name', 'Teacher');
+        })->get();
     }
 
-
-    public function updatedSearchCourseId()
+    public function updatedCourseId($value)
     {
-        $this->resetErrorBag('search.attendance_date');
+        if ($value) {
+            $this->loadCourseStudent();
+        } else {
+            $this->students = collect();
+            $this->attendances = [];
+        }
     }
 
-    public function updatedSearchAttendanceDate()
+    public function updatedAttendanceDate()
     {
-        $this->resetErrorBag('search.attendance_date');
+        $this->loadCourseStudent();
+        $this->resetErrorBag('attendance_date');
     }
+
     public function saveAttendance()
     {
         if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
 
-        $course_id = $this->search['course_id'] ?? null;
+        $course_id = $this->course_id ?? null;
         if (!$course_id) return;
 
         $course = Course::find($course_id);
         if (!$course) return;
-        $start = \Carbon\Carbon::parse($course->start_date)->toDateString(); 
-        $end   = \Carbon\Carbon::parse($course->end_date)->toDateString(); 
-       $this->validate(
-            [
-                'search.attendance_date' =>
-                    'required|date|after_or_equal:' . $start .
-                    '|before_or_equal:' . $end,
-            ],
-            [], 
-            [
-                'search.attendance_date' => __('label.attendance_date'), 
-            ]
-        );
 
+        $start = \Carbon\Carbon::parse($course->start_date)->toDateString();
+
+        $this->validate([
+            'attendance_date' => 'required|date|after_or_equal:' . $start,
+        ]);
+
+        DB::beginTransaction();
 
         try {
 
-            $date = $this->search['attendance_date'];
+            $date = $this->attendance_date;
 
+            // =========================
+            // 1. STUDENT ATTENDANCE (UNCHANGED)
+            // =========================
             foreach ($this->attendances as $student_id => $status) {
+
                 StudentAttendance::updateOrCreate(
                     [
                         'student_id' => $student_id,
@@ -274,17 +396,76 @@ class StudentAttendanceList extends Component
                         'recorded_by' => Auth::id(),
                     ]
                 );
+
+                $absent_days = StudentAttendance::where('student_id', $student_id)
+                    ->where('course_id', $course_id)
+                    ->where('status', 'absent')
+                    ->count();
+
+                $drop_days = $course->book?->drop_days;
+
+                if ($drop_days && $absent_days >= $drop_days) {
+                    DB::table('course_student')
+                        ->where('student_id', $student_id)
+                        ->where('course_id', $course_id)
+                        ->update(['status' => 'dropped']);
+                }
             }
+
+            // =========================
+            // 2. UNIT NUMBER LOGIC (NEW)
+            // =========================
+            $previous = TeacherAttendance::where('course_id', $course_id)
+                ->where('attendance_date', '<', $date) 
+                ->orderByDesc('attendance_date')
+                ->first();
+
+            if (!$previous) {
+                $unit_number = 1;
+            } else {
+
+                if ($previous->lesson_status === 'ongoing') {
+                    // ادامه همان یونت
+                    $unit_number = $previous->unit_number;
+                } else {
+                    // یونت قبلی تمام شده → یونت جدید
+                    $unit_number = $previous->unit_number + 1;
+                }
+            }
+
+            // =========================
+            // 3. TEACHER ATTENDANCE (UPDATED)
+            // =========================
+            TeacherAttendance::updateOrCreate(
+                [
+                    'course_id' => $course_id,
+                    'teacher_id' => $course->teacher_id,
+                    'attendance_date' => $date,
+                ],
+                [
+                    'status' => $this->teacher_status ?? 'present',
+                    'lesson_status' => $this->unit_status ?? 'finished',
+                    'unit_number' => $unit_number,
+                    'note' => $this->teacher_note,
+                    'recorded_by' => Auth::id(),
+                ]
+            );
+
+            DB::commit();
+
+            $this->students = collect();
 
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
 
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
         }
     }
 
     public function exportPdf()
     {
+         $this->students = collect();
         $data = $this->getReport();
         $students = $data['students'];
         $fields = $data['fields'];
@@ -301,7 +482,7 @@ class StudentAttendanceList extends Component
             ]
         )->setPaper('a4',$this->pdfOrientation)
         ->setOption('defaultFont', 'dejavusans');
-
+        
         return response()->streamDownload(
             fn () => print($pdf->output()),
             'student-attendance-' . Carbon::now()->format('Y-m-d -H-i-A') . '.pdf'
@@ -310,6 +491,7 @@ class StudentAttendanceList extends Component
 
     public function exportExcel()
     {
+         $this->students = collect();
         $data = $this->getReport();
         $students = $data['students'];
         $fields = $data['fields'];
@@ -346,6 +528,18 @@ class StudentAttendanceList extends Component
                                 case 'last_name': $row[] = $sc->student?->last_name; break;
                                 case 'father_name': $row[] = $sc->student?->father_name; break;
                                 case 'status': $row[] = $sc->att_status; break;
+                                case 'absent_days': $row[] = $sc->absent_days; break;
+                                case 'payment_status':
+                
+                                    if ($sc->payment_status === 'not_registered') {
+                                        $row[] = 'Not Registered';
+                                    } elseif ($sc->payment_status === 'paid') {
+                                        $row[] = 'Fully Paid';
+                                    } else {
+                                       
+                                        $row[] = __('label.due') . ': ' . number_format($sc->remaining_amount);
+                                    }
+                                    break;
                                 default: $row[] = '';
                             }
                         }
@@ -364,6 +558,8 @@ class StudentAttendanceList extends Component
                         'last_name'      => __('label.last_name'),
                         'father_name'    => __('label.father_name'),
                         'status'         => __('label.status'),
+                        'absent_days'         => __('label.absent_days'),
+                        'payment_status'         => __('label.payment_status'),
                     ];
 
                     $translatedFields = [];
@@ -459,6 +655,8 @@ class StudentAttendanceList extends Component
             'last_name',
             'father_name',
             'status',
+            'absent_days',
+            'payment_status',
         ];
 
         $fields = !empty($this->selectedFields)
@@ -482,6 +680,9 @@ class StudentAttendanceList extends Component
                 ->where('course_id', $course_id)
                 ->orderBy('id', 'asc') 
                 ->get();
+            $fees = StudentCourseFee::where('course_id', $course_id)
+            ->get()
+            ->keyBy('student_id');
 
             foreach ($students as $i=> $cs) {
                 $record = StudentAttendance::where([
@@ -491,6 +692,21 @@ class StudentAttendanceList extends Component
                 ])->first();
 
                 $students[$i]->att_status = $record->status ?? 'Not Taken';
+                
+                // محاسبه تعداد روزهای غیبت از شروع کورس تا تاریخ انتخابی، بجز جمعه
+                $absent_days = StudentAttendance::where('student_id', $cs->student_id)
+                    ->where('course_id', $course_id)
+                    ->where('status', 'absent')
+                    ->count();
+
+                $students[$i]->absent_days = $absent_days;
+                // فیدهای مالی 
+
+                $fee = $fees[$cs->student_id] ?? null;
+                $students[$i]->remaining_amount = $fee?->remaining_amount ?? 0;
+                $students[$i]->payment_status = !$fee 
+                    ? 'not_registered' 
+                    : ($fee->remaining_amount == 0 ? 'paid' : 'due');
             }
         }
 
@@ -498,5 +714,6 @@ class StudentAttendanceList extends Component
             'students' => $students,
             'fields' => $fields,
         ];
+        
     }
 }

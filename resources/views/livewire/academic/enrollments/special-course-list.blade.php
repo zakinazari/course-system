@@ -172,8 +172,9 @@
                   
                 <div class="row gy-4 mb-4">
                     @foreach($courses as $i => $course)
-                    <div class="col-sm-6 col-lg-4 ">
+                    <div class="col-sm-6 col-lg-3">
                         <div class="card p-2 h-100">
+                            {{--
                             <div class="rounded-2 text-center mb-3">
                                 <a href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id,'student_id'=>$student_id]) }}">
 
@@ -190,58 +191,95 @@
                                     </div>
                                 </a>
                             </div>
-
+                            --}}
                             <div class="card-body p-3 pt-2">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="badge bg-label-primary">{{ $course->program?->name }}</span>
-                                <h6 class="d-flex align-items-center justify-content-center gap-1 mb-0">
-                                4.4 <span class="text-warning"><i class="bx bxs-star me-1"></i></span><span class="text-muted">(1.23k)</span>
-                                </h6>
-                            </div>
-                            <a href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id,'student_id'=>$student_id]) }}" class="h5">{{ $course->book?->name }}</a>
-                            <p class="mt-2">{{ $course->name }}</p>
-                            <p class="d-flex align-items-center"><i class="bx bx-time-five me-2"></i>{{ $course->start_time->format('h:i A') }} - {{ $course->end_time->format('h:i A') }}</p>
-                            <p class="d-flex align-items-center"><i class="bx bx bx-task bx-sm me-2"></i>
-                            <span class="badge  {{ $course->status_badge_class }}">
-                                    {{ __('label.' . $course->status) }}
-                            </span></p>
-                            <p class="text-nowrap mb-1">
-                                <i class="bx bx-up-arrow-circle bx-sm me-2 text-danger"></i>
-                                {{ __('label.max_capacity') }}:
-                                <strong>{{ $course->max_capacity ?? 0 }}</strong>
-                            </p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge bg-label-info small">{{ $course->program?->name }}</span>
+                                   
+                                </div>
+                                <a href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id,'student_id'=>$student_id]) }}" class="mt-2 small">{{ $course->book?->name }}</a>
+                                <p class="mt-2 small" style="font-size:10px">{{ $course->name }}</p>
+                                <p class="d-flex align-items-center small"><i class="bx bx-time-five me-2"></i>{{ $course->time?->start_time->format('h:i A') }} - {{ $course->time?->end_time->format('h:i A') }}</p>
+                                <p class="d-flex align-items-center small"><i class="bx bx bx-task bx-sm me-2"></i>
+                                <span class="badge  {{ $course->status_badge_class }}">
+                                        {{ __('label.' . $course->status) }}
+                                </span></p>
+                                <!-- <p class="text-nowrap mb-1 small">
+                                    <i class="bx bx-up-arrow-circle bx-sm me-2 text-danger"></i>
+                                    {{ __('label.max_capacity') }}:
+                                    <strong>{{ $course->max_capacity ?? 0 }}</strong>
+                                </p> -->
 
-                            <p class="text-nowrap mb-1">
-                                <i class="bx bx-group bx-sm me-2 text-primary"></i>
-                                {{ __('label.registered_students') }}:
-                                <strong>{{ $course->students()->count() }}</strong>
-                            </p>
+                                <p class="text-nowrap mb-1 small">
+                                    <i class="bx bx-group bx-sm me-2 text-primary"></i>
+                                    {{ __('label.registered_students') }}:
+                                    <strong>{{ $course->students()->count() }}</strong>
+                                </p>
 
-                            <p class="text-nowrap">
-                                <i class="bx bx-chair bx-sm me-2 text-warning"></i>
-                                {{ __('label.available_seats') }}:
-                                <strong>
-                                    {{ max(($course->max_capacity ?? 0) - $course->students()->count(), 0) }}
-                                </strong>
-                            </p>
-                            <div class="d-flex flex-column flex-md-row gap-2 text-nowrap pe-xl-3 pe-xxl-0">
-                                @if(add(Auth::user()->role_ids,$active_menu_id))
-                                <button 
-                                    type="button" 
-                                    class="btn btn-success"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#{{$modalId}}" 
-                                    wire:click="setIds({{ $course->id }}, {{ $student_id }})">
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-chair bx-sm me-2 text-warning"></i>
+                                    {{ __('label.available_seats') }}:
+                                    <strong>
+                                        {{ max(($course->max_capacity ?? 0) - $course->students()->count(), 0) }}
+                                    </strong>
+                                </p>
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-user bx-sm me-2 text-info small"></i>
+                                    {{ __('label.teacher') }}:
+                                    <strong class="small">{{ $course->teacher?->name }} {{ $course->teacher?->last_name }}</strong>
+                                </p>
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-calendar me-2 text-primary"></i>
+                                    {{ __('label.teaching_days') }}:
+                                    <strong>{{ $course->total_days ?? 0 }}</strong>
+                                </p>
 
-                                    <i class="bx bx-plus"></i>
-                                    <span class="small"> {{ __('label.add_student_to_course') }} </span>
-                                </button>
-                                 @endif
-                              <a class="app-academy-md-50 btn btn-label-primary d-flex align-items-center" href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id,'student_id'=>$student_id]) }}">
-                                <span class="me-2">{{ __('label.details') }}</span><i class="bx bx-chevron-right lh-1 scaleX-n1-rtl"></i>
-                              </a>
+                                <p class="text-nowrap small">
+                                    <i class="bx bx-check-circle me-2"></i>
+                                    {{ __('label.today_attendance') }}:
+
+                                    @if($course->today_attendance)
+                                        <span class="badge bg-success">Taken</span>
+                                    @else
+                                        <span class="badge bg-danger">Not Taken</span>
+                                    @endif
+                                </p>
+                                <div class="d-flex flex-column gap-2  pt-0 small">
+
+                                    @if(add(Auth::user()->role_ids,$active_menu_id))
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-success"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#{{$modalId}}" 
+                                        wire:click="setIds({{ $course->id }}, {{ $student_id }})">
+
+                                        <i class="bx bx-plus"></i>
+                                        <span class="small"> {{ __('label.add_student_to_course') }} </span>
+                                    </button>
+                                    @endif
+
+                                   
+                                    <div class="d-flex gap-2">
+                                        <a class="btn btn-label-primary d-flex align-items-center justify-content-center w-50"
+                                        href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id,'student_id'=>$student_id]) }}">
+                                            <span class="me-2 small">{{ __('label.details') }}</span>
+                                            <i class="bx bx-chevron-right lh-1 scaleX-n1-rtl"></i>
+                                        </a>
+
+                                        @if(add(Auth::user()->role_ids,$active_menu_id))
+                                        <a class="btn btn-primary w-50 d-flex align-items-center justify-content-center"
+                                        href="{{ route('student-financial-profile', [
+                                                'menu_id'   => $this->active_menu_id,
+                                                'student_id' => encrypt($student_id),
+                                            ]) }}">
+                                            <span class="small">{{ __('label.financial_profile') }}</span>
+                                        </a>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
-                            </div>
+                            
                         </div>
                     </div>
                     @endforeach

@@ -24,6 +24,8 @@ class StudentCourseFee extends Model
         'discount_value',
         'discount_reason',
         'discount_amount',
+        'g_discount_value',
+        'g_discount_amount',
         'total_amount',
         'paid_amount',
         'remaining_amount',
@@ -35,6 +37,9 @@ class StudentCourseFee extends Model
     protected $casts = [
         'fee_amount' => 'decimal:2',
         'discount_value' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'g_discount_value' => 'decimal:2',
+        'g_discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'remaining_amount' => 'decimal:2',

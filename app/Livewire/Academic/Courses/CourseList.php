@@ -15,6 +15,7 @@ use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
+use App\Models\CenterSettings\Time;
 use App\Models\Hr\Employee;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -34,6 +35,7 @@ class CourseList extends Component
     public $modalId = 'course-list-addEditModal';
     public $table_name='courses';
     public $selectedFields = [];
+
     public $pdfOrientation ='landscape';
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
     public function closeModal(){
@@ -71,6 +73,7 @@ class CourseList extends Component
     public $programs=[];
     public $books=[];
     public $shifts=[];
+    public $times=[];
     public $course_types=[];
     public $teachers=[];
     public $classrooms=[];
@@ -87,7 +90,34 @@ class CourseList extends Component
         $this->loadClassroomAndTeacher($this->branch_id);
         
         $this->shifts = Shift::all();
+        $this->times = Time::all();
         $this->course_types = CourseType::all();
+
+        $this->selectedFields = [
+            'no',
+            'name',
+            'course_type_id',
+            'program_id',
+            'book_id',
+            'shift_id',
+            'total_teaching_days',
+            'min_capacity',
+            'max_capacity',
+            'start_date',
+            'mid_exam_date',
+            'final_exam_date',
+            'teacher_id',
+            'classroom_id',
+            'status',
+            'time_id',
+        ];
+
+        if (auth()->user()->isDeveloper() || auth()->user()->isAdmin()) {
+            if (!in_array('branch_id', $this->selectedFields)) {
+                $this->selectedFields[] = 'branch_id';
+            }
+        }
+
     }
 
     public $name,$course_code,$course_id,$program_id,$book_id,$course_type_id,$total_teaching_days,$shift_id,$start_time,$end_time,$start_date,$end_date,
@@ -100,7 +130,9 @@ class CourseList extends Component
         $image,
         $existing_image,
         $teacher_ids=[],
+        $teacher_id,
         $status = 'pending';
+        public $time_id;
     public function resetInputFields(){
         $this->resetExcept([
             'active_menu_id',
@@ -112,6 +144,7 @@ class CourseList extends Component
             'programs',
             'books',
             'shifts',
+            'times',
             'course_types',
             'teachers',
             'classrooms',
@@ -125,13 +158,14 @@ class CourseList extends Component
             'status' => null,
             'course_type_id' => null,
             'shift_id' => null,
+            'time_id' => null,
             'teacher_id' => null,
         ];
 
     public function render()
     {
     
-        $courses = Course::with('branch','courseType','program','book','classroom','shift')
+        $courses = Course::with('branch','courseType','program','book','classroom','time','teacher')
         ->when(!empty($this->search['name']), function ($query) {
             $query->where('name', 'like', '%' . $this->search['name'] . '%');
         })
@@ -150,15 +184,76 @@ class CourseList extends Component
         ->when(!empty($this->search['shift_id']), function ($query) {
             $query->where('shift_id',$this->search['shift_id']);
         })
+        ->when(!empty($this->search['status']), function ($query) {
+            $query->where('status',$this->search['status']);
+        })
         ->when(!empty($this->search['teacher_id']), function ($query) {
-            $query->whereHas('teachers',function($q){
-                $q->where('teacher_id',$this->search['teacher_id']);
-            });
+            $query->where('teacher_id',$this->search['teacher_id']);
         })
         ->orderBy('id','desc')
         ->paginate($this->perPage);
 
         return view('livewire.academic.courses.course-list',compact('courses'));
+    }
+
+    public function calculateEndDate()
+    {
+        if (!$this->start_date || !$this->total_teaching_days || $this->total_teaching_days <= 0) {
+            $this->end_date = null;
+            $this->mid_exam_date = null;
+            $this->final_exam_date = null;
+            return;
+        }
+
+        $start = Carbon::parse($this->start_date);
+        $date = $start->copy();
+        $days_counted = 0;
+
+        // 1️ محاسبه end_date 
+        while ($days_counted < $this->total_teaching_days) {
+            if ($date->dayOfWeek != Carbon::FRIDAY) {
+                $days_counted++;
+            }
+
+            if ($days_counted < $this->total_teaching_days) {
+                $date->addDay();
+            }
+        }
+
+        // 2️ اضافه کردن 2 روز امتحان (بدون جمعه)
+        $exam_days = 0;
+        while ($exam_days < 2) {
+            $date->addDay();
+
+            if ($date->dayOfWeek != Carbon::FRIDAY) {
+                $exam_days++;
+            }
+        }
+
+        $end = $date->copy();
+
+        //  محاسبه وسط زمانی
+        $mid = $start->copy()->addSeconds($start->diffInSeconds($end) / 2);
+
+        //  اگر وسط افتاد روی جمعه → برو روز بعد
+        while ($mid->dayOfWeek == Carbon::FRIDAY) {
+            $mid->addDay();
+        }
+
+        // نتایج
+        $this->end_date = $end->toDateString();
+        $this->mid_exam_date = $mid->toDateString();
+        $this->final_exam_date = $this->end_date;
+
+        if (!is_null($this->end_date)) {
+            $this->resetErrorBag('end_date');
+        }
+    }
+
+    // وقتی تاریخ شروع تغییر کند
+    public function updatedStartDate($value)
+    {
+        $this->calculateEndDate();
     }
 
     protected function rules()
@@ -168,17 +263,17 @@ class CourseList extends Component
             'book_id' => 'required',
             'course_type_id' => 'required',
             'shift_id' => 'required',
+            'time_id' => 'required',
             'total_teaching_days' => 'required|integer|min:1',
-            'max_capacity' => 'required|integer|min:1',
+            'min_capacity' => 'required|integer|min:1',
             'max_capacity' => 'required|integer|gte:min_capacity',
-            'start_time' => 'required|date_format:H:i',
-            'end_time'   => 'required|date_format:H:i|after:start_time',
             'start_date' => 'required',
             'end_date' => 'required',
             'mid_exam_date' => 'required',
             'final_exam_date' => 'required',
             'classroom_id' => 'required',
-            'teacher_ids' => 'required|array',
+            'teacher_id' => 'required',
+            // 'teacher_ids' => 'required|array',
             'image' => 'nullable|image|mimes:jpeg,jpg,png|max:512',
         ];
         if (!Auth::user()->branch_id) {
@@ -195,14 +290,15 @@ class CourseList extends Component
             'program_id.required'   => __('label.program.required'),
             'book_id.required'   => __('label.book.required'),
             'course_type_id.required'   => __('label.course_type.required'),
-            'shift_type_id.required'   => __('label.shift.required'),
+            'shift_id.required'   => __('label.shift.required'),
+            'time_id.required'   => __('label.time.required'),
             'classroom_id.required'   => __('label.classroom.required'),
+            'teacher_id.required'   => __('label.teacher.required'),
             'teacher_ids.required'   => __('label.teacher.required'),
             'total_teaching_days.required'   => __('label.total_teaching_days.required'),
             'min_capacity.required'   => __('label.min_capacity.required'),
             'max_capacity.required'   => __('label.max_capacity.required'),
-            'start_time.required'   => __('label.start_time.required'),
-            'end_time.required'   => __('label.end_time.required'),
+          
             'start_date.required'   => __('label.start_date.required'),
             'end_date.required'   => __('label.end_date.required'),
             'mid_exam_date.required'   => __('label.mid_exam_date.required'),
@@ -212,6 +308,34 @@ class CourseList extends Component
         ];
     }
     
+   
+    public function updatedBookId($value)
+    {
+        
+        $book = Book::find($value);
+
+        if ($book) {
+            $this->total_teaching_days = $book->total_teaching_days;
+            $this->min_capacity = $book->min_capacity;
+            $this->max_capacity = $book->max_capacity;
+
+            if (!is_null($this->total_teaching_days)) {
+                $this->resetErrorBag('total_teaching_days');
+            }
+
+            if (!is_null($this->min_capacity)) {
+                $this->resetErrorBag('min_capacity');
+            }
+
+            if (!is_null($this->max_capacity)) {
+                $this->resetErrorBag('max_capacity');
+            }
+        } else {
+            $this->total_teaching_days = null;
+            $this->min_capacity = null;
+            $this->max_capacity = null;
+        }
+    }
     // Create role
     public function store()
     {
@@ -224,14 +348,24 @@ class CourseList extends Component
         DB::beginTransaction();
         try {
 
+            $exists = Course::where('branch_id', Auth::user()->branch_id ?: $this->branch_id)
+            ->where('classroom_id', $this->classroom_id)
+            ->where('time_id', $this->time_id)
+            ->whereDate('start_date', $this->start_date)
+            ->exists();
+
+            if ($exists) {
+                DB::rollBack();
+                return $this->dispatch('alert', type: 'error', message: __('label.course_already_exists'));
+            }
+
             $course = Course::create([
                 'course_type_id' => $this->course_type_id,
                 'program_id' => $this->program_id,
                 'book_id' => $this->book_id,
                 'shift_id' => $this->shift_id,
+                'time_id' => $this->time_id,
                 'classroom_id' => $this->classroom_id,
-                'start_time' => $this->start_time,
-                'end_time' => $this->end_time,
                 'min_capacity' => $this->min_capacity,
                 'max_capacity' => $this->max_capacity,
                 'total_teaching_days' => $this->total_teaching_days,
@@ -239,6 +373,8 @@ class CourseList extends Component
                 'end_date' => $this->end_date,
                 'mid_exam_date' => $this->mid_exam_date,
                 'final_exam_date' => $this->final_exam_date,
+
+                'teacher_id' => $this->teacher_id,
 
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
                 'user_id' => Auth::Id(),
@@ -259,9 +395,9 @@ class CourseList extends Component
                 $course->save();
             }
 
-            if(!empty($this->teacher_ids)){
-                $course->teachers()->sync($this->teacher_ids);
-            }
+            // if(!empty($this->teacher_ids)){
+            //     $course->teachers()->sync($this->teacher_ids);
+            // }
 
             // ---start system log-----------
             SystemLog::create([
@@ -293,18 +429,14 @@ class CourseList extends Component
         $this->book_id = $course->book_id;
         $this->loadClassroomAndTeacher($this->branch_id);
         $this->classroom_id = $course->classroom_id;
-        $this->teacher_ids = $course->teachers?->pluck('id')->toArray();
+        // $this->teacher_ids = $course->teachers?->pluck('id')->toArray();
+        $this->teacher_id = $course->teacher_id;
         $this->shift_id = $course->shift_id;
+        $this->time_id = $course->time_id;
         $this->total_teaching_days = $course->total_teaching_days;
         $this->min_capacity = $course->min_capacity;
         $this->max_capacity = $course->max_capacity;
-        $this->start_time = $course->start_time
-        ? $course->start_time->format('H:i')
-        : null;
-        $this->end_time = $course->end_time
-        ? $course->end_time->format('H:i')
-        : null;
-
+        
         $this->start_date = $course->start_date
         ? $course->start_date->format('Y-m-d')
         : null;
@@ -340,9 +472,8 @@ class CourseList extends Component
                 'program_id' => $this->program_id,
                 'book_id' => $this->book_id,
                 'shift_id' => $this->shift_id,
+                'time_id' => $this->time_id,
                 'classroom_id' => $this->classroom_id,
-                'start_time' => $this->start_time,
-                'end_time' => $this->end_time,
                 'total_teaching_days' => $this->total_teaching_days,
                 'min_capacity' => $this->min_capacity,
                 'max_capacity' => $this->max_capacity,
@@ -350,6 +481,7 @@ class CourseList extends Component
                 'end_date' => $this->end_date,
                 'mid_exam_date' => $this->mid_exam_date,
                 'final_exam_date' => $this->final_exam_date,
+                'teacher_id' => $this->teacher_id,
 
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
                 'user_id' => Auth::Id(),
@@ -374,9 +506,9 @@ class CourseList extends Component
                 $course->save();
             }
 
-            if(!empty($this->teacher_ids)){
-                $course->teachers()->sync($this->teacher_ids);
-            }
+            // if(!empty($this->teacher_ids)){
+            //     $course->teachers()->sync($this->teacher_ids);
+            // }
 
             // ---start system log-----------
             SystemLog::create([
@@ -427,35 +559,9 @@ class CourseList extends Component
 
    public function exportPdf()
     {
-        $defaultFields = [
-            'no',
-            'name',
-            'course_type_id',
-            'program_id',
-            'book_id',
-            'shift_id',
-            'total_teaching_days',
-            'start_time',
-            'end_time',
-            'start_date',
-            'mid_exam_date',
-            'final_exam_date',
-            'teacher_ids',
-            'classroom_id',
-            'status',
-        ];
-
-         $fields = !empty($this->selectedFields)
-            ? $this->selectedFields
-            : $defaultFields;
-        if (auth()->user()->isDeveloper() || auth()->user()->isAdmin()) {
-            if (!in_array('branch_id', $fields)) {
-                $fields[] = 'branch_id';
-            }
-        }
-
+        $fields = $this->selectedFields;
         $realColumns = collect($fields)
-            ->reject(fn($field) => in_array($field, ['no','teacher_ids']))
+            ->reject(fn($field) => in_array($field, ['no']))
             ->values()
             ->toArray();
 
@@ -478,34 +584,40 @@ class CourseList extends Component
             ->when(!empty($this->search['shift_id']), function ($query) {
                 $query->where('shift_id',$this->search['shift_id']);
             })
+            ->when(!empty($this->search['status']), function ($query) {
+                $query->where('status',$this->search['status']);
+            })
             ->when(!empty($this->search['teacher_id']), function ($query) {
                 $query->whereHas('teachers',function($q){
                     $q->where('teacher_id',$this->search['teacher_id']);
                 });
             });
 
-        if (in_array('branch_id', $fields)) {
-            $query->with('branch');
-        }
-        if (in_array('course_type_id', $fields)) {
-            $query->with('courseType');
-        }
-        if (in_array('shift_id', $fields)) {
-            $query->with('shift');
-        }
-        if (in_array('program_id', $fields)) {
-            $query->with('program');
-        }
-        if (in_array('book_id', $fields)) {
-            $query->with('book');
-        }
-        if (in_array('classroom_id', $fields)) {
-            $query->with('classroom');
-        }
+            if (in_array('branch_id', $fields)) {
+                $query->with('branch');
+            }
+            if (in_array('course_type_id', $fields)) {
+                $query->with('courseType');
+            }
+            if (in_array('shift_id', $fields)) {
+                $query->with('shift');
+            }
 
-        if (in_array('teacher_ids', $fields)) {
-            $query->with('teachers');
-        }
+            $query->with('time');
+            
+            if (in_array('program_id', $fields)) {
+                $query->with('program');
+            }
+            if (in_array('book_id', $fields)) {
+                $query->with('book');
+            }
+            if (in_array('classroom_id', $fields)) {
+                $query->with('classroom');
+            }
+
+            if (in_array('teacher_id', $fields)) {
+                $query->with('teacher');
+            }
 
         $courses = $query
             ->orderBy('id', 'desc')
@@ -526,6 +638,11 @@ class CourseList extends Component
         );
     }
 
+    public function loadShiftTime($shift_id)
+    {
+        $this->times = Time::where('shift_id', $shift_id)->get();
+    }
+
     public function loadProgramBook($program_id)
     {
         $this->books = Book::where('status', 'active')
@@ -538,7 +655,10 @@ class CourseList extends Component
         $this->classrooms = Classroom::where('status', 'active')
             ->where('branch_id', $branch_id)->get();
 
-        $this->teachers = Employee::where('status','new')->get();
+        $this->teachers = Employee::whereHas('employeeRoles', function($query) {
+            $query->where('name', 'Teacher');
+        })->get();
+
         $this->teacher_ids = [];
     }
 

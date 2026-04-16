@@ -74,7 +74,7 @@
             <div class="mb-3 px-3">
                 <form wire:submit.prevent="applySearch" class="row g-3 align-items-end">
                     <div class="col-md-3">
-                        <label class="form-label">{{ __('label.name') }} / {{ __('label.student_code') }} </label>
+                        <label class="form-label">{{ __('label.name') }} / {{ __('label.student_code') }} / {{ __('label.phone_no') }} </label>
                         <input type="text" class="form-control" placeholder="" wire:model="search.identity">
                     </div>
                      @if(!auth()->user()->branch_id)
@@ -156,15 +156,17 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="phone_no">
                                 {{ __('label.phone_no') }}
                             </th>
-
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="registration_date">
-                                {{ __('label.date') }}
+                                {{ __('label.add_to_course') }}
                             </th>
-
+                          
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
+                            </th>
+                              <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="registration_date">
+                                {{ __('label.date') }}
                             </th>
                              @if(!auth()->user()->branch_id)
                             <th>
@@ -195,7 +197,15 @@
                             <td>{{ $student->last_name }}</td>
                             <td>{{ $student->father_name }}</td>
                             <td>{{ $student->phone_no }}</td>
-                            <td>{{ $student->registration_date->format('Y/m/d - h:i A') }}</td>
+                            <td>
+                                <a class="btn btn-success"
+                                    href="{{ route('special-course-list', [
+                                            'menu_id'   => $this->active_menu_id,
+                                            'student_id' => $student->id,
+                                        ]) }}">
+                                    {{ __('label.add_to_course') }}
+                                </a>
+                            </td>
                             <td>
                                 @if($student->status=='new')
                                 <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ ucfirst($student->status) }}</span>
@@ -205,6 +215,9 @@
                                 <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($student->status) }}</span>
                                 @endif
                             </td>
+                            <td>{{ $student->registration_date->format('Y/m/d - h:i A') }}</td>
+                         
+                            
                              @if(!auth()->user()->branch_id)
                             <td>{{ $student->branch?->name }}</td>
                             @endif
@@ -219,8 +232,10 @@
                                             ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
                                         @if(delete(Auth::user()->role_ids,$active_menu_id))
-                                            <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $student->id }},'{{$table_name}}')"
-                                            ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
+                                            @if(Auth::user()->isAdmin() || Auth::user()->isDeveloper())
+                                                <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $student->id }},'{{$table_name}}')"
+                                                ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
@@ -254,27 +269,36 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label" >{{ __('label.student_code') }} <span style="color:red;">*</span></label>
+                                <input type="text" id="nameBasic" class="form-control @error('student_code') is-invalid @enderror" wire:model.lazy="student_code" >
+                                @error('student_code') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label" >{{ __('label.name') }} <span style="color:red;">*</span></label>
-                                <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name" @if(!$editMode) readonly @endif>
+                                <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name" >
                                 @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.last_name') }}</label>
-                                <input type="text" id="nameBasic" class="form-control @error('last_name') is-invalid @enderror" wire:model.lazy="last_name" @if(!$editMode) readonly @endif>
+                                <input type="text" id="nameBasic" class="form-control @error('last_name') is-invalid @enderror" wire:model.lazy="last_name" >
                                 @error('last_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.father_name') }} <span style="color:red;">*</span></label>
-                                <input type="text" id="nameBasic" class="form-control @error('father_name') is-invalid @enderror" wire:model.lazy="father_name" @if(!$editMode) readonly @endif>
+                                <input type="text" id="nameBasic" class="form-control @error('father_name') is-invalid @enderror" wire:model.lazy="father_name" >
                                 @error('father_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.phone_no') }}</label>
-                                <input type="text" id="nameBasic" class="form-control @error('phone_no') is-invalid @enderror" wire:model.lazy="phone_no" @if(!$editMode) readonly @endif>
+                                <label for="nameBasic" class="form-label">{{ __('label.phone_no') }} <span style="color:red;">*</span></label>
+                                <input type="text" id="nameBasic" class="form-control @error('phone_no') is-invalid @enderror" wire:model.lazy="phone_no">
                                 @error('phone_no') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>

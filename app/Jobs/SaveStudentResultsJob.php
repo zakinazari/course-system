@@ -8,6 +8,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Assessment\StudentCourseResult;
+use App\Models\Assessment\StudentExamScore;
+use App\Models\Assessment\StudentExamScoreLog;
 use App\Models\Assessment\StudentCourseResultLog;
 use App\Models\Academic\Course;
 class SaveStudentResultsJob implements ShouldQueue
@@ -17,110 +19,87 @@ class SaveStudentResultsJob implements ShouldQueue
     public int $course_id;
     public array $results;
     public int $user_id;
+    public  $exam_percentages;
 
-    public function __construct(int $course_id, array $results, int $user_id)
+    public function __construct($course_id, $results, $user_id, $exam_percentages)
     {
         $this->course_id = $course_id;
         $this->results = $results;
         $this->user_id = $user_id;
+        $this->exam_percentages = $exam_percentages; 
     }
 
     public function handle()
     {
-        $course = Course::with('book:id,pass_mark,excellent_mark')
-            ->findOrFail($this->course_id);
+        $course = Course::with('book:id,pass_mark')->findOrFail($this->course_id);
         $book = $course->book;
 
-        $rows = [];
-        $logs = [];
+        $student_totals = [];
 
-        foreach ($this->results as $student_id => $data) {
-            $attendance = $data['attendance'] ?? 0;
-            $cognitive  = $data['cognitive'] ?? 0;
-            $midterm    = $data['midterm'] ?? 0;
-            $final      = $data['final'] ?? 0;
-            $total      = min(100, $attendance + $cognitive + $midterm + $final);
+        foreach ($this->results as $student_id => $exam_scores) {
+
+            $total = 0;
+
+            foreach ($exam_scores as $exam_type_id => $score) {
             
-            $pass_mark_snapshot      = $book->pass_mark;
-            $excellent_mark_snapshot = $book->excellent_mark;
-            $status = $this->calculateStatus($total, $book);
+                $max = $this->exam_percentages[$exam_type_id] ?? 100;
+                $score = min(max($score, 0), $max);
 
+                $total += $score;
 
-            $existing = StudentCourseResult::where('student_id', $student_id)
-                        ->where('course_id', $this->course_id)
-                        ->first();
-            // اگر رکورد موجود بود و مقادیر تغییر کرده، لاگ بزن
-            if ($existing && (
-                $existing->attendance != $attendance ||
-                $existing->cognitive != $cognitive ||
-                $existing->midterm != $midterm ||
-                $existing->final != $final ||
-                $existing->total != $total
-            )) {
-                $logs[] = [
-                    'student_course_result_id' => $existing->id,
-                    'midterm_old' => $existing->midterm,
-                    'final_old' => $existing->final,
-                    'cognitive_old' => $existing->cognitive,
-                    'attendance_old' => $existing->attendance,
-                    'total_old' => $existing->total,
-                    'status_old' => $existing->status,
-                    'pass_mark_snapshot_old' => $existing->pass_mark_snapshot,
-                    'excellent_mark_snapshot_old' => $existing->excellent_mark_snapshot,
+                 // گرفتن مقدار قبلی
+                $old = StudentExamScore::where([
+                    'student_id' => $student_id,
+                    'course_id' => $this->course_id,
+                    'exam_type_id' => $exam_type_id,
+                ])->first();
 
-                    'midterm_new' => $midterm,
-                    'final_new' => $final,
-                    'cognitive_new' => $cognitive,
-                    'attendance_new' => $attendance,
-                    'total_new' => $total,
-                    'status_new' => $status,
-                    'pass_mark_snapshot_new' => $pass_mark_snapshot,
-                    'excellent_mark_snapshot_new' => $excellent_mark_snapshot,
+                // ذخیره مقدار جدید
+                $new = StudentExamScore::updateOrCreate(
+                    [
+                        'student_id' => $student_id,
+                        'course_id' => $this->course_id,
+                        'exam_type_id' => $exam_type_id,
+                    ],
+                    [
+                        'score' => $score,
+                        'user_id' => $this->user_id,
+                    ]
+                );
 
-                    'user_id' => $this->user_id,
-                ];
+                // فقط اگر تغییر کرده لاگ بساز
+                if ($old && floatval($old->score) !== floatval($score)) {
+                    StudentExamScoreLog::create([
+                        'student_id'   => $student_id,
+                        'course_id'    => $this->course_id,
+                        'exam_type_id' => $exam_type_id,
+                        'score_old'    => $old->score,
+                        'score_new'    => $score,
+                        'user_id'      => $this->user_id,
+                    ]);
+                }
             }
 
-            $rows[] = [
-                'student_id' => $student_id,
-                'course_id'  => $this->course_id,
-                'attendance' => $attendance,
-                'cognitive'  => $cognitive,
-                'midterm'    => $midterm,
-                'final'      => $final,
-                'total'      => $total,
-                'status'      => $status,
-                'pass_mark_snapshot'   => $pass_mark_snapshot,
-                'excellent_mark_snapshot'   => $excellent_mark_snapshot,
-                'user_id' => $existing->user_id ?? $this->user_id,
-            ];
+            $student_totals[$student_id] = $total;
         }
 
-        // ذخیره نمرات با upsert
-        StudentCourseResult::upsert(
-            $rows,
-            ['student_id','course_id'],
-            ['attendance','cognitive','midterm','final','total','user_id','status','pass_mark_snapshot','excellent_mark_snapshot']
-        );
+        // ذخیره total در student_course_results
+        foreach ($student_totals as $student_id => $total) {
+            $status = $total >= $book->pass_mark ? 'passed' : 'failed';
 
-        foreach ($logs as $log) {
-            StudentCourseResultLog::create($log);
+            StudentCourseResult::updateOrCreate(
+                [
+                    'student_id' => $student_id,
+                    'course_id' => $this->course_id,
+                ],
+                [
+                    'total' => $total,
+                    'status' => $status,
+                    'pass_mark_snapshot' => $book->pass_mark,
+                    'user_id' => $this->user_id,
+                ]
+            );
         }
-
-        // \Log::info('Existing student result', [
-        //     'student_id' => $student_id,
-        //     'existing' => $existing ? $existing->toArray() : null,
-        // ]);
     }
 
-    private function calculateStatus(float $total, $book): ?string
-    {
-      
-        if (!is_null($book->pass_mark) && $total >= $book->pass_mark) {
-            return 'passed';
-        }elseif(!is_null($book->pass_mark)){
-            return 'failed';
-        }
-        return null;
-    }
 }

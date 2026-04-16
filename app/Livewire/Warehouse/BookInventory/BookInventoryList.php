@@ -7,7 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Branch;
-use App\Models\CenterSettings\Book;
+use App\Models\CenterSettings\PhysicalBook;
 use App\Models\Warehouse\Warehouse;
 use App\Models\Warehouse\BookInventory;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -76,7 +76,7 @@ class BookInventoryList extends Component
         // -------------start for activing menu in sidebar ----------------------
 
          $this->warehouses =  Warehouse::all();
-        $this->books =  Book::all();
+        $this->books =  PhysicalBook::all();
     }
 
      public $warehouse_id,$name,$branch_id,$category_id;
@@ -106,7 +106,7 @@ class BookInventoryList extends Component
         $book_inventories = BookInventory::with('book','warehouse')
          ->when(!empty($this->search['book_id']), function ($query) {
             $query->whereHas('book', function($q) {
-                $q->where('book_id', $this->search['book_id']);
+                $q->where('id', $this->search['book_id']);
             });
         })
         ->when(!empty($this->search['warehouse_id']), function ($query) {

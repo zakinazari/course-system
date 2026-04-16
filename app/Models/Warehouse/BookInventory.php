@@ -3,7 +3,7 @@
 namespace App\Models\Warehouse;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\CenterSettings\Book;
+use App\Models\CenterSettings\PhysicalBook;
 class BookInventory extends Model
 {
      protected $fillable = [
@@ -20,7 +20,7 @@ class BookInventory extends Model
     
     public function book()
     {
-        return $this->belongsTo(Book::class);
+        return $this->belongsTo(PhysicalBook::class);
     }
 
     

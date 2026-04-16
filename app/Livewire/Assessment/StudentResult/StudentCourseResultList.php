@@ -19,6 +19,7 @@ use App\Models\CenterSettings\Shift;
 use App\Models\Hr\Employee;
 use App\Models\Assessment\StudentAttendance;
 use App\Models\Assessment\StudentCourseResult;
+use App\Models\Assessment\StudentExamScore;
 use App\Jobs\SaveStudentResultsJob;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -99,9 +100,10 @@ class StudentCourseResultList extends Component
         $this->programs = Program::where('status','active')->get();
         $this->shifts = Shift::all();
         $this->course_types = CourseType::all();
-        $this->search['attendance_date'] = now()->toDateString();
         $branch_id = Auth::user()->branch_id ?: $this->search['branch_id'];
         $this->loadClassroomAndTeacher($branch_id);
+
+
     }
     public
         $student_id,
@@ -134,70 +136,116 @@ class StudentCourseResultList extends Component
             'course_type_id' => null,
             'shift_id' => null,
             'teacher_id' => null,
-            'course_id' => null,
         ];
 
     public $students=[];
     public $results=[];
+    public $exam_types=[];
+    public $exam_percentages = [];
     public function render()
     {
         return view('livewire.assessment.student-result.student-course-result-list');
     }
-     protected function loadCourseStudent()
+
+    protected function loadCourseStudent()
     {
-        $course_id = $this->search['course_id'] ?? null;
-        $this->results = [];
+        $course_id = $this->course_id;
         $this->students = collect();
+        $this->exam_types = collect();
+        $this->exam_percentages = [];
 
         if (!$course_id) return;
 
+        // گرفتن کورس با کتاب و exam types
+        $course = Course::with('book.examTypes')->find($course_id);
+        if (!$course || !$course->book) return;
+
+        // exam types مرتب شده بر اساس id (descending)
+        $this->exam_types = $course->book->examTypes->sortByDesc('id');
+
+        // درصد هر exam type
+        foreach ($this->exam_types as $type) {
+            $this->exam_percentages[$type->id] = $type->pivot->percentage ?? 0;
+        }
+
+        // گرفتن دانش‌آموزان کورس
         $students = CourseStudent::with('student')
             ->where('course_id', $course_id)
             ->get();
 
-        $results = StudentCourseResult::where('course_id', $course_id)
-            ->whereIn('student_id', $students->pluck('student_id'))
+        $studentIds = $students->pluck('student_id');
+
+        // گرفتن نمرات کل دانش‌آموزان برای این کورس (total + status)
+        $studentTotals = StudentCourseResult::where('course_id', $course_id)
+            ->whereIn('student_id', $studentIds)
             ->get()
             ->keyBy('student_id');
 
+        // گرفتن نمرات تک تک امتحانات
+        $examScores = StudentExamScore::where('course_id', $course_id)
+            ->whereIn('student_id', $studentIds)
+            ->get()
+            ->groupBy('student_id')
+            ->map(function ($scores) {
+                return $scores->keyBy('exam_type_id');
+            });
+
         $filteredStudents = collect();
+
         foreach ($students as $cs) {
-            $res = $results[$cs->student_id] ?? null;
-            $total = $res?->total ?? 0;
 
-            // status filter
-            $status = $this->search['status'] ?? null;
+            $cs->result = (object) [];
+
+            // attach نمرات هر exam type به student
+            foreach ($this->exam_types as $type) {
+                $score = $examScores[$cs->student_id][$type->id]->score ?? 0;
+                $cs->result->{$type->id} = $score;
+            }
+
+            // attach مجموع و وضعیت از StudentCourseResult
+            $res = $studentTotals[$cs->student_id] ?? null;
+            $cs->result->total = $res?->total ?? 0;
+            $cs->result->status = $res?->status ?? null;
+
+                    // اعمال فیلتر وضعیت
+        if ($this->search['status'] === 'excellent' && $cs->result->total < 90) continue;
+        if ($this->search['status'] === 'accepted' && ($cs->result?->status === 'failed' || $cs->result?->total >= 90)) continue;
+        if ($this->search['status'] === 'weak' && $cs->result?->status === 'passed') continue;
             
-            if ($status === 'excellent' && $total < 90) continue;
-            if ($status === 'accepted' && ($res?->status==='failed' || $total > 90)) continue;
-            if ($status === 'week' && $res?->status==='passed') continue;
-
-            $cs->result = (object) [
-                'attendance' => $res?->attendance,
-                'cognitive'  => $res?->cognitive,
-                'midterm'    => $res?->midterm,
-                'final'      => $res?->final,
-                'total'      => $res?->total,
-                'status'      => $res?->status,
-            ];
-
             $filteredStudents->push($cs);
         }
 
-        $this->students = $filteredStudents;
+        $this->students = $filteredStudents->values();
+
+        // ------فیلدهای انتخاب شده 
+        if (empty($this->selectedFields)) {
+
+            $studentFields = ['no', 'student_code', 'name', 'father_name'];
+            $endFields = ['total', 'status'];
+
+            $examFields = collect($this->exam_types)
+                ->map(fn($type) => 'exam_' . $type->id)
+                ->toArray();
+
+            $this->selectedFields = array_merge($studentFields, $examFields, $endFields);
+        }
     }
+
     protected function rules()
     {
         $rules =  [
-            'search.course_id' => 'required',
+            'course_id' => 'required',
 
         ];
         return $rules;
     }
 
     public function updatedSearch()
-    {
-
+    {   
+        $this->dispatch('reset-select2');
+        $this->course_id = null;
+        $this->courses = [];
+        $this->students = collect();
         $this->courses = Course::with('branch','courseType','program','book','classroom','shift')
         ->where('status','ongoing')
         ->when(!empty($this->search['name']), function ($query) {
@@ -220,9 +268,7 @@ class StudentCourseResultList extends Component
             $query->where('shift_id',$this->search['shift_id']);
         })
         ->when(!empty($this->search['teacher_id']), function ($query) {
-            $query->whereHas('teachers',function($q){
-                $q->where('teacher_id',$this->search['teacher_id']);
-            });
+            $query->where('teacher_id',$this->search['teacher_id']);
         })->get();
     }
 
@@ -238,94 +284,30 @@ class StudentCourseResultList extends Component
         $this->classrooms = Classroom::where('status', 'active')
             ->where('branch_id', $branch_id)->get();
 
-        $this->teachers = Employee::where('status','new')->get();
+        $this->teachers = Employee::whereHas('employeeRoles', function($query) {
+            $query->where('name', 'Teacher');
+        })->get();
     }
 
 
-    public function updatedSearchCourseId()
+    public function updatedCourseId($value)
     {
-        $this->results = [];
-        $this->students=collect();
-    }
-
-    public function saveMarks()
-    {
-        
-        if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
-            return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
-        }
-
-        $course_id = $this->search['course_id'] ?? null;
-        if (!$course_id) return;
-
-        $course = Course::find($course_id);
-        if (!$course) return;
-          $data = ['results' => $this->results];
-
-
-        $validator = Validator::make($data, [
-            'results' => 'required|array',
-            'results.*.cognitive'  => 'nullable|numeric|min:0|max:20',
-            'results.*.attendance' => 'nullable|numeric|min:0|max:20',
-            'results.*.midterm'    => 'nullable|numeric|min:0|max:30',
-            'results.*.final'      => 'nullable|numeric|min:0|max:30',
-            'results.*.total'      => 'nullable|numeric|min:0|max:100',
-        ], [], [
-            'results.*.cognitive'  => 'Cognitive',
-            'results.*.attendance' => 'Attendance',
-            'results.*.midterm'    => 'Midterm',
-            'results.*.final'      => 'Final',
-            'results.*.total'      => 'Total',
-        ]);
-
-        if ($validator->fails()) {
-            
-            $this->dispatch('alert', type: 'error', message: implode('<br>', $validator->errors()->all()));
-            return;
-        }
-
-        try {
-
-            // foreach ($this->results as $student_id => $data) {
-
-            //     $attendance = isset($data['attendance']) ? floatval($data['attendance']) : 0;
-            //     $cognitive = isset($data['cognitive']) ? floatval($data['cognitive']) : 0;
-            //     $midterm   = isset($data['midterm']) ? floatval($data['midterm']) : 0;
-            //     $final     = isset($data['final']) ? floatval($data['final']) : 0;
-            //     $total = min(100, $attendance + $cognitive + $midterm + $final);
-
-            //     StudentCourseResult::updateOrCreate(
-            //         [
-            //             'student_id' => $student_id,
-            //             'course_id'  => $course_id,
-            //         ],
-            //         [
-            //             'attendance' => $attendance,
-            //             'cognitive'  => $cognitive,
-            //             'midterm'    => $midterm,
-            //             'final'      => $final,
-            //             'total'      => $total,
-            //             'user_id'      => Auth::Id(),
-            //         ]
-            //     );
-            // }
-             // Dispatch Job برای ذخیره در پس‌زمینه
-            $user_id = Auth::user()->id;
-            SaveStudentResultsJob::dispatch($course_id, $this->results,$user_id);
-            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
-
-        } catch (\Exception $e) {
-            $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
+        if ($value) {
+            $this->loadCourseStudent();
+        } else {
+            $this->students = collect();
+            $this->results = [];
         }
     }
-    
 
     public function exportPdf()
     {
         $data = $this->getReport();
         $students = $data['students'];
         $fields = $data['fields'];
-        $course = Course::find($this->search['course_id']);
+        $exam_types = $data['exam_types'];
+        $exam_percentages = $data['exam_percentages'];
+        $course = Course::find($this->course_id);
         if($this->search['status']==='excellent'){
             $status = __('label.excellent_student');
         }elseif($this->search['status']==='accepted'){
@@ -343,6 +325,8 @@ class StudentCourseResultList extends Component
                 'fields' => $fields,
                 'course' => $course,
                 'status' => $status,
+                'exam_types' => $exam_types,
+                'exam_percentages' => $exam_percentages,
             ]
         )->setPaper('a4',$this->pdfOrientation)
         ->setOption('defaultFont', 'dejavusans');
@@ -513,35 +497,59 @@ class StudentCourseResultList extends Component
         );
     }
 
-    protected function getReport()
+   protected function getReport()
     {
-        $defaultFields = [
-            'no',
-            'student_code',
-            'name', 
-            'father_name',
-            'cognitive',
-            'attendance',
-            'midterm',
-            'final',
-            'total',
-        ];
-
-        $fields = !empty($this->selectedFields)
-            ? $this->selectedFields
-            : $defaultFields;
-
-        // if (auth()->user()->isDeveloper() || auth()->user()->isAdmin()) {
-        //     if (!in_array('branch_id', $fields)) {
-        //         $fields[] = 'branch_id';
-        //     }
-        // }
-
         $this->loadCourseStudent();
 
+        $studentFields = ['no', 'student_code', 'name', 'father_name'];
+        $endFields = ['total', 'status'];
+
+        // mapping: exam_id → name
+        $examMapping = collect($this->exam_types ?? [])
+            ->mapWithKeys(fn($type) => [
+                'exam_' . $type->id => $type->name
+            ])
+            ->toArray();
+
+        $selected = $this->selectedFields ?? [];
+
+        $fields = [];
+
+        //  فیلدهای ثابت اول
+        foreach ($studentFields as $f) {
+            if (in_array($f, $selected)) {
+                $fields[] = $f;
+            }
+        }
+
+        //  exam ها (با نام واقعی)
+        foreach ($selected as $f) {
+            if (isset($examMapping[$f])) {
+                $fields[] = $examMapping[$f];
+            }
+        }
+
+        //  آخر: total و status
+        foreach ($endFields as $f) {
+            if (in_array($f, $selected)) {
+                $fields[] = $f;
+            }
+        }
+
+        //  map نمرات به نام exam
+        foreach ($this->students as $cs) {
+            foreach ($this->exam_types ?? [] as $type) {
+                $cs->result->{$type->name} = $cs->result->{$type->id} ?? 0;
+            }
+        }
+
         return [
-            'students' => $this->students ?? collect(),
+            'students' => $this->students,
             'fields' => $fields,
+            'exam_types' => $this->exam_types,
+            'exam_percentages' => $this->exam_percentages,
+            'examMapping' => $examMapping,
         ];
     }
+
 }

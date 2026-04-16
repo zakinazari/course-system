@@ -16,11 +16,23 @@ class Book extends Model
         'program_id',
         'fee',
         'pass_mark',
-        'excellent_mark',
+        'total_teaching_days',
+        'min_capacity',
+        'max_capacity',
+        'exam_fine_amount',
+        'level_number',
+        'drop_days',
     ];
 
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class, 'program_id');
+    }
+
+    public function examTypes()
+    {
+        return $this->belongsToMany(ExamType::class, 'book_exam_types')
+            ->withPivot('percentage')
+            ->withTimestamps();
     }
 }

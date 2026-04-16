@@ -32,6 +32,8 @@
         'last_name' => __('label.last_name'),
         'father_name' => __('label.father_name'),
         'status' => __('label.status'),
+        'absent_days' => __('label.absent_days'),
+        'payment_status' => __('label.payment_status'),
     ];
 @endphp
 
@@ -94,11 +96,25 @@
                             ">
                                 {{ ucfirst($status) }}
                             </span>
+                        @elseif($field === 'absent_days')
+                        @if(!empty($sc?->absent_days) && $sc?->absent_days > 0) <span class="text-danger" style="color: #dc3545"> {{ $sc?->absent_days}} @endif
+                        @elseif($field === 'payment_status')
+                            @if($sc->payment_status === 'not_registered')
+                                <span class="text-warning"  style="color: #ffc107">Not Registered</span>
+                            @elseif($sc->payment_status === 'paid')
+                                <span class="text-success" style="color: #198754">Fully Paid</span>
+                            @else
+                                <span class="text-danger" style="color: #dc3545">
+                                    {{ __('label.due') }}: {{ number_format($sc->remaining_amount) }}
+                                </span>
+                            @endif
+                            
                         @else
                             {{ $sc->student?->$field }}
                         @endif
 
                     </td>
+                    
 
                 @endforeach
             </tr>

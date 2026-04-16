@@ -21,8 +21,7 @@ return new class extends Migration
             $table->foreignId('teacher_id')->nullable()->constrained('employees')->nullOnDelete();
             $table->foreignId('classroom_id')->nullable()->constrained('classrooms')->nullOnDelete();
             $table->foreignId('shift_id')->nullable()->constrained('shifts')->nullOnDelete();
-            $table->time('start_time')->nullable();
-            $table->time('end_time')->nullable();
+            $table->foreignId('time_id')->nullable()->constrained('times')->nullOnDelete();
             $table->integer('total_teaching_days');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

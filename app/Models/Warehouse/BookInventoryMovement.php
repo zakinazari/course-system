@@ -3,13 +3,14 @@
 namespace App\Models\Warehouse;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\CenterSettings\Book;
+use App\Models\CenterSettings\PhysicalBook;
 class BookInventoryMovement extends Model
 {
      protected $fillable = [
         'book_inventory_id',
         'quantity_change',
         'balance_after',
+        'unit_price',
         'type',
         'note',
         'user_id',
@@ -39,7 +40,7 @@ class BookInventoryMovement extends Model
     public function book()
     {
         return $this->hasOneThrough(
-            Book::class,
+            PhysicalBook::class,
             BookInventory::class,
             'id',
             'id',

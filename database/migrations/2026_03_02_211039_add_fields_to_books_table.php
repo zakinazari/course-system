@@ -14,18 +14,35 @@ return new class extends Migration
         Schema::table('books', function (Blueprint $table) {
 
             $table->integer('fee')->nullable();
-            $table->integer('pass_mark')->nullable();
-            $table->integer('excellent_mark')->nullable();
+            $table->unsignedSmallInteger('pass_mark')->nullable();
+            $table->unsignedSmallInteger('total_teaching_days');
+            $table->unsignedSmallInteger('min_capacity')->nullable();
+            $table->unsignedSmallInteger('max_capacity')->nullable();
+            $table->integer('exam_fine_amount')->nullable();
+            $table->unsignedSmallInteger('level_number')->nullable();
+            $table->unsignedSmallInteger('drop_days')->nullable();
+
+            $table->unique(['program_id', 'level_number'], 'books_program_level_unique');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('books', function (Blueprint $table) {
-            $table->dropColumn(['fee', 'pass_mark', 'excellent_mark']);
+            
+            $table->dropUnique('books_program_level_unique');
+
+       
+            $table->dropColumn([
+                'fee', 
+                'pass_mark',
+                'total_teaching_days',
+                'min_capacity',
+                'max_capacity',
+                'exam_fine_amount',
+                'level_number',
+                'drop_days'
+            ]);
         });
     }
 };

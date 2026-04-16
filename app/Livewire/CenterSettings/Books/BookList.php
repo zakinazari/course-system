@@ -6,9 +6,12 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
+use App\Models\CenterSettings\ExamType;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use Auth;
+use DB;
+use Illuminate\Validation\Rule;
 class BookList extends Component
 {
     // -------start generals--------------------
@@ -19,6 +22,7 @@ class BookList extends Component
     public $active_menu_id;
     public $active_menu;
     public $programs=[];
+    public $exam_types=[];
     public $modalId = 'book-list-addEditModal';
     public $table_name='books';
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
@@ -61,10 +65,16 @@ class BookList extends Component
         // -------------start for activing menu in sidebar ----------------------
 
         $this->programs = Program::all();
+        $this->exam_types =  ExamType::orderBy('id','ASC')->get();
+
     }
 
-    public $name,$abbreviation,$book_id, $program_id,$status = 'active',$fee,$pass_mark,$excellent_mark;
-
+    public $name,$abbreviation,$book_id, $program_id,$status = 'active',$fee,$pass_mark,$total_teaching_days,$min_capacity,$max_capacity;
+    public $exam_type_ids = [];
+    public $percentages = [];   
+    public $exam_fine_amount;   
+    public $level_number;   
+    public $drop_days;   
     public function resetInputFields(){
         $this->resetExcept([
             'active_menu_id',
@@ -73,6 +83,7 @@ class BookList extends Component
             'modalId',
             'search',
             'programs',
+            'exam_types',
         ]);
     }
     public $search = [
@@ -100,7 +111,24 @@ class BookList extends Component
         return [
             'name' => 'required|string|max:255|unique:books,name,' . $this->book_id,
             'abbreviation' => 'required|string|max:255|unique:books,abbreviation,' . $this->book_id,
-            'program_id' => 'required|',
+            'program_id' => 'required',
+            'pass_mark' => 'required',
+            'fee' => 'required',
+            'total_teaching_days' => 'required|integer|min:1',
+            'min_capacity' => 'required|integer|min:1',
+            'max_capacity' => 'required|integer|gte:min_capacity',
+            
+            'exam_fine_amount' => 'required',
+            'drop_days' => 'required',
+            'level_number' => [
+                'required',
+                Rule::unique('books')
+                    ->where(fn ($query) => $query->where('program_id', $this->program_id))
+                    ->ignore($this->book_id),
+            ],
+            
+            'exam_type_ids' => 'required|array|min:1',
+            'percentages' => 'required|array',
         ];
     }
     // Localized messages
@@ -113,20 +141,48 @@ class BookList extends Component
             'name.max'      => __('label.book_name.max'),
             'name.unique'   => __('label.book_name.unique'),
             'program_id.required'   => __('label.program.required'),
+            'pass_mark.required'   => __('label.pass_mark.required'),
+            'fee.required'   => __('label.fee.required'),
+            'total_teaching_days.required'   => __('label.total_teaching_days.required'),
+            'min_capacity.required'   => __('label.min_capacity.required'),
+            'max_capacity.required'   => __('label.max_capacity.required'),
+            'max_capacity.required'   => __('label.max_capacity.required'),
+            'exam_fine_amount.required'   => __('label.exam_fine_amount.required'),
+            'level_number.required'   => __('label.level_number.required'),
+            'drop_days.required'   => __('label.drop_days.required'),
+            
+            'exam_type_ids.required' => __('label.exam_type.required'),
+            'percentages.required'      => __('label.percentage.required'),
         ];
     }
     
     // Create role
     public function store()
     {
+        
         if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
+        }
+        
+        foreach ($this->exam_type_ids as $id) {
+            $this->percentages[$id] = is_numeric($this->percentages[$id] ?? null)
+                ? $this->percentages[$id]
+                : 0;
+        }
+ 
+        $totalPercentage = array_sum($this->percentages ?? []);
+        if ($totalPercentage != 100) {
+            $this->addError('percentages_total',__('label.total_percentage_message'));
+            return;
         }
 
         $this->validate();
 
-        try {
+    
+        DB::beginTransaction();
 
+        try {
+            // ذخیره کتاب
             $book = Book::create([
                 'name' => $this->name,
                 'abbreviation' => $this->abbreviation,
@@ -134,19 +190,34 @@ class BookList extends Component
                 'status' => $this->status,
                 'fee' => $this->fee,
                 'pass_mark' => $this->pass_mark,
-                'excellent_mark' => $this->excellent_mark,
+                'total_teaching_days' => $this->total_teaching_days,
+                'min_capacity' => $this->min_capacity,
+                'max_capacity' => $this->max_capacity,
+                'exam_fine_amount' => $this->exam_fine_amount,
+                'level_number' => $this->level_number,
+                'drop_days' => $this->drop_days,
             ]);
-            // ---start system log-----------
+
+            // ذخیره exam types + درصدها
+            $syncData = [];
+            foreach ($this->exam_type_ids as $id) {
+                $syncData[$id] = ['percentage' => $this->percentages[$id] ?? 0];
+            }
+            $book->examTypes()->sync($syncData);
+
             SystemLog::create([
                 'user_id' => Auth::user()->id,
                 'section' => __('label.book').' ('.$book->name.' ID:'.$book->id.')',
                 'type_id' => 2,
             ]);
-            // ---end system log-------------
+
+            DB::commit();
+
             $this->closeModal();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
-            
+
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
         }
     }
@@ -163,7 +234,20 @@ class BookList extends Component
         $this->status = $book->status;
         $this->fee = $book->fee;
         $this->pass_mark = $book->pass_mark;
-        $this->excellent_mark = $book->excellent_mark;
+        $this->total_teaching_days = $book->total_teaching_days;
+        $this->min_capacity = $book->min_capacity;
+        $this->max_capacity = $book->max_capacity;
+        $this->exam_fine_amount = $book->exam_fine_amount;
+        $this->level_number = $book->level_number;
+        $this->drop_days = $book->drop_days;
+
+        $this->exam_type_ids = [];
+        $this->percentages = [];
+        foreach ($book->examTypes as $type) {
+            $this->exam_type_ids[] = $type->id;
+            $this->percentages[$type->id] = $type->pivot->percentage;
+        }
+
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -174,7 +258,15 @@ class BookList extends Component
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
 
+        $totalPercentage = array_sum($this->percentages);
+        if ($totalPercentage != 100) {
+            $this->addError('percentages_total', __('label.total_percentage_message'));
+            return;
+        }
+
         $this->validate();
+        DB::beginTransaction();
+
         try {
             $book = Book::findOrFail($this->book_id);
             $book->update([
@@ -184,8 +276,23 @@ class BookList extends Component
                 'status' => $this->status,
                 'fee' => $this->fee,
                 'pass_mark' => $this->pass_mark,
-                'excellent_mark' => $this->excellent_mark,
+                'total_teaching_days' => $this->total_teaching_days,
+                'min_capacity' => $this->min_capacity,
+                'max_capacity' => $this->max_capacity,
+                'exam_fine_amount' => $this->exam_fine_amount,
+                'level_number' => $this->level_number,
+                'drop_days' => $this->drop_days,
             ]);
+
+            $syncData = [];
+
+            foreach ($this->exam_type_ids as $id) {
+                $syncData[$id] = [
+                    'percentage' => $this->percentages[$id] ?? 0
+                ];
+            }
+
+            $book->examTypes()->sync($syncData);
 
             // ---start system log-----------
             SystemLog::create([
@@ -194,11 +301,11 @@ class BookList extends Component
                 'type_id' => 3,
             ]);
             // ---end system log-------------
-
+            DB::commit();
             $this->closeModal();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_updated'));
         } catch (\Exception $e) {
-        
+            DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.update_error').' : '. $e->getMessage());
         }
     }
@@ -236,4 +343,6 @@ class BookList extends Component
             $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
         }
     }
+
+    
 }

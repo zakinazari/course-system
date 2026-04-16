@@ -50,28 +50,33 @@
                             <i class="bx bx-calendar-event bx-sm me-2"></i>{{ __('label.total_teaching_days') }}: {{ $course->total_teaching_days }}
                         </p>
                         <p class="text-nowrap">
-                            <i class="bx bx-time-five bx-sm me-2"></i>{{ __('label.shift') }}: {{ $course->shift->name }}
+                            <i class="bx bx-time-five bx-sm me-2"></i>{{ __('label.shift') }}: {{ $course->shift?->name }}
                         </p>
+                        <p class="text-nowrap">
+                            <i class="bx bx-time-five bx-sm me-2"></i>{{ __('label.time') }}: {{ $course->time?->start_time->format('h:i A') }} - {{ $course->time?->end_time->format('h:i A') }}
+                        </p>
+                    
+                        <p class="text-nowrap d-flex align-items-center">
+                            <i class="bx bx-task bx-sm me-2"></i>{{ __('label.status') }}: 
+                            <span class="badge  {{ $course->status_badge_class }}">
+                                {{ __('label.' . $course->status) }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="me-5">
                         <p class="text-nowrap">
                             <i class="bx bxs-calendar-check bx-sm me-2"></i>{{ __('label.start_date') }}: {{ $course->start_date->format('Y/m/d') }}
                         </p>
                         <p class="text-nowrap">
                             <i class="bx bxs-calendar-check bx-sm me-2"></i>{{ __('label.end_date') }}: {{ $course->end_date->format('Y/m/d') }}
                         </p>
-                    </div>
 
-                    <div class="me-5">
                         <p class="text-nowrap">
                             <i class="bx bxs-calendar bx-sm me-2"></i>{{ __('label.mid_exam_date') }}: {{ $course->mid_exam_date->format('Y/m/d') }}
                         </p>
                         <p class="text-nowrap">
                             <i class="bx bxs-calendar bx-sm me-2"></i>{{ __('label.final_exam_date') }}: {{ $course->final_exam_date->format('Y/m/d') }}
-                        </p>
-                        <p class="text-nowrap d-flex align-items-center">
-                            <i class="bx bx-task bx-sm me-2"></i>{{ __('label.status') }}: 
-                            <span class="badge  {{ $course->status_badge_class }}">
-                                {{ __('label.' . $course->status) }}
-                            </span>
                         </p>
                         
                     </div>
@@ -103,31 +108,11 @@
                         </p>
                     </div>
 
-                   
-
                 </div>
                 
                 <hr class="my-4">
                 <h5>{{__('label.instractor')}}</h5>
-
-                    @foreach($course->teachers as $teacher)
-                        <div class="d-flex justify-content-start align-items-center user-name mb-2">
-                            <div class="avatar-wrapper">
-                                <div class="avatar avatar-sm me-2">
-                                    <img 
-                                        src="{{ $teacher->photo?->thumbnail_url ?? asset('default.png') }}" 
-                                        alt="Avatar" 
-                                        class="rounded-circle"
-                                    >
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-column">
-                                {{ $teacher->name }} {{ $teacher->last_name }}
-                            </div>
-                        </div>
-                    @endforeach
-
+                {{ $course?->teacher?->name }} {{ $course?->teacher?->last_name }} 
                 </div>
             </div>
 
@@ -174,8 +159,15 @@
 
                     <!-- Add New Record Button -->
                     @if(add(Auth::user()->role_ids,$active_menu_id))
+                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#mergeModal" wire:click="openMergeModal">
+                            <i class="bi bi-plus-lg"></i> {{ __('label.merge_courses') }}
+                        </button>
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#promoteModal" wire:click="openPromoteModal">
+                            <i class="bi bi-plus-lg"></i> {{ __('label.promote') }}
+                        </button>
+
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                            <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
+                            <i class="bi bi-plus-lg"></i> {{ __('label.add_student_to_course') }}
                         </button>
                     @endif
                 </div>
@@ -255,6 +247,9 @@
                                 {{ __('label.enrolled_date') }}
                             </th>
                             <th>
+                                {{ __('label.change_time') }}
+                            </th>
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
                             </th>
@@ -274,7 +269,27 @@
                             <td>{{ $student->father_name }}</td>
                             <td>{{ $student->pivot->enrolled_at }}</td>
                             <td>
-                                {{ ucfirst($student->pivot->status) }}
+                                @if(edit(Auth::user()->role_ids,$active_menu_id))
+                                <button
+                                    class="btn btn-success btn-sm rounded-pill"
+                                    wire:click="changeTime({{ $student->pivot->id }})">
+                                    {{ __('label.change_time') }}
+                                </button>
+                                @endif
+                            </td>
+                            
+                            <td>
+                                @if($student->pivot->status==='active')
+                                <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                @elseif($student->pivot->status==='completed')
+                                <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                @elseif($student->pivot->status==='dropped')
+                                <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                @elseif($student->pivot->status==='failed')
+                                <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                @elseif($student->pivot->status==='pending')
+                                    <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                @endif
                             </td>
 
                             <td>
@@ -357,6 +372,172 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="promoteModal" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.promote') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+                <form wire:submit.prevent="promoteCourse">
+                    <div class="modal-body">
+                        <div class="col mb-3">
+                            <label class="form-label d-block">{{ __('label.promote_type') }}</label>
+                            <div class="form-check form-check-inline">
+                                <input name="promote_type" 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    id="status-active" 
+                                    value="1" 
+                                    
+                                    wire:model.lazy="promote_type"  @checked($promote_type == 1 || is_null($promote_type))>
+                                <label class="form-check-label" for="status-active">{{ __('label.existing_course') }}</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input name="promote_type" 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    id="status-inactive" 
+                                    value="2" 
+                                    wire:model.lazy="promote_type"  @checked($promote_type == 2)>
+                                <label class="form-check-label" for="status-inactive">{{ __('label.new_course') }}</label>
+                            </div>
+                            @error('promote_type') 
+                                <div class="invalid-feedback d-block">{{ $message }}</div> 
+                            @enderror
+                        </div>
+                        @if($promote_type==1)
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.target_course') }}</label>
+                                <select class="form-select select2 @error('status') is-invalid @enderror" id="promote_target_course_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                    @foreach($target_courses as $t_course)
+                                    <option value="{{ $t_course->id }}"  wire:key="promote-course-option-{{ $t_course->id }}">{{ $t_course->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('target_course_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        @elseif($promote_type==2 && !empty($new_level))
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.book') }} <span style="color:red;">*</span></label>
+                                <input type="text" id="nameBasic" class="form-control @error('book_id') is-invalid @enderror" value="{{ $new_level->name }}" wire:model.lazy="book_id" disabled>
+                                @error('book_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.total_teaching_days') }} <span style="color:red;">*</span></label>
+                                <input type="text" id="nameBasic" class="form-control @error('book_id') is-invalid @enderror" value="{{ $new_level->total_teaching_days }}" wire:model.lazy="book_id" disabled>
+                                @error('book_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.start_date') }} <span style="color:red;">*</span></label>
+                                <input type="date" id="nameBasic" class="form-control @error('start_date') is-invalid @enderror" wire:model.lazy="start_date">
+                                @error('start_date') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.end_date') }} <span style="color:red;">*</span></label>
+                                <input type="date" id="nameBasic" class="form-control @error('end_date') is-invalid @enderror" wire:model.lazy="end_date" disabled>
+                                @error('end_date') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.mid_exam_date') }} <span style="color:red;">*</span></label>
+                                <input type="date" id="nameBasic" class="form-control @error('mid_exam_date') is-invalid @enderror" wire:model.lazy="mid_exam_date" disabled>
+                                @error('mid_exam_date') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.final_exam_date') }} <span style="color:red;">*</span></label>
+                                <input type="date" id="nameBasic" class="form-control @error('final_exam_date') is-invalid @enderror" wire:model.lazy="final_exam_date" disabled>
+                                @error('final_exam_date') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
+                        <button type="submit" class="btn btn-info">{{ __('label.promote') }} </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="mergeModal" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.merge_courses') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+                <form wire:submit.prevent="mergeCourse">
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.course') }}</label>
+                                <select class="form-select select2 @error('status') is-invalid @enderror" multiple id="merging_course_ids">
+                                    <option value="" disabled>{{ __('label.select') }}</option>
+                                    @foreach($target_courses as $t_course)
+                                    <option value="{{ $t_course->id }}"  wire:key="merge-course-option-{{ $t_course->id }}">{{ $t_course->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('merging_course_ids') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+       
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
+                        <button type="submit" class="btn btn-warning">{{ __('label.merge') }} </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="changeTimeModal" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.change_time') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+                <form wire:submit.prevent="changeTimeStore">
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.target_course') }}</label>
+                                <select class="form-select select2 @error('status') is-invalid @enderror" id="change_time_target_course_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                    @foreach($target_courses as $t_course)
+                                    <option value="{{ $t_course->id }}"  wire:key="change-time-target-course-option-{{ $t_course->id }}">{{ $t_course->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('target_course_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+       
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
+                        <button type="submit" class="btn btn-success">{{ __('label.change') }} </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
 @script
 <script>
@@ -378,8 +559,19 @@ document.addEventListener("livewire:initialized", function () {
             });
         });
 
+        $('#promote_target_course_id').off('change').on('change', function () {
+            $wire.set('target_course_id', $(this).val());
+        });
 
+        $('#merging_course_ids').off('change').on('change', function () {
+            $wire.set('merging_course_ids', $(this).val());
+        });
+        
+         $('#change_time_target_course_id').off('change').on('change', function () {
+            $wire.set('target_course_id', $(this).val());
+        });
 
+        // -----------search student------------------
         let $student = $('#student_id');
 
         if (!$student.length) return;
@@ -395,7 +587,7 @@ document.addEventListener("livewire:initialized", function () {
             width: '100%',
             minimumInputLength: 2,
             ajax: {
-                url: '/search-students' + menuId,
+                url: '/search-students',
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -416,6 +608,7 @@ document.addEventListener("livewire:initialized", function () {
 
     }
 
+
     initStudentSelect();
 
     Livewire.hook('morphed', () => {
@@ -427,6 +620,12 @@ document.addEventListener("livewire:initialized", function () {
         initStudentSelect();
     });
 
+    Livewire.on('reset-select2', () => {
+        $('#promote_target_course_id').val(null).trigger('change');
+        $('#change_time_target_course_id').val(null).trigger('change');
+        $('#merging_course_ids').val(null).trigger('change');
+        
+    });
 });
 
 </script>

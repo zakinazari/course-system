@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Academic\Course;
 use App\Models\Academic\Student;
+use App\Models\Hr\Employee;
 
 class StudentAttendance extends Model
 {
-     protected $fillable = [
+    protected $fillable = [
         'student_id',
         'course_id',
+        'teacher_id',
         'attendance_date',
         'status',
         'note',
@@ -23,13 +25,18 @@ class StudentAttendance extends Model
         'attendance_date' => 'date',
     ];
 
-    public function student(): HasOne
+    public function student(): BelongsTo
     {
-        return $this->hasOne(Student::class);
+        return $this->BelongsTo(Student::class);
+    }
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'teacher_id');
     }
 
-    public function course(): HasOne
+    public function course(): BelongsTo
     {
-        return $this->hasOne(Course::class);
+        return $this->BelongsTo(Course::class);
     }
+
 }

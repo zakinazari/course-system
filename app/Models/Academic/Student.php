@@ -77,6 +77,7 @@ class Student extends Model
 
             DB::transaction(function () use ($student) {
 
+                // شماره دانشجو همیشه سیستم حساب می‌کند
                 $lastNumber = self::withoutGlobalScope('branch')
                     ->where('branch_id', $student->branch_id)
                     ->max('student_number');
@@ -85,17 +86,21 @@ class Student extends Model
 
                 $student->student_number = $nextNumber;
 
-                $branchCode = $student->branch->code;
+                $branchCode = $student->branch->code ?? '';
 
-                $student->student_code =
-                    $branchCode . '-ST-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                // اگر student_code دستی وارد نشده باشد، بساز
+                if (empty($student->student_code)) {
+                    $student->student_code = $branchCode . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                }
             });
         });
 
         static::updating(function ($student) {
-            
-            if ($student->isDirty('branch_id')) {
+            // فقط اگر branch_id تغییر کرده یا student_code خالی باشد
+            if ($student->isDirty('branch_id') || empty($student->student_code)) {
                 DB::transaction(function () use ($student) {
+
+                    // شماره دانشجو همیشه سیستم حساب می‌کند
                     $lastNumber = self::withoutGlobalScope('branch')
                         ->where('branch_id', $student->branch_id)
                         ->max('student_number');
@@ -104,10 +109,11 @@ class Student extends Model
 
                     $student->student_number = $nextNumber;
 
-                    $branchCode = $student->branch->code;
+                    $branchCode = $student->branch->code ?? '';
 
-                    $student->student_code =
-                        $branchCode . '-ST-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                    if (empty($student->student_code)) {
+                        $student->student_code = $branchCode . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                    }
                 });
             }
         });

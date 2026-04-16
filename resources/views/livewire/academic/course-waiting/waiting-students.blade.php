@@ -204,7 +204,7 @@
                                 {{ __('label.status') }}
                             </th>
                             <th>
-                                {{ __('label.enrollment') }}
+                                {{ __('label.add_to_course') }}
                             </th>
                             @if(!auth()->user()->branch_id)
                             <th>
@@ -237,6 +237,7 @@
                                 </span>
                             </td>
                             <td>
+                                @if($waiting->status=='waiting')
                                 <a class="btn btn-success"
                                     href="{{ route('special-course-list', [
                                             'menu_id'   => $this->active_menu_id,
@@ -249,6 +250,7 @@
                                         ]) }}">
                                     {{ __('label.add_to_course') }}
                                 </a>
+                                @endif
                             </td>
                             @if(!auth()->user()->branch_id)
                             <td>{{ $waiting->branch?->name }}</td>

@@ -16,6 +16,7 @@ use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
+use App\Models\Financial\StudentCourseFee;
 use App\Models\Hr\Employee;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -27,7 +28,7 @@ class SpecialCourseList extends Component
 {
     // -------start generals--------------------
     use WithPagination;
-    public $perPage = 12;
+    public $perPage = 24;
     protected $paginationTheme = 'bootstrap';   
     public $editMode = false;
     public $active_menu_id;
@@ -163,7 +164,27 @@ class SpecialCourseList extends Component
     public function render()
     {
         
-         $courses = Course::with('branch','courseType','program','book','classroom','shift')
+        $today = now()->toDateString();
+
+        $courses = Course::with('branch','courseType','program','book','classroom','shift','teacher','time')
+            ->whereIn('status',['ongoing','draft'])
+            // =========================
+            // total_days (DISTINCT)
+            // =========================
+            ->withCount([
+                'teacherAttendances as total_days' => function ($q) {
+                    $q->select(DB::raw('count(distinct attendance_date)'));
+                }
+            ])
+
+            // =========================
+            // today attendance (exists)
+            // =========================
+            ->withExists([
+                'teacherAttendances as today_attendance' => function ($q) use ($today) {
+                    $q->where('attendance_date', $today);
+                }
+            ])
         ->when(!empty($this->search['name']), function ($query) {
             $query->where('name', 'like', '%' . $this->search['name'] . '%');
         })
@@ -251,16 +272,28 @@ class SpecialCourseList extends Component
                 return $this->dispatch('alert', type: 'error', message: __('label.course_capacity_full'));
             }
 
-            $course->students()->attach($this->student_id, [
-                'status' => 'active',
-                'enrolled_at' => now(),
-            ]);
+            $fee = StudentCourseFee::where('course_id',$this->course_id)
+            ->where('student_id',$this->student_id)->exists();
+
+            $course->students()->sync([
+                $this->student_id => [
+                    'status' => $fee ? 'active' : 'pending',
+                    'enrolled_at' => now(),
+                ]
+            ], false);
             
             if($this->placement_test_id){// placement student
                 PlacementTest::find($this->placement_test_id)->update([
                     'status'=>'enrolled',
                 ]);
             } 
+            
+            if($this->waiting_list_id){// Waiting_list student
+                CourseWaitingList::find($this->waiting_list_id)->update([
+                    'status'=>'enrolled',
+                ]);
+            } 
+
             
             // --------active course-----------
             $course->status= 'ongoing';
@@ -293,7 +326,9 @@ class SpecialCourseList extends Component
         $this->classrooms = Classroom::where('status', 'active')
             ->where('branch_id', $branch_id)->get();
 
-        $this->teachers = Employee::where('status','new')->get();
+        $this->teachers = Employee::whereHas('employeeRoles', function($query) {
+            $query->where('name', 'Teacher');
+        })->get();
         
         $this->teacher_ids = [];
     }

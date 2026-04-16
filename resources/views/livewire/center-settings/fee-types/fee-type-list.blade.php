@@ -96,7 +96,7 @@
                                             <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $fee->id }})"
                                             ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
-                                        @if($fee->studentFees?->count() ==0)
+                                        @if($fee->studentFees?->count() ==0 )
                                             @if(delete(Auth::user()->role_ids,$active_menu_id))
                                                 <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $fee->id }},'{{$table_name}}')"
                                                 ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>

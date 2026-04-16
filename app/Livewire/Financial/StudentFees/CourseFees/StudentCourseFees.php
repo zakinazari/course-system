@@ -9,9 +9,19 @@ use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Branch;
 use App\Models\CenterSettings\DiscountProvider;
 use App\Models\Academic\Student;
+use App\Models\Academic\CourseStudent;
+use App\Models\Academic\Course;
 use App\Models\Financial\StudentCourseFee;
+use App\Models\CenterSettings\PhysicalBook;
 use App\Models\Financial\StudentCourseFeeInstallment;
 use App\Models\Financial\StudentCourseFeePayment;
+use App\Models\Financial\GeneralDiscount;
+use App\Models\Financial\StudentBookFee;
+use App\Models\Warehouse\Warehouse;
+use App\Models\Warehouse\BookInventory;
+use App\Models\Warehouse\BookInventoryMovement;
+use App\Models\User;
+use App\Notifications\BookExemptionRequestNotification;
 
 use Auth;
 use Carbon\Carbon;
@@ -68,6 +78,9 @@ class StudentCourseFees extends Component
     public $student;
     public $student_courses = [];
     public $discount_providers = [];
+    public $physical_books = [];
+    public $selected_physical_books = [];
+    public $physical_books_total = 0;
     public function mount($active_menu_id = null, $student_id = null)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -90,9 +103,13 @@ class StudentCourseFees extends Component
         public $discount_value;  
         public $discount_amount;  
         public $discount_reason;  
+        public $g_discount_value;  
+        public $g_discount_amount;  
+        public $general_discount_amount;  
         public $total_amount;     
         public $payment_type; 
         public $installments = [];
+        public $installment_amount;
 
 
     public function resetInputFields(){
@@ -121,7 +138,7 @@ class StudentCourseFees extends Component
         ->pluck('course_id');
         $this->student_courses = $this->student->courses()
         ->with('book') 
-        ->wherePivot('status', 'active')
+        // ->wherePivot('status', 'active')
         ->whereNotIn('courses.id', $feeCourseIds)  
         ->orderBy('pivot_enrolled_at','desc') 
         ->get();
@@ -142,14 +159,27 @@ class StudentCourseFees extends Component
             $this->fee_amount = $course->book?->fee ?? 0;
             $this->discount_type = $course->discount_type ?? null;
             $this->discount_value = $course->discount_value ?? 0;
-
+            $this->physical_books = PhysicalBook::where('book_id',$course->book_id)->get();
             $this->calculateTotalAmount();
+
+            $this->selected_physical_books = $this->physical_books->map(function ($book) {
+                return [
+                    'id' => $book->id,
+                    'name' => $book->name ?? 'Book #'.$book->id,
+                    'price' => $book->price ?? 0,
+                    'status' => 'paid',
+                ];
+            })->toArray();
+
+        $this->calculatePhysicalBooksTotal();
         } else {
 
             $this->fee_amount = 0;
             $this->discount_type = null;
             $this->discount_value = 0;
             $this->total_amount = 0;
+            $this->physical_books = [];
+            $this->selected_physical_books = [];
         }
     }
 
@@ -157,33 +187,53 @@ class StudentCourseFees extends Component
 
     public function calculateTotalAmount()
     {
-        if ($this->discount_type === 'percentage' && $this->discount_value > 100) {
-            $this->discount_value = 0; 
-            $this->discount_error = "Discount percentage cannot be more than 100%";
-        }elseif($this->discount_type === 'fixed' && $this->discount_value > $this->fee_amount){
-            $this->discount_value = 0;
-            $this->discount_error = "Discount Amount cannot be more than Total Amount";
-        } else {
-            $this->discount_error = null;
-        }
-
         $fee = (float) $this->fee_amount;
         $discount = (float) $this->discount_value;
 
         $this->total_amount = $fee;
+        $this->discount_error = null;
 
-        if ($this->discount_type == 'percentage') {
+        // ------ General Discount ------------------
+        $course = Course::find($this->course_id);
+        if ($course) {
+            $general_discount = GeneralDiscount::where('status','active')
+                ->where('branch_id',$course->branch_id)
+                ->where('book_id',$course->book_id)
+                ->latest()
+                ->first();
 
-            $this->discount_amount = ($fee * $discount / 100);
-            $this->total_amount -= $this->discount_amount;
+            if ($general_discount) {
+        
+                $this->g_discount_amount = min($general_discount->discount_amount, $course->fee);
 
-        } elseif ($this->discount_type == 'fixed') {
+                $this->total_amount -= $this->g_discount_amount;
 
-            $this->discount_amount = $discount;
-            $this->total_amount -= $this->discount_amount;
+                $this->total_amount = max(0, $this->total_amount);
+            }
+        }
+        // -----------------------------------------
+
+        // ------ Personal Discount Validation ------
+        if ($this->discount_type === 'percentage' && $discount > 100) {
+            $discount = 100;
+            $this->discount_error = "Discount percentage cannot be more than 100%";
         }
 
-        $this->recalculateInstallments();
+        if ($this->discount_type === 'fixed' && $discount > $this->total_amount) {
+            $discount = $this->total_amount;
+            $this->discount_error = "Discount amount adjusted to remaining total";
+        }
+
+        // ------ Apply Personal Discount ----------
+        if ($this->discount_type == 'percentage') {
+            $this->discount_amount = $this->total_amount * $discount / 100;
+        } else { // fixed
+            $this->discount_amount = $discount;
+        }
+
+        $this->total_amount -= $this->discount_amount;
+          
+        $this->total_amount = max(0, $this->total_amount);
     }
     
     public function updatedDiscountType($value)
@@ -199,85 +249,6 @@ class StudentCourseFees extends Component
         
         $this->calculateTotalAmount();
         $this->loadProviderDiscountInfo();
-    }
-
-    public function updatedPaymentType($value)
-    {
-    
-    }
-    // --------------installment---------------------------------------
-
-    public $installment_error; 
-
-    public function addInstallment()
-    {
-        if (!$this->total_amount) {
-            $this->installment_error = "Total amount must be set first";
-            return;
-        }
-
-        $this->installments[] = [
-            'due_date' => now()->toDateString(),
-            'amount' => 0,
-        ];
-
-        $this->recalculateInstallments(); 
-    }
-
-    public function removeInstallment($index)
-    {
-        unset($this->installments[$index]);
-
-        $this->installments = array_values($this->installments);
-
-        $this->recalculateInstallments();
-    }
-
-    public function updatedInstallments($value, $name)
-    {
-        $this->validateInstallments();
-       
-    }
-
-    public function recalculateInstallments()
-    {
-        $count = count($this->installments);
-
-        if ($count == 0) {
-            return;
-        }
-
-        $amountPerInstallment = floor($this->total_amount / $count);
-        $remaining = $this->total_amount - ($amountPerInstallment * $count);
-
-        foreach ($this->installments as $index => &$installment) {
-
-            $installment['amount'] = $amountPerInstallment;
-
-            if ($index == $count - 1) {
-                $installment['amount'] += $remaining;
-            }
-        }
-
-        $this->validateInstallments();
-    }
-
-    public function updatedTotalAmount()
-    {
-        $this->recalculateInstallments();
-    }
-
-    public function validateInstallments()
-    {
-        $sum = array_sum(array_column($this->installments, 'amount'));
-
-        if ($sum > $this->total_amount) {
-            $this->installment_error = "Sum of installments cannot exceed total amount ({$this->total_amount})";
-            return false;
-        }
-
-        $this->installment_error = null;
-        return true;
     }
 
     // ----------------store------------------------------
@@ -298,11 +269,7 @@ class StudentCourseFees extends Component
 
         if ($this->payment_type === 'installment') {
 
-            $rules['installments'] = 'required|array|min:1';
-
-            $rules['installments.*.due_date'] = 'required|date';
-
-            $rules['installments.*.amount'] = 'required|numeric|min:0';
+           $rules['installment_amount'] = 'required|numeric|min:0|lte:total_amount';
         }
 
         return $rules;
@@ -319,8 +286,7 @@ class StudentCourseFees extends Component
             'total_amount.required' => __('label.total_amount.required'),
             'discount_reason.required' => __('label.discount_reason.required'),
             'total_amount.numeric' => __('label.branch.required'),
-            'installments.*.amount.required' => __('label.installments.*.amount.required'),
-            'installments.*.due_date.required' => __('label.installments.*.due_date.required'),
+            'installment_amount.required' => __('label.installments.*.amount.required'),
         ];
 
         return $rules;
@@ -328,44 +294,47 @@ class StudentCourseFees extends Component
 
     public function store()
     {
-         
         if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
 
-        if(!$this->loadProviderDiscountInfo()){
+        if (!$this->loadProviderDiscountInfo() && $this->discount_type) {
             return;
         }
+
         $this->validate();
 
         DB::beginTransaction();
-       try {
 
-            $sumInstallments = array_sum(array_column($this->installments, 'amount'));
-             
-            if (($sumInstallments > $this->total_amount || $sumInstallments < $this->total_amount) && $this->payment_type==='installment' ) {
-                  DB::rollBack();
-                $this->installment_error = "Sum of installments ({$sumInstallments}) cannot exceed total fee ({$this->total_amount})";
-                return; 
-            }
+        try {
 
-            // چک unique student + course
+            // جلوگیری از تکرار
             $exists = StudentCourseFee::where('student_id', $this->student->id)
                 ->where('course_id', $this->course_id)
                 ->exists();
-                
-            if ($exists) {
 
+            if ($exists) {
                 $this->dispatch('alert',
                     type: 'error',
                     message: 'Fee for this course already exists for this student.'
                 );
-
                 return;
             }
 
-            $this->installment_error = null;
-                
+            //  تعیین مقدار پرداخت
+            $paid = $this->payment_type === 'installment'
+                ? $this->installment_amount
+                : $this->total_amount;
+
+            $remaining = $this->total_amount - $paid;
+
+            $status = match (true) {
+                $remaining <= 0 => 'paid',
+                $paid > 0 => 'partial',
+                default => 'unpaid',
+            };
+
+            //  ایجاد fee
             $studentCourseFee = StudentCourseFee::create([
                 'student_id' => $this->student->id,
                 'course_id' => $this->course_id,
@@ -373,45 +342,142 @@ class StudentCourseFees extends Component
                 'fee_amount' => $this->fee_amount,
                 'discount_type' => $this->discount_type ?: null,
                 'discount_provider_id' => $this->discount_provider_id ?: null,
+                'g_discount_value' => $this->g_discount_value ?? 0,
+                'g_discount_amount' => $this->g_discount_amount ?? 0,
                 'discount_value' => $this->discount_value ?? 0,
-                'discount_amount' => $this->discount_amount,
+                'discount_amount' => $this->discount_amount ?? 0,
                 'discount_reason' => $this->discount_reason,
                 'total_amount' => $this->total_amount,
-                'paid_amount' => 0,
-                'remaining_amount' => $this->total_amount,
-                'status' => 'unpaid',
+
+                //  مهم
+                'paid_amount' => $paid,
+                'remaining_amount' => $remaining,
+                'status' => $status,
+
                 'branch_id' => $this->student->branch_id,
                 'user_id' => auth()->id(),
             ]);
 
-            
-            if ($this->payment_type === 'installment') {
-                foreach ($this->installments as $installment) {
-                    StudentCourseFeeInstallment::create([
-                        'student_course_fee_id' => $studentCourseFee->id,
-                        'due_date' => $installment['due_date'],
-                        'amount' => $installment['amount'],
-                        'status' => 'unpaid',
+            //  ثبت installment + payment
+            $installment = StudentCourseFeeInstallment::create([
+                'student_course_fee_id' => $studentCourseFee->id,
+                'due_date' => now()->toDateString(),
+                'amount' => $paid,
+                'status' => 'paid',
+            ]);
+
+            StudentCourseFeePayment::firstOrCreate(
+                ['installment_id' => $installment->id],
+                [
+                    'student_course_fee_id' => $installment->student_course_fee_id,
+                    'amount' => $installment->amount,
+                    'payment_date' => now(),
+                    'notes' => $this->payment_type === 'installment' ? 'Installment payment' : 'Full payment',
+                    'user_id' => auth()->id(),
+                ]
+            );
+
+            //  کتاب‌ها
+           
+            // گرفتن warehouseهای مربوط به branch
+            $warehouseIds = Warehouse::where('branch_id', $this->student->branch_id)
+                ->pluck('id');
+
+            foreach ($this->selected_physical_books as $book) {
+
+                $status = $book['status'] ?? 'paid';
+
+                $existing = StudentBookFee::where([
+                    'student_id' => $this->student->id,
+                    'physical_book_id' => $book['id'],
+                ])->first();
+
+                StudentBookFee::updateOrCreate(
+                    [
+                        'student_id' => $this->student->id,
+                        'physical_book_id' => $book['id'],
+                    ],
+                    [
+                        'branch_id' => $this->student->branch_id,
+                        'price' => $book['price'],
+                        'status' => $status,
+                        'payment_date' => $status === 'requested_exemption' ? null : now()->toDateString(),
+                        'user_id' => Auth::id(),
+                    ]
+                );
+                // notification
+                if ($status === 'requested_exemption') {
+
+                    $users = User::whereHas('role', function ($q) {
+                        $q->where('role_name', 'Academic Admin');
+                    })
+                    ->where('branch_id', $this->student->branch_id)
+                    ->get();
+
+                    \Notification::send(
+                        $users,
+                        new BookExemptionRequestNotification(
+                            $this->student,
+                            $book,
+                            $this->active_menu_id
+                        )
+                    );
+                }
+
+                if ($status === 'paid' && (!$existing || $existing->status !== 'paid')) {
+
+                    $inventory = BookInventory::where('book_id', $book['id'])
+                        ->whereIn('warehouse_id', $warehouseIds)
+                        ->where('quantity', '>', 0)
+                        ->lockForUpdate()
+                        ->orderBy('quantity', 'desc')
+                        ->first();
+
+                    if (!$inventory) {
+                        throw new \Exception('Book "' . ($book['name'] ?? '') . '" is not available in this branch inventory.');
+                    }
+
+                    $before = $inventory->quantity;
+                    $new_quantity = $before - 1;
+
+                    $inventory->update([
+                        'quantity' => $new_quantity
+                    ]);
+
+                    BookInventoryMovement::create([
+                        'book_inventory_id' => $inventory->id,
+                        'quantity_change' => -1,
+                        'balance_after' => $new_quantity,
+                        'unit_price' => $book['price'] ?? 0,
+                        'type' => 'sale',
+                        'note' => 'Sold to student ID: ' . $this->student->student_code,
+                        'user_id' => auth()->id(),
                     ]);
                 }
-            } else {
-                
-                StudentCourseFeeInstallment::create([
-                    'student_course_fee_id' => $studentCourseFee->id,
-                    'due_date' => now()->toDateString(),
-                    'amount' => $this->total_amount,
-                    'status' => 'unpaid',
+            }
+
+
+            //  فعال شدن شاگرد در کورس (فقط اگر پرداخت داشته باشد)
+            if ($paid > 0) {
+                $course_student = CourseStudent::where('student_id', $this->student->id)
+                    ->where('course_id', $this->course_id)
+                    ->firstOrFail();
+
+                $course_student->update([
+                    'status' => 'active'
                 ]);
             }
-            // ---start system log-----------
+
+            //  لاگ سیستم
             SystemLog::create([
                 'st_id' => $this->student->id,
                 'user_id' => Auth::user()->id,
-                'section' => 'Student Course Fee ('.$studentCourseFee->course?->name.' ID:'.$studentCourseFee->id.')',
+                'section' => 'Student Course Fee (' . $studentCourseFee->course?->name . ' ID:' . $studentCourseFee->id . ')',
                 'type_id' => 2,
             ]);
-            // ---end system log-------------
+
             DB::commit();
+
             $this->closeModal();
 
             $this->dispatch('alert',
@@ -422,6 +488,7 @@ class StudentCourseFees extends Component
         } catch (\Exception $e) {
 
             DB::rollBack();
+
             $this->dispatch('alert',
                 type: 'error',
                 message: __('label.store_error') . ': ' . $e->getMessage()
@@ -496,11 +563,11 @@ class StudentCourseFees extends Component
   
     public $fee_installments = [];
     public $selected_fee_id;
-
+    public $course_fee;
     public function showInstallments($fee_id)
     {
         $this->selected_fee_id = $fee_id;
-
+        $this->course_fee = StudentCourseFee::find($fee_id);
         $this->fee_installments = StudentCourseFeeInstallment::where('student_course_fee_id',$fee_id)
             ->with('payments')
             ->get();
@@ -668,4 +735,143 @@ class StudentCourseFees extends Component
         }
     }
 
+    //-----start physical book-------------------------
+    public function requestExemption($index)
+    {
+        $this->selected_physical_books[$index]['status'] = 'requested_exemption';
+        $this->calculatePhysicalBooksTotal();
+    }
+
+    public function cancelExemption($index)
+    {
+        $this->selected_physical_books[$index]['status'] = 'paid';
+        $this->calculatePhysicalBooksTotal();
+    }
+    public function calculatePhysicalBooksTotal()
+    {
+        $this->physical_books_total = collect($this->selected_physical_books)
+            ->where('status', 'paid') 
+            ->sum('price');
+    }
+    //-----end physical book--------------------------- 
+
+    public function openPaymentModal($id)
+    {
+        $this->selected_fee_id = $id;
+        $this->install_amount = null;
+        $this->dispatch('open-modal', id: "openPaymentModal");
+    }
+    
+    
+    public $install_amount;
+   public function updatedInstallAmount()
+    {
+        $fee = StudentCourseFee::find($this->selected_fee_id);
+
+        if (!$fee) return;
+
+        $total_installments = StudentCourseFeeInstallment::where('student_course_fee_id', $this->selected_fee_id)
+            ->sum('amount');
+
+        $remaining = $fee->total_amount - $total_installments;
+
+        $this->resetErrorBag('install_amount');
+
+        if ($remaining <= 0) {
+            $this->install_amount = null; // پاک کردن input
+            $this->addError('install_amount', "All installments have been paid. No more installments allowed.");
+            return;
+        }
+
+        if ($this->install_amount !== null && $this->install_amount !== '') {
+            if ($this->install_amount > $remaining) {
+                $this->addError('install_amount', "Installment ({$this->install_amount}) cannot exceed remaining ({$remaining})");
+            }
+        }
+    }
+    
+    public function storeInstallment()
+    {
+        $fee = StudentCourseFee::find($this->selected_fee_id);
+
+        if (!$fee) {
+            $this->dispatch('alert', type: 'error', message: 'Fee not found');
+            return;
+        }
+
+        // مجموع اقساط قبلی
+        $total_installments = StudentCourseFeeInstallment::where('student_course_fee_id', $this->selected_fee_id)
+            ->sum('amount');
+
+        $remaining = $fee->total_amount - $total_installments;
+
+        $this->validate([
+            'install_amount' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($remaining) {
+                    if ($value > $remaining) {
+                        $fail("Installment ({$value}) cannot exceed remaining ({$remaining})");
+                    }
+                },
+            ],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            //  ایجاد installment (پرداخت شده)
+            $installment = StudentCourseFeeInstallment::create([
+                'student_course_fee_id' => $this->selected_fee_id,
+                'due_date' => now()->toDateString(),
+                'amount' => $this->install_amount,
+                'status' => 'paid',
+            ]);
+
+            //  ثبت payment
+            StudentCourseFeePayment::create([
+                'installment_id' => $installment->id,
+                'student_course_fee_id' => $installment->student_course_fee_id,
+                'amount' => $installment->amount,
+                'payment_date' => now(),
+                'notes' => 'Installment payment',
+                'user_id' => auth()->id(),
+            ]);
+
+            //  آپدیت fee 
+            $fee->paid_amount += $this->install_amount;
+            $fee->remaining_amount = $fee->total_amount - $fee->paid_amount;
+
+            if ($fee->remaining_amount <= 0) {
+                $fee->status = 'paid';
+            } else {
+                $fee->status = 'partial';
+            }
+
+            $fee->save();
+
+           
+            if ($fee->paid_amount > 0) {
+                CourseStudent::where('student_id', $fee->student_id)
+                    ->where('course_id', $fee->course_id)
+                    ->update(['status' => 'active']);
+            }
+
+            DB::commit();
+
+            $this->showInstallments($this->selected_fee_id);
+            $this->reset('install_amount');
+
+            $this->dispatch('close-modal', id: 'openPaymentModal');
+            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
+        }
+    }
 }

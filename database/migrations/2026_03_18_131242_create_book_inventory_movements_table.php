@@ -16,8 +16,9 @@ return new class extends Migration
             $table->foreignId('book_inventory_id')->constrained('book_inventories')->cascadeOnDelete();
             $table->integer('quantity_change'); 
             $table->integer('balance_after'); 
+            $table->decimal('unit_price', 10, 2)->nullable();
             $table->enum('type', ['purchase', 'sale', 'transfer', 'return']);
-            $table->string('note')->nullable();
+            $table->text('note')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete(); 
             $table->timestamps();
 

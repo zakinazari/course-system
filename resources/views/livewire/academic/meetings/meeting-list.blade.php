@@ -276,24 +276,24 @@
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.name') }} <span style="color:red;">*</span></label>
-                                <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name" @if(!$editMode) readonly @endif>
+                                <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name" >
                                 @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.last_name') }}</label>
-                                <input type="text" id="nameBasic" class="form-control @error('last_name') is-invalid @enderror" wire:model.lazy="last_name" @if(!$editMode) readonly @endif>
+                                <input type="text" id="nameBasic" class="form-control @error('last_name') is-invalid @enderror" wire:model.lazy="last_name" >
                                 @error('last_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.father_name') }} <span style="color:red;">*</span></label>
-                                <input type="text" id="nameBasic" class="form-control @error('father_name') is-invalid @enderror" wire:model.lazy="father_name" @if(!$editMode) readonly @endif>
+                                <input type="text" id="nameBasic" class="form-control @error('father_name') is-invalid @enderror" wire:model.lazy="father_name">
                                 @error('father_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.phone_no') }}</label>
-                                <input type="text" id="nameBasic" class="form-control @error('phone_no') is-invalid @enderror" wire:model.lazy="phone_no" @if(!$editMode) readonly @endif>
+                                <input type="text" id="nameBasic" class="form-control @error('phone_no') is-invalid @enderror" wire:model.lazy="phone_no" >
                                 @error('phone_no') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>

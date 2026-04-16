@@ -23,43 +23,7 @@
 
             <h5 class="card-title mb-0">@if(App::getLocale()=='en') {{ $active_menu?->name_en }} @else {{ $active_menu?->name }}  @endif</h5>
 
-            <div class="d-flex align-items-center gap-2">
-                <div class="btn-group">
-
-                    <button type="button" class="btn btn-secondary">
-                        <i class="fa fa-file-export"></i> {{ __('label.export') }}
-                    </button>
-
-                    <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="visually-hidden">Toggle Dropdown</span>
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                        <li class="px-3 py-2">
-                            <div class="d-flex align-items-center gap-3 mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" id="portraitRadio" wire:model="pdfOrientation" value="portrait">
-                                    <label class="form-check-label" for="portraitRadio">{{ __('label.portrait') }}</label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" id="landscapeRadio" wire:model="pdfOrientation" value="landscape">
-                                    <label class="form-check-label" for="landscapeRadio">{{ __('label.landscape') }}</label>
-                                </div>
-                            </div>
-
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportPdf">
-                                <i class="fa fa-file-pdf text-danger"></i> {{ __('label.export_to_pdf') }}
-                            </a>
-
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="#" wire:click.prevent="exportExcel">
-                                <i class="fa fa-file-excel text-success"></i> {{ __('label.export_to_excel') }}
-                            </a>
-
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
+         
 
         </div>
         <hr>
@@ -138,9 +102,9 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-4 d-flex flex-column">
                         <label class="form-label">{{ __('label.course') }}</label>
-                        <select class="form-select " wire:model="search.course_id">
+                        <select class="form-select select2"  id="search_course_id">
                            <option value="">{{ __('label.all') }}</option>
                            @foreach($courses as $course)
                                  <option value="{{ $course->id }}"  wire:key="course-search-{{ $course->id }}">
@@ -164,40 +128,28 @@
                     <thead class="table-dark table-border-bottom-0 small-table">
                         <tr>
                             <th style="width:15px;">
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="no">
+
                                 {{ __('label.NO') }}
                             </th>
 
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="student_code">
+ 
                                 {{ __('label.student_code') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="name">
+
                                 {{ __('label.name') }}
                             </th>
 
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_name">
+  
                                 {{ __('label.father_name') }}
                             </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
-                              {{ __('label.cognitive_score') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
-                               {{ __('label.attendance_score') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
-                                 {{ __('label.midterm_score') }}
-                            </th>
-                            
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
-                                 {{ __('label.final_score') }}
-                            </th>
+                           @foreach($exam_types as $type)
+                                <th>
+                                    {{ $type->name }} ({{ $exam_percentages[$type->id] ?? 0 }}%)
+                                </th>
+                            @endforeach
                            
                             <th>
                                 
@@ -210,50 +162,51 @@
                     
                     <tbody class="table-border-bottom-0">
                         @foreach($students as $i => $cs)
-                        <tr wire:key="course-{{ $search['course_id'] }}-student-{{ $cs->student_id }}">
+                        <tr wire:key="course-{{ $course_id }}-student-{{ $cs->student_id }}">
                             <td >{{ $i + 1 }}</td>
                             <td>{{ $cs->student?->student_code }}</td>
                             <td>{{ $cs->student?->name }}</td>
                             <td>{{ $cs->student?->father_name }}</td>
-                            <td>
-                              <input class="form-control " min="0" max="20" step="0.1" type="text" wire:model.live="results.{{ $cs->student_id }}.cognitive"  wire:key="cognitive-{{ $cs->student_id }}">
-                           </td>
-                           <td>
-                              <input class="form-control " min="0" max="20" step="0.1"  type="text" wire:model.live="results.{{ $cs->student_id }}.attendance"  wire:key="attendance-{{ $cs->student_id }}">
-                           </td>
-                          
-                           <td>
-                              <input class="form-control " min="0" max="30" step="0.1" type="text" wire:model.live="results.{{ $cs->student_id }}.midterm"  wire:key="midterm-{{ $cs->student_id }}">
-                           </td>
-                           <td>
-                              <input class="form-control " min="0" max="30" step="0.1" type="text" wire:model.live="results.{{ $cs->student_id }}.final"  wire:key="final-{{ $cs->student_id }}">
-                           </td>
-                          <td  wire:key="total-{{ $cs->student_id }}">
-                               {{
-                                 number_format(
-                                    min(
-                                       100,
-                                       (float)($results[$cs->student_id]['attendance'] ?? 0) +
-                                       (float)($results[$cs->student_id]['cognitive'] ?? 0) +
-                                       (float)($results[$cs->student_id]['midterm'] ?? 0) +
-                                       (float)($results[$cs->student_id]['final'] ?? 0)
-                                    ),
-                                    1
-                                 )
-                              }}
-                           </td>
+                            @foreach($exam_types as $type)
+                                @php
+                                    $is_absent = $exam_absents[$cs->student_id][$type->id] ?? false;
+                                @endphp
+
+                                <td wire:key="input-{{ $cs->student_id }}-{{ $type->id }}">
+
+                                    @if($is_absent)
+                                        <span class="badge bg-danger w-100 d-block py-2">
+                                            Absent
+                                        </span>
+                                    @else
+                                        <input class="form-control"
+                                            type="number"
+                                            min="0"
+                                            max="{{ $exam_percentages[$type->id] ?? 100 }}"
+                                            step="0.1"
+                                            wire:model.lazy="results.{{ $cs->student_id }}.{{ $type->id }}">
+                                    @endif
+
+                                </td>
+                            @endforeach
+                            <td wire:key="total-{{ $cs->student_id }}">
+                                 {{ number_format(array_sum($results[$cs->student_id] ?? []), 1) }}
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
-                 @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
-                <div class="d-flex justify-content-end mt-4 mb-3 px-3">
-                    <button type="button" class="btn btn-primary" wire:click="saveMarks">
-                        <i class="bi bi-save me-1"></i> {{ __('label.save') }}
-                    </button>
-                </div>
-                @endif
+                 
             </div>
+
+                    @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
+                    
+                        <div class="d-flex justify-content-end mt-4 mb-3 px-3">
+                            <button type="button" class="btn btn-primary" wire:click="saveMarks">
+                                <i class="bi bi-save me-1"></i> {{ __('label.save') }}
+                            </button>
+                        </div>
+                    @endif
             @endif
         </div>
     </div>
@@ -282,8 +235,7 @@ document.addEventListener("livewire:initialized", function () {
             });
         });
 
-        
-
+    
         $('#teacher_ids').off('change').on('change', function () {
              $wire.set('teacher_ids', $(this).val());
         });
@@ -313,6 +265,9 @@ document.addEventListener("livewire:initialized", function () {
         $('#search_teacher_id').off('change').on('change', function () {
             $wire.set('search.teacher_id', $(this).val());
         });
+         $('#search_course_id').off('change').on('change', function () {
+            $wire.set('course_id', $(this).val());
+        });
     }
 
     initSelect2();
@@ -325,6 +280,9 @@ document.addEventListener("livewire:initialized", function () {
         initSelect2();
     });
 
+    Livewire.on('reset-select2', () => {
+        $('#search_course_id').val(null).trigger('change');        
+    });
 
 });
 </script>

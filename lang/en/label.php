@@ -24,6 +24,7 @@ return [
     'to'    => 'To',
     'landscape'    => 'Landscape',
     'portrait'    => 'Portrait',
+    'price'    => 'Price',
 
     "successfully_done"      => "Successfully done!",
     "store_error"            => "Error storing the record!",
@@ -244,7 +245,7 @@ return [
     'program_name.unique' => 'This Program name has already been taken.',
 
     // books-----------
-    'book' => 'Book',
+    'book' => 'Level',
     'book_name' => 'Book Name',
     'abbreviation' => 'Abbreviation',
     'abbreviation.required' => 'Abbreviation is Required',
@@ -253,7 +254,15 @@ return [
     'book_name.max' => 'Book name may not be greater than 255 characters.',
     'book_name.unique' => 'This Book name has already been taken.',
     'program.required' => 'Program is required.',
+    'level_number' => 'Level Number',
+    'level_number.required' => 'Level Number is required.',
+    'book_branch_id.unique' => 'This Book already exists in this branch',
 
+    'physical_book' => 'Book',
+    'price.required' => 'Price is required',
+    'memo' => 'Memo',
+    'memo.required' => 'Memo is required',
+    'discount_amount.required' => 'Discount amount is required',
     
      // -----------start classroom -----------------
     'classroom' => 'Classroom',
@@ -277,6 +286,7 @@ return [
     'no_course_found_message' => 'Currently there are no courses available for this student',
     'add_to_waiting_list' => 'Add to waiting list',
     'student_already_exists_in_waiting_list' => 'This student is already in the waiting list.',
+    'student_already_exists_in_this_course' => 'This student already exists in this course',
     
 
     // ---------end center cettings--------------------
@@ -315,6 +325,7 @@ return [
     //----------------start students------------------
     'student' => 'Student',
     'student_code' => 'Student ID',
+    'student_code.required' => 'Student ID is required',
     'registration_date' => 'Registration Date',
     'address' => 'Address',
     'tazkira_no' => 'Tazkira No',
@@ -333,13 +344,14 @@ return [
     'scheduled'=>'Scheduled',
     'ongoing'=>'Ongoing',
     'completed'=>'Completed',
+    'archived'=>'Archived',
     'dropped'=>'Dropped',
     'failed'=>'Failed',
     'waiting'=>'Waiting',
     'enrolled'=>'Enrolled',
     //----------------end students--------------------
 
-     //----------------start course------------------
+    //----------------start course------------------
     'course' => 'Course',
     'course_name' => 'Course Name',
     'shift' => 'Shift',
@@ -356,7 +368,9 @@ return [
     'mid_exam_date' => 'Mid Exam Date',
     'final_exam_date' => 'Final Exam Date',
     'time' => 'Time',
+    'start_time.unique' => 'This time has already been registered for this shift.',
     'start_time' => 'Start Time',
+    'time.required' => 'Time is required',
     'end_time' => 'End Time',
     'teacher' => 'Teacher',
     'students' => 'Students',
@@ -392,11 +406,32 @@ return [
     'instractor' => 'Instructor',
     'student.required' => 'Student is Required',
     'student.unique' => 'This student arleady exists in this course',
+
+    'promote'=>'Promote',
+    'target_course'=>'Target course',
+    'drop_days'=>'Drop Days',
+    'drop_days.required'=>'Drop Days field is required',
+
+    'merge_courses'=>'Merge courses',
+    'merge'=>'Merge',
+    'change_time'=>'Change Time',
+    'change'=>'Change',
+    'promote_type'=>'Promote Type',
+    'existing_course'=>'Existing Course',
+    'new_course'=>'New Course',
+    'next_level_is_not_defined'=>'Next level is not defined',
+    'no_students_has_passed_this_course'=>'No students have passed this course.',
+    'course_already_exists'=>'Course already exists.',
+    'course_already_exists'=>'Course already exists.',
+    'total_days'=>'Total Days',
+    'teaching_days'=>'Teaching Days',
+    'today_attendance'=>'Today Attendance',
     //----------------end course--------------------
 
 
     // -----------start Assessment------------------------
     'student_attendance'=>'Student Attendance',
+    'exam_attendance'=>'Exam Attendance',
     'save_attendance'=>'Save Attendance',
     'attendance_date'=>'Attendance Date',
 
@@ -413,8 +448,15 @@ return [
     'weak_student'=>'Weak Student',
 
     'pass_mark'=>'Pass Mark',
+    'pass_mark.required'=>'Pass Mark is required',
     'excellent_mark'=>'Excellent Mark',
     'fee'=>'Fee',
+    'fee.required'=>'Fee is required',
+
+    'exam_type'=>'Exam Type',
+    'exam_type.required'=>'Exam Type is required',
+    'percentage.required'=>'Percentage is required',
+    'total_percentage_message'=>'The total percentage must be 100',
     // -----------end Assessment------------------------
     
     // ----------start Financial------------------------
@@ -484,7 +526,7 @@ return [
     'pay_installment'=>'Pay Installment',
     'confirm_cancel'=>'Confirm Cancel',
     'cancel_reason'=>'Cancel Reason',
-
+    'reject'=>'Reject',
     'amount.required'=>'Amount is required',
     'note.required'=>'Note is required',
     'fee_type'=>'Fee Type',
@@ -492,6 +534,25 @@ return [
     'code.required'=>'Code is required',
     'student_course_fee_report'=>'Student Course Fee Report',
     'student_course_fee_discount_report'=>'Student Course Fee Discount Report',
+    'g_discount_value'=>'General Discount',
+    'g_discount_amount'=>'General Discount',
+    'due'=>'Due',
+    'payment_status'=>'Payment Status',
+    'absent_days'=>'Absent Days',
+
+    'exam_fine'=>'Exam Fine',
+    'pay_exam_fine'=>'Pay Exam Fine',
+    'waived_exam_fine'=>'Waived Exam Fine',
+    'confirm'=>'Confirm',
+    'reason'=>'Reason',
+    'waive'=>'Waive',
+    'exam_fine_amount.required'=>'Exam fine amount is required',
+    'exam_fine_amount'=>'Exam fine amount',
+
+    'confirm_exemption'=>'Confirm Exemption',
+    'reject_exemption'=>'Reject Exemption',
+    'request_exemption'=>'Request Exemption',
+    'cancel_exemption'=>'Cancel Exemption',
 
     // ----------end Financial------------------------
 
@@ -507,10 +568,15 @@ return [
     'unit'=>'Unit',
     'warehouse_category'=>'Warehouse Category',
     'warehouse'=>'Warehouse',
+    'warehouse.required'=>'Warehouse is required',
     'quantity'=>'Quantity',
+    'quantity.required'=>'Quantity is required',
+    'unit_price'=>'Unit Price',
+    'unit_price.required'=>'Unit Price is required',
     'balance_after'=>'Balance After',
     'no_change_made'=>'No change made',
     'book_inventory_list'=>'Book Inventory List',
     'book_purchase_list'=>'Book Purchase List',
+    'book.required'=>'Book is required',
     // -----------------------end Warehouse --------------------------
 ];

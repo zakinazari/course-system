@@ -81,7 +81,7 @@
                         </select>
                     </div>
                     <div class="col-md-3 d-flex flex-column" wire:ignore>
-                        <label class="form-label">{{ __('label.book') }}</label>
+                        <label class="form-label">{{ __('label.physical_book') }}</label>
                         <select  class="form-select select2" id ="search_book_id">
                            <option value="">{{ __('label.all') }}</option>
                            @foreach($books as $book)
@@ -124,7 +124,7 @@
                             </th>
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="book_id">
-                                {{ __('label.book') }}
+                                {{ __('label.physical_book') }}
                             </th>
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="quantity">
