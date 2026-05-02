@@ -13,17 +13,13 @@ return new class extends Migration
     {
         Schema::create('student_course_results', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained();
+            $table->foreignId('course_id')->constrained();
 
-            $table->decimal('midterm', 5, 1)->nullable();
-            $table->decimal('final', 5, 1)->nullable();
-            $table->decimal('cognitive', 5, 1)->nullable();
-            $table->decimal('attendance', 5, 1)->nullable();
             $table->decimal('total', 5, 1)->nullable(); 
-            $table->enum('status', ['passed', 'failed'])->nullable();
+            $table->enum('status', ['passed', 'makeup', 'failed'])->nullable();
             $table->integer('pass_mark_snapshot')->nullable();
-            $table->integer('excellent_mark_snapshot')->nullable();
+            $table->integer('makeup_mark_snapshot')->nullable();
             $table->boolean('is_finalized')->default(false); 
             $table->timestamp('finalized_at')->nullable();
             $table->foreignId('finalized_by')->nullable()->constrained('users')->nullOnDelete();

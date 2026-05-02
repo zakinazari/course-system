@@ -109,8 +109,8 @@ class StudentCourseResultList extends Component
         $student_id,
         $course_id,
         $attendance_date,
-        $status;
-
+        $status,
+        $result_status;
      public function resetInputFields(){
         $this->resetExcept([
             'active_menu_id',
@@ -132,7 +132,6 @@ class StudentCourseResultList extends Component
             'program_id' => null,
             'book_id' => null,
             'branch_id' => null,
-            'status' => null,
             'course_type_id' => null,
             'shift_id' => null,
             'teacher_id' => null,
@@ -170,6 +169,7 @@ class StudentCourseResultList extends Component
 
         // گرفتن دانش‌آموزان کورس
         $students = CourseStudent::with('student')
+            ->whereHas('courseResult')
             ->where('course_id', $course_id)
             ->get();
 
@@ -208,9 +208,9 @@ class StudentCourseResultList extends Component
             $cs->result->status = $res?->status ?? null;
 
                     // اعمال فیلتر وضعیت
-        if ($this->search['status'] === 'excellent' && $cs->result->total < 90) continue;
-        if ($this->search['status'] === 'accepted' && ($cs->result?->status === 'failed' || $cs->result?->total >= 90)) continue;
-        if ($this->search['status'] === 'weak' && $cs->result?->status === 'passed') continue;
+            if ($this->result_status === 'excellent' && $cs->result->total < 90) continue;
+            if ($this->result_status === 'accepted' && ($cs->result?->status === 'failed' || $cs->result?->total >= 90)) continue;
+            if ($this->result_status === 'weak' && $cs->result?->status === 'passed') continue;
             
             $filteredStudents->push($cs);
         }
@@ -229,6 +229,10 @@ class StudentCourseResultList extends Component
 
             $this->selectedFields = array_merge($studentFields, $examFields, $endFields);
         }
+    }
+
+    public function updatedResulStatus(){
+        $this->loadCourseStudent;
     }
 
     protected function rules()
@@ -308,11 +312,11 @@ class StudentCourseResultList extends Component
         $exam_types = $data['exam_types'];
         $exam_percentages = $data['exam_percentages'];
         $course = Course::find($this->course_id);
-        if($this->search['status']==='excellent'){
+        if($this->result_status==='excellent'){
             $status = __('label.excellent_student');
-        }elseif($this->search['status']==='accepted'){
+        }elseif($this->result_status==='accepted'){
             $status = __('label.accepted_student');
-        }elseif($this->search['status']==='week'){
+        }elseif($this->result_status==='week'){
             $status = __('label.week_student');
         }else{
             $status ='';
@@ -343,11 +347,11 @@ class StudentCourseResultList extends Component
         $students = $data['students'];
         $fields = $data['fields'];
         $course = Course::find($this->search['course_id']);
-        if($this->search['status']==='excellent'){
+        if($this->result_status==='excellent'){
             $status = __('label.excellent_student');
-        }elseif($this->search['status']==='accepted'){
+        }elseif($this->result_status==='accepted'){
             $status = __('label.accepted_student');
-        }elseif($this->search['status']==='week'){
+        }elseif($this->result_status==='week'){
             $status = __('label.week_student');
         }else{
             $status ='';

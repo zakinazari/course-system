@@ -81,7 +81,7 @@ class AccessRoleList extends Component
         $currentUser = auth()->user();
 
         $roles = AccessRole::query()
-           
+           ->where('role_name','!=','developer')
             ->when(!empty($this->search['role_name']), function ($query) {
                 $query->where('role_name', 'like', '%' . $this->search['role_name'] . '%');
             })

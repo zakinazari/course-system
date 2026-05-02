@@ -67,6 +67,28 @@ class Employee extends Model
         return $this->employeeRoles->contains('name', 'Staff');
     }
 
+    public function activeTemporaryContract()
+    {
+        return $this->hasMany(TemporaryContract::class, 'employee_id')
+        ->where('status', 'active');
+    }
+
+    public function activePermanentContract()
+    {
+        return $this->hasMany(PermanentContract::class, 'employee_id')
+        ->where('status', 'active');
+    }
+
+    public function temporaryPayrolls()
+    {
+        return $this->hasMany(TemporaryPayroll::class);
+    }
+    public function permanentPayrolls()
+    {
+        return $this->hasMany(PermanentPayroll::class);
+    }
+
+
     // شرط شعبه، سکوپ
     protected static function booted()
     {

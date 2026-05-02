@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Gender;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,12 +19,15 @@ class Student extends Model
         'last_name',
         'father_name',
         'phone_no',
+        'whats_app',
+        'father_whats_app',
         'tazkira_no',
         'address',
         'status',
         'registration_date',
         'user_id',
         'branch_id',
+        'gender_id',
     ];
     protected $casts = [
         'registration_date' => 'datetime',
@@ -50,6 +54,10 @@ class Student extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+    public function gender(): BelongsTo
+    {
+        return $this->belongsTo(Gender::class, 'gender_id');
     }
     
 

@@ -158,7 +158,10 @@
                     </div>
 
                     <!-- Add New Record Button -->
-                    @if(add(Auth::user()->role_ids,$active_menu_id))
+                    @if(add(Auth::user()->role_ids,$active_menu_id) && $this->course->status!='archived')
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#archiveModal">
+                            <i class="bi bi-plus-lg"></i> {{ __('label.archive') }}
+                        </button>
                         <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#mergeModal" wire:click="openMergeModal">
                             <i class="bi bi-plus-lg"></i> {{ __('label.merge_courses') }}
                         </button>
@@ -269,7 +272,7 @@
                             <td>{{ $student->father_name }}</td>
                             <td>{{ $student->pivot->enrolled_at }}</td>
                             <td>
-                                @if(edit(Auth::user()->role_ids,$active_menu_id))
+                                @if(edit(Auth::user()->role_ids,$active_menu_id) && $this->course->status!='archived')
                                 <button
                                     class="btn btn-success btn-sm rounded-pill"
                                     wire:click="changeTime({{ $student->pivot->id }})">
@@ -294,6 +297,7 @@
 
                             <td>
                                 <div class="dropdown position-static">
+                                    @if($this->course->status!='archived')
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
@@ -307,8 +311,6 @@
                                             ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
                                         @endif
                                     </div>
-                                    @if($editMode)
-
                                     @endif
                                 </div>
                             </td>
@@ -538,6 +540,28 @@
         </div>
     </div>
 
+    <div class="modal fade" id="archiveModal" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.archive_course') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+                <form wire:submit.prevent="archiveCourse">
+                    <div class="modal-body">
+                            <div class="alert alert-solid-danger" role="alert">
+                                Warning: Archiving this course will permanently lock it. 
+                                You will not be able to modify student grades, attendance, fees, or any course-related information.
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
+                        <button type="submit" class="btn btn-danger">{{ __('label.archive') }} </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @script
 <script>

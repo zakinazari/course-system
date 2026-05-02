@@ -69,7 +69,9 @@ class BookList extends Component
 
     }
 
-    public $name,$abbreviation,$book_id, $program_id,$status = 'active',$fee,$pass_mark,$total_teaching_days,$min_capacity,$max_capacity;
+    public $name,$abbreviation,$book_id, $program_id,$status = 'active',$fee,
+    $pass_mark,$makeup_mark,
+    $total_teaching_days,$min_capacity,$max_capacity;
     public $exam_type_ids = [];
     public $percentages = [];   
     public $exam_fine_amount;   
@@ -113,6 +115,7 @@ class BookList extends Component
             'abbreviation' => 'required|string|max:255|unique:books,abbreviation,' . $this->book_id,
             'program_id' => 'required',
             'pass_mark' => 'required',
+            'makeup_mark' => 'required',
             'fee' => 'required',
             'total_teaching_days' => 'required|integer|min:1',
             'min_capacity' => 'required|integer|min:1',
@@ -142,6 +145,7 @@ class BookList extends Component
             'name.unique'   => __('label.book_name.unique'),
             'program_id.required'   => __('label.program.required'),
             'pass_mark.required'   => __('label.pass_mark.required'),
+            'makeup_mark.required'   => __('label.makeup_mark.required'),
             'fee.required'   => __('label.fee.required'),
             'total_teaching_days.required'   => __('label.total_teaching_days.required'),
             'min_capacity.required'   => __('label.min_capacity.required'),
@@ -190,6 +194,7 @@ class BookList extends Component
                 'status' => $this->status,
                 'fee' => $this->fee,
                 'pass_mark' => $this->pass_mark,
+                'makeup_mark' => $this->makeup_mark,
                 'total_teaching_days' => $this->total_teaching_days,
                 'min_capacity' => $this->min_capacity,
                 'max_capacity' => $this->max_capacity,
@@ -234,6 +239,7 @@ class BookList extends Component
         $this->status = $book->status;
         $this->fee = $book->fee;
         $this->pass_mark = $book->pass_mark;
+        $this->makeup_mark = $book->makeup_mark;
         $this->total_teaching_days = $book->total_teaching_days;
         $this->min_capacity = $book->min_capacity;
         $this->max_capacity = $book->max_capacity;
@@ -276,6 +282,7 @@ class BookList extends Component
                 'status' => $this->status,
                 'fee' => $this->fee,
                 'pass_mark' => $this->pass_mark,
+                'makeup_mark' => $this->makeup_mark,
                 'total_teaching_days' => $this->total_teaching_days,
                 'min_capacity' => $this->min_capacity,
                 'max_capacity' => $this->max_capacity,

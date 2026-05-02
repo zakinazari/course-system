@@ -187,6 +187,11 @@
                                 @error('pass_mark') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.makeup_mark') }} <span style="color:red;">*</span></label>
+                                <input type="text" id="nameBasic" class="form-control @error('makeup_mark') is-invalid @enderror" wire:model.lazy="makeup_mark">
+                                @error('makeup_mark') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.total_teaching_days') }} <span style="color:red;">*</span></label>
                                 <input type="number" min="1" id="nameBasic" class="form-control @error('total_teaching_days') is-invalid @enderror" wire:model.lazy="total_teaching_days">
                                 @error('total_teaching_days') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror

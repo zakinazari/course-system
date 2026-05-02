@@ -202,6 +202,7 @@ class ExamAttendanceList extends Component
 
     public function updatedSearch()
     {
+        
         $this->students = collect();
         $this->courses = Course::with('branch','courseType','program','book','classroom','shift')
         ->where('status','ongoing')
@@ -225,9 +226,7 @@ class ExamAttendanceList extends Component
             $query->where('shift_id',$this->search['shift_id']);
         })
         ->when(!empty($this->search['teacher_id']), function ($query) {
-            $query->whereHas('teachers',function($q){
-                $q->where('teacher_id',$this->search['teacher_id']);
-            });
+            $query->where('teacher_id',$this->search['teacher_id']);
         })->get();
     }
 

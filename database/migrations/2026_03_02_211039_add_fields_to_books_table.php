@@ -15,6 +15,7 @@ return new class extends Migration
 
             $table->integer('fee')->nullable();
             $table->unsignedSmallInteger('pass_mark')->nullable();
+            $table->unsignedSmallInteger('makeup_mark')->nullable();
             $table->unsignedSmallInteger('total_teaching_days');
             $table->unsignedSmallInteger('min_capacity')->nullable();
             $table->unsignedSmallInteger('max_capacity')->nullable();

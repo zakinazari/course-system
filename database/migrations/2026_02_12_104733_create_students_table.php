@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('last_name')->nullable();
             $table->string('father_name')->nullable();
             $table->string('phone_no', 16)->nullable();
+            $table->string('whats_app', 16)->nullable();
+            $table->string('father_whats_app', 16)->nullable();
             $table->string('tazkira_no',32)->nullable();
             $table->text('address')->nullable();
             $table->timestamp('registration_date');
@@ -28,6 +30,7 @@ return new class extends Migration
                 'graduated', 
             ])->default('new');
             $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
+            $table->foreignId('gender_id')->default(1)->constrained('genders')->defacults(1);
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 

@@ -661,6 +661,13 @@ class CourseEnrollments extends Component
 
             $this->dispatch('reset-select2');
             $this->target_course_id = null;
+
+            SystemLog::create([
+                'user_id' => Auth::user()->id,
+                'section' => 'Course Promoted ('.$source_course->name.')',
+                'type_id' => 3,
+            ]);
+
             DB::commit();
         
             $this->closePromoteModal();
@@ -742,6 +749,11 @@ class CourseEnrollments extends Component
             $target_course->status = 'ongoing';
             $target_course->save();
 
+            SystemLog::create([
+                'user_id' => Auth::user()->id,
+                'section' => 'Course Merged ('.$target_course->name.')',
+                'type_id' => 3,
+            ]);
             DB::commit();
 
             $this->merging_course_ids = [];
@@ -847,6 +859,38 @@ class CourseEnrollments extends Component
 
             $this->closeChangeTimeModal();
 
+            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
+        }
+    }
+
+    public function archiveCourse()
+    {
+        if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
+            return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // کورس مقصد
+            $course = Course::where('id', $this->course_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $course->status='archived';
+            $course->save();
+
+            SystemLog::create([
+                'user_id' => Auth::user()->id,
+                'section' => 'Course Archived('.$course->name.')',
+                'type_id' => 3,
+            ]);
+
+            DB::commit();
+            $this->dispatch('close-modal', id: 'archiveModal');
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
 
         } catch (\Exception $e) {

@@ -177,6 +177,10 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="hire_date">
                                 {{ __('label.hire_date') }}
                             </th>
+                            
+                            <th>
+                                {{ __('label.profile') }}
+                            </th>
 
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
@@ -214,6 +218,16 @@
                             <td>{{ $employee->email }}</td>
                             <td>{{ $employee->employeeRoles->pluck('name')->join(', ') }}</td>
                             <td>{{ $employee->hire_date->format('Y/m/d') }}</td>
+                            <td>
+                                <a class="btn btn-success btn-icon rounded-pill"
+                                    href="{{ route('employee-profile', [
+                                            'menu_id'   => $this->active_menu_id,
+                                            'employee_id' => encrypt($employee->id),
+                                        ]) }}">
+                                    <i class="bx bx-show text-white"></i>
+                                </a>
+                                
+                            </td>
                             <td>
                                 @if($employee->status=='new')
                                 <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ ucfirst($employee->status) }}</span>

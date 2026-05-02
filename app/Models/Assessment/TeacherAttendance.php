@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models\Assessment;
-
+use App\Models\Academic\Course;
 use Illuminate\Database\Eloquent\Model;
 
 class TeacherAttendance extends Model

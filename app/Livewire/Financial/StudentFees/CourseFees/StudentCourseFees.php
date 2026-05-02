@@ -140,6 +140,7 @@ class StudentCourseFees extends Component
         ->with('book') 
         // ->wherePivot('status', 'active')
         ->whereNotIn('courses.id', $feeCourseIds)  
+        ->where('courses.status','!=','archived')  
         ->orderBy('pivot_enrolled_at','desc') 
         ->get();
 

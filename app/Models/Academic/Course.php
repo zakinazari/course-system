@@ -148,11 +148,11 @@ class Course extends Model
 
                 $branchCode = $course->branch?->code;
                 $bookAbb = $course->book?->abbreviation;
-                $classroom = $course->classroom?->name;
-                $shift = $course->shift?->name;
-                $start_date = $course->start_date->format('Y-m-d');
+                $classroom = $course?->classroom?->name;
+                $time = $course->time?->start_time->format('h:i A');
+                $teacher =$course->teacher?->last_name;
                 $course->name =
-                    $branchCode .'-'. $bookAbb .'-'. $classroom.'-'.$shift.'-'.$start_date;
+                    $branchCode .'-'. $bookAbb .'-'.$teacher.'-'. $classroom.'-'.$time;
             });
         });
 
@@ -162,11 +162,11 @@ class Course extends Model
                 DB::transaction(function () use ($course) {
                     $branchCode = $course->branch?->code;
                     $bookAbb = $course->book?->abbreviation;
-                    $classroom = $course->classroom?->name;
-                    $shift = $course->shift?->name;
-                    $start_date = $course->start_date->format('Y-m-d');
+                    $classroom = $course?->classroom?->name;
+                    $time = $course->time?->start_time->format('h:i A');
+                    $teacher =$course->teacher?->last_name;
                     $course->name =
-                    $branchCode .'-'. $bookAbb .'-'. $classroom .'-'.$shift.'-'.$start_date;
+                    $branchCode .'-'. $bookAbb .'-'.$teacher.'-'. $classroom.'-'.$time;
                 });
             }
         });

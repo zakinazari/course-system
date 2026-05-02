@@ -8,6 +8,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Str;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
+use App\Models\CenterSettings\Gender;
 use App\Models\Academic\Student;
 use App\Models\Academic\StudentFile;
 use App\Models\Academic\Visitor;
@@ -31,6 +32,7 @@ class StudentList extends Component
     public $active_menu_id;
     public $active_menu;
     public $branches=[];
+    public $genders=[];
     public $modalId = 'student-list-addEditModal';
     public $table_name='students';
     public $selectedFields = [];
@@ -74,11 +76,17 @@ class StudentList extends Component
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
         $this->branches =  Branch::all();
+        $this->genders =  Gender::all();
     }
 
-    public $name,$last_name,$father_name,$phone_no,$tazkira_no,$registration_date,$address,
+    public $name,$last_name,$father_name,
+    $phone_no,
+    $whats_app,
+    $father_whats_app,
+    $tazkira_no,$registration_date,$address,
         $st_id, 
         $branch_id,
+        $gender_id,
         $photo,
         $status = 'new';
     public $student_code;
@@ -91,6 +99,7 @@ class StudentList extends Component
             'modalId',
             'search',
             'branches',
+            'genders',
         ]);
     }
     public $search = [
@@ -101,7 +110,7 @@ class StudentList extends Component
 
     public function render()
     {
-        $students = Student::with('branch','photo')
+        $students = Student::with('branch','photo','gender')
         ->when(!empty($this->search['identity']), function ($q) {
                 $search = $this->search['identity'];
 
@@ -117,6 +126,9 @@ class StudentList extends Component
         ->when(!empty($this->search['branch_id']), function ($query) {
             $query->where('branch_id',$this->search['branch_id']);
         })
+        ->when(!empty($this->search['gender_id']), function ($query) {
+            $query->where('gender_id',$this->search['gender_id']);
+        })
         ->orderBy('id','desc')
         ->paginate($this->perPage);
 
@@ -129,7 +141,9 @@ class StudentList extends Component
             'student_code' => 'required|string|unique:students,student_code,' . $this->st_id . ',id',
             'name' => 'required',
             'father_name' => 'required',
-            'phone_no' => 'required|string|max:16|unique:students,phone_no,' . $this->st_id . ',id',
+            'gender_id' => 'required',
+            // 'phone_no' => 'required|string|max:16|unique:students,phone_no,' . $this->st_id . ',id',
+            'phone_no' => 'required',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048'
         ];
 
@@ -148,6 +162,7 @@ class StudentList extends Component
             'father_name.string'   => __('label.father_name.required'),
             'phone_no.max'   => __('label.phone_no.max'),
             'branch_id.required'   => __('label.branch.required'),
+            'gender_id.required'   => __('label.gender.required'),
         ];
     }
     
@@ -169,10 +184,14 @@ class StudentList extends Component
                 'last_name'         => $this->last_name,
                 'father_name'       => $this->father_name,
                 'phone_no'          => $this->phone_no,
+                'whats_app'         => $this->whats_app,
+                'father_whats_app'  => $this->father_whats_app,
+                'phone_no'          => $this->phone_no,
                 'tazkira_no'        => $this->tazkira_no,
                 'address'           => $this->address,
                 'registration_date' => now(),
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
+                'gender_id'           =>$this->gender_id,
                 'user_id'           => Auth::id(),
             ]);
 
@@ -274,8 +293,11 @@ class StudentList extends Component
         $this->last_name = $student->last_name;
         $this->father_name = $student->father_name;
         $this->phone_no = $student->phone_no;
+        $this->whats_app = $student->whats_app;
+        $this->father_whats_app = $student->father_whats_app;
         $this->address = $student->address;
         $this->branch_id = $student->branch_id;
+        $this->gender_id = $student->gender_id;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -300,8 +322,11 @@ class StudentList extends Component
                 'last_name' => $this->last_name,
                 'father_name' => $this->father_name,
                 'phone_no' => $this->phone_no,
+                'whats_app'         => $this->whats_app,
+                'father_whats_app'  => $this->father_whats_app,
                 'tazkira_no' => $this->tazkira_no,
                 'address' => $this->address,
+                'gender_id' => $this->gender_id,
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
             ]);
 
@@ -423,6 +448,7 @@ class StudentList extends Component
             'address',
             'registration_date',
             'status',
+            'gender_id',
         ];
 
          $fields = !empty($this->selectedFields)
@@ -453,6 +479,9 @@ class StudentList extends Component
             )
             ->when(!empty($this->search['status']), fn($q) =>
                 $q->where('status',$this->search['status'])
+            )
+            ->when(!empty($this->search['gender_id']), fn($q) =>
+                $q->where('gender_id',$this->search['gender_id'])
             );
 
         if (in_array('branch_id', $fields)) {

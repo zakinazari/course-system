@@ -92,6 +92,8 @@ class PermissionList extends Component
                 $query->where('role_id', $role_id);
             }
         ])
+        ->where('status',1)
+        ->where('id','<>',4)
         ->when(!empty($this->search['identity']), function ($q) {
             $search = $this->search['identity'];
             $q->where(function ($qq) use ($search) {

@@ -90,6 +90,18 @@
                         </select>
                      </div>
                      @endif
+
+                     <div class="col-md-2">
+                        <label class="form-label">{{ __('label.gender') }}</label>
+                        <select class="form-select" wire:model.defer="search.gender_id" id ="">
+                           <option value="">{{ __('label.all') }}</option>
+                           @foreach($genders as $gender)
+                                 <option value="{{ $gender->id }}"  wire:key="gender-search-{{ $gender->id }}">
+                                    {{ $gender->name }}
+                                 </option>
+                           @endforeach
+                        </select>
+                     </div>
                     <div class="col-md-2">
                         <label class="form-label">{{ __('label.status') }}</label>
                         <select class="form-select" wire:model.defer="search.status" id ="">
@@ -153,21 +165,33 @@
                             </th>
 
                             <th>
+                                {{ __('label.add_to_course') }}
+                            </th>
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="phone_no">
                                 {{ __('label.phone_no') }}
                             </th>
                             <th>
-                                {{ __('label.add_to_course') }}
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="whats_app">
+                                {{ __('label.whats_app') }}
                             </th>
-                          
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_whats_app">
+                                {{ __('label.father_whats_app') }}
+                            </th>
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
                             </th>
-                              <th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="gender_id">
+                                {{ __('label.gender') }}
+                            </th>
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="registration_date">
                                 {{ __('label.date') }}
                             </th>
+                          
                              @if(!auth()->user()->branch_id)
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="branch_id">
@@ -196,7 +220,6 @@
                             <td>{{ $student->name }}</td>
                             <td>{{ $student->last_name }}</td>
                             <td>{{ $student->father_name }}</td>
-                            <td>{{ $student->phone_no }}</td>
                             <td>
                                 <a class="btn btn-success"
                                     href="{{ route('special-course-list', [
@@ -206,6 +229,10 @@
                                     {{ __('label.add_to_course') }}
                                 </a>
                             </td>
+                            <td>{{ $student->phone_no }}</td>
+                            <td>{{ $student->whats_app }}</td>
+                            <td>{{ $student->father_whats_app }}</td>
+                            
                             <td>
                                 @if($student->status=='new')
                                 <span class="badge bg-label-primary me-1" style="font-size:10px;">{{ ucfirst($student->status) }}</span>
@@ -215,10 +242,11 @@
                                 <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($student->status) }}</span>
                                 @endif
                             </td>
+                            <td>{{ $student->gender?->name }}</td>
                             <td>{{ $student->registration_date->format('Y/m/d - h:i A') }}</td>
                          
                             
-                             @if(!auth()->user()->branch_id)
+                            @if(!auth()->user()->branch_id)
                             <td>{{ $student->branch?->name }}</td>
                             @endif
                             <td>
@@ -304,6 +332,18 @@
                         </div>
                         <div class="row">
                             <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.whats_app') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('whats_app') is-invalid @enderror" wire:model.lazy="whats_app" >
+                                @error('whats_app') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.father_whats_app') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('father_whats_app') is-invalid @enderror" wire:model.lazy="father_whats_app">
+                                @error('father_whats_app') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.address') }}</label>
                                 <textarea type="text" id="nameBasic" class="form-control @error('address') is-invalid @enderror" wire:model.lazy="address"></textarea>
                                 @error('address') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -333,6 +373,19 @@
                         </div>
 
                         <div class="row">
+                            <div class="col mb-3">
+                              <label class="form-label">{{ __('label.gender') }} <span style="color:red;">*</span></label>
+                              <select class="form-select @error('gender_id') is-invalid @enderror" wire:model.lazy="gender_id" id ="gender_id">
+                                 <option value="">{{ __('label.select') }}</option>
+                                    @foreach($genders as $gender)
+                                        <option value="{{ $gender->id }}"  wire:key="gender-{{ $gender->id }}">
+                                            {{ $gender->name }}
+                                        </option>
+                                    @endforeach
+                              </select>
+                                @error('gender_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                           </div>
+
                             <div class="col mb-3">
                                 <label for="formFile" class="form-label">{{ __('label.photo') }}</label>
                                 <input class="form-control @error('photo') is-invalid @enderror" 

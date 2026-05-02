@@ -152,8 +152,8 @@
                            <option value="">{{ __('label.all') }}</option>
                             <option value="draft">{{ __('label.draft') }}</option>
                             <option value="ongoing">{{ __('label.ongoing') }}</option>
-                            <option value="completed">{{ __('label.completed') }}</option>
                             <option value="cancelled">{{ __('label.cancelled') }}</option>
+                            <option value="archived">{{ __('label.archived') }}</option>
                         </select>
                     </div>
                   
@@ -286,7 +286,7 @@
                             <td>{{ $course->branch?->name }}</td>
                             @endif
                             <td>
-                                @if($course->status=='draft' || $course->status=='scheduled' )
+                                @if($course->status !='archived')
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
@@ -296,7 +296,7 @@
                                             <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $course->id }})"
                                             ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
-                                        @if(delete(Auth::user()->role_ids,$active_menu_id))
+                                        @if(delete(Auth::user()->role_ids,$active_menu_id) && $course->status==='draft')
                                             <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $course->id }},'{{$table_name}}')"
                                             ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
                                         @endif

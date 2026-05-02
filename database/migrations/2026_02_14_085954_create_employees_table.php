@@ -27,7 +27,7 @@ return new class extends Migration
             ])->default('new');
 
             $table->date('hire_date');
-            $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
+            $table->foreignId('branch_id')->constrained('branches');
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();

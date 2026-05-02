@@ -152,7 +152,7 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">{{ __('label.status') }}</label>
-                        <select class="form-select" wire:model="search.status">
+                        <select class="form-select" wire:model="result_status">
                            <option value="">{{ __('label.all') }}</option>
                               <option value="excellent">{{ __('label.excellent_student') }}</option>
                               <option value="accepted"> {{ __('label.accepted_student') }}</option>
@@ -229,6 +229,10 @@
                             <td>
                                 @if($cs->result?->status === 'passed')
                                     <span class="badge bg-label-success me-1" style="font-size:10px;">
+                                        {{ ucfirst($cs->result?->status) }}
+                                    </span>
+                                @elseif($cs->result?->status === 'makeup')
+                                    <span class="badge bg-label-warning me-1" style="font-size:10px;">
                                         {{ ucfirst($cs->result?->status) }}
                                     </span>
                                 @elseif($cs->result?->status === 'failed')

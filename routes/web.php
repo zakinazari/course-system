@@ -155,7 +155,7 @@ Route::middleware(['auth'])->group(function () {
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
         }
-        return view('livewire.center-settings.physical-books.physical-book-list-page',['menu_id' => $menu_id]);
+        return view('livewire.center-settings.general-discounts.general-discount-list-page',['menu_id' => $menu_id]);
     })->name('general-discounts');
         
     Route::get('/time-list/{menu_id?}', function ($menu_id = null) {
@@ -178,6 +178,13 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.center-settings.units.unit-list-page',['menu_id' => $menu_id]);
     })->name('units');
+
+    Route::get('/positions/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.positions.position-list-page',['menu_id' => $menu_id]);
+    })->name('positions');
 
     Route::get('/warehouse-categories/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
@@ -397,6 +404,48 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.hr.employees.employee-list-page',['menu_id' => $menu_id]);
     })->name('employees');
+
+    Route::get('employee-profile/{menu_id?}/{employee_id?}', function ($menu_id = null,$employee_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.hr.employees.employee-profile-page', ['menu_id' => $menu_id,'employee_id'=>$employee_id]);
+    })->whereNumber('menu_id')->name('employee-profile');
+
+    Route::get('/employee-attendance/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.hr.employees.attendance.employee-attendance-list-page',['menu_id' => $menu_id]);
+    })->name('employee-attendance');
+
+    Route::get('/permanent-contracts/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.hr.contracts.permanent-contract-list-page',['menu_id' => $menu_id]);
+    })->name('permanent-contracts');
+
+    Route::get('/temporary-contracts/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.hr.contracts.temporary-contract-list-page',['menu_id' => $menu_id]);
+    })->name('temporary-contracts');
+    
+    Route::get('/permanent-payrolls/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.hr.payrolls.permanent-payroll-list-page',['menu_id' => $menu_id]);
+    })->name('permanent-payrolls');
+
+    Route::get('/temporary-payrolls/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.hr.payrolls.temporary-payroll-list-page',['menu_id' => $menu_id]);
+    })->name('temporary-payrolls');
     
     // -------end Hr------------------------
 

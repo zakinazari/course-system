@@ -316,9 +316,7 @@ class StudentAttendanceList extends Component
             $query->where('shift_id',$this->search['shift_id']);
         })
         ->when(!empty($this->search['teacher_id']), function ($query) {
-            $query->whereHas('teachers',function($q){
-                $q->where('teacher_id',$this->search['teacher_id']);
-            });
+            $query->where('teacher_id',$this->search['teacher_id']);
         })->get();
 
     }
@@ -383,6 +381,11 @@ class StudentAttendanceList extends Component
             // =========================
             // 1. STUDENT ATTENDANCE (UNCHANGED)
             // =========================
+            $absent_counts = StudentAttendance::where('course_id', $course_id)
+            ->where('status', 'absent')
+            ->selectRaw('student_id, COUNT(*) as total')
+            ->groupBy('student_id')
+            ->pluck('total', 'student_id');
             foreach ($this->attendances as $student_id => $status) {
 
                 StudentAttendance::updateOrCreate(
@@ -397,10 +400,12 @@ class StudentAttendanceList extends Component
                     ]
                 );
 
-                $absent_days = StudentAttendance::where('student_id', $student_id)
-                    ->where('course_id', $course_id)
-                    ->where('status', 'absent')
-                    ->count();
+
+                $absent_days = $absent_counts[$student_id] ?? 0;
+                // اگر امروز absent ثبت شده → باید حساب شود
+                if ($status === 'absent') {
+                    $absent_days++;
+                }
 
                 $drop_days = $course->book?->drop_days;
 
@@ -410,6 +415,7 @@ class StudentAttendanceList extends Component
                         ->where('course_id', $course_id)
                         ->update(['status' => 'dropped']);
                 }
+
             }
 
             // =========================
@@ -469,8 +475,8 @@ class StudentAttendanceList extends Component
         $data = $this->getReport();
         $students = $data['students'];
         $fields = $data['fields'];
-        $course = Course::find($this->search['course_id']);
-        $date = $this->search['attendance_date'];
+        $course = Course::find($this->course_id);
+        $date = $this->attendance_date;
 
         $pdf = Pdf::loadView(
             'livewire.assessment.attendance.student-attendance-list-pdf',
@@ -495,8 +501,8 @@ class StudentAttendanceList extends Component
         $data = $this->getReport();
         $students = $data['students'];
         $fields = $data['fields'];
-        $course = Course::find($this->search['course_id']);
-        $date = $this->search['attendance_date'];
+        $course = Course::find($this->course_id);
+        $date = $this->attendance_date;
 
         return Excel::download(
             new class($students, $fields,$course,$date) implements FromCollection, WithHeadings, WithEvents {
@@ -669,8 +675,8 @@ class StudentAttendanceList extends Component
         //     }
         // }
 
-        $course_id = $this->search['course_id'] ?? null;
-        $date = $this->search['attendance_date'] ?? now()->toDateString();
+        $course_id = $this->course_id ?? null;
+        $date = $this->attendance_date ?? now()->toDateString();
 
         if (!$course_id) {
             $students = collect();

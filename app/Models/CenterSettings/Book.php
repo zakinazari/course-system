@@ -16,6 +16,7 @@ class Book extends Model
         'program_id',
         'fee',
         'pass_mark',
+        'makeup_mark',
         'total_teaching_days',
         'min_capacity',
         'max_capacity',

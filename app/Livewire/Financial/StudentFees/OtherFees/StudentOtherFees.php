@@ -79,7 +79,7 @@ class StudentOtherFees extends Component
         $fee_type = FeeType::where('code',$fee_type)->first();
         $this->fee_type_id = $fee_type?->id;
         $this->fee_type_name = $fee_type?->name;
-        $this->amount = $fee_type->fee_amount;
+        $this->amount = $fee_type?->fee_amount;
         $this->modalId = 'student-other-fees-addEditModal'.$this->fee_type_name;
         $this->billModalId = 'student-other-fees-billModal'.$this->fee_type_name;
         $this->payment_date = now()->format('Y-m-d');

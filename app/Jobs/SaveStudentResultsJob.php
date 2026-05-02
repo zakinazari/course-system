@@ -31,9 +31,10 @@ class SaveStudentResultsJob implements ShouldQueue
 
     public function handle()
     {
-        $course = Course::with('book:id,pass_mark')->findOrFail($this->course_id);
+        $course = Course::with('book:id,pass_mark,makeup_mark')->findOrFail($this->course_id);
         $book = $course->book;
-
+        $pass_mark = $book?->pass_mark ?? 50;
+        $makeup_mark = $book?->makeup_mark ?? 40;
         $student_totals = [];
 
         foreach ($this->results as $student_id => $exam_scores) {
@@ -85,7 +86,14 @@ class SaveStudentResultsJob implements ShouldQueue
 
         // ذخیره total در student_course_results
         foreach ($student_totals as $student_id => $total) {
-            $status = $total >= $book->pass_mark ? 'passed' : 'failed';
+
+            if ($total >= $pass_mark) {
+                $status = 'passed';
+            } elseif ($total >= $makeup_mark) {
+                $status = 'makeup';
+            } else {
+                $status = 'failed';
+            }
 
             StudentCourseResult::updateOrCreate(
                 [
@@ -95,7 +103,8 @@ class SaveStudentResultsJob implements ShouldQueue
                 [
                     'total' => $total,
                     'status' => $status,
-                    'pass_mark_snapshot' => $book->pass_mark,
+                    'pass_mark_snapshot' => $pass_mark,
+                    'makeup_mark_snapshot' => $makeup_mark,
                     'user_id' => $this->user_id,
                 ]
             );

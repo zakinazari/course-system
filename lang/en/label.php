@@ -171,6 +171,8 @@ return [
     'indexes'=>'Indexes',
     'last_news'=>'Last News',
     'all_posts'=>'All Posts',
+    'gender'=>'Gender',
+    'gender.required'=>'Gender is required',
 
 
     // start dashboard labels-----------------------
@@ -196,6 +198,7 @@ return [
     'reviewers_count'   => 'Number of Reviewers',
     'authors_count'     => 'Number of Authors',
     'users_count'       => 'Total Users',
+
     // end dashboard labels-------------------------
 
     // start profile validation-------------------
@@ -206,6 +209,8 @@ return [
     'profile_photo_image' => 'The profile photo must be a valid image file.',
     'profile_photo_max'   => 'The profile photo may not be larger than 1MB.',
 
+    'password'   => 'Password',
+    'confirm_password'   => 'Confirm Password',
     'change_password'   => 'Change Password',
     'change_password'      => 'Change Password',
     'current_password'     => 'Current Password',
@@ -297,6 +302,8 @@ return [
     'last_name' => 'Last Name',
     'father_name' => "F/Name",
     'phone_no' => 'Phone',
+    'whats_app' => 'WhatsApp No',
+    'father_whats_app' => 'Father WhatsApp No',
     'visit_date' => 'Visit Date',
     'visit_purpose' => 'Visit Purpose',
     'referral_source' => 'Referral Source',
@@ -345,6 +352,8 @@ return [
     'ongoing'=>'Ongoing',
     'completed'=>'Completed',
     'archived'=>'Archived',
+    'archive'=>'Archive',
+    'archive_course'=>'Archive Course',
     'dropped'=>'Dropped',
     'failed'=>'Failed',
     'waiting'=>'Waiting',
@@ -448,7 +457,9 @@ return [
     'weak_student'=>'Weak Student',
 
     'pass_mark'=>'Pass Mark',
+    'makeup_mark'=>'Makeup Mark',
     'pass_mark.required'=>'Pass Mark is required',
+    'makeup_mark.required'=>'Makeup Mark is required',
     'excellent_mark'=>'Excellent Mark',
     'fee'=>'Fee',
     'fee.required'=>'Fee is required',
@@ -562,6 +573,42 @@ return [
     'hire_date' => 'Hire Date',
     'email' => 'Email',
     'role' => 'Role',
+
+    'permanent_contract'=>'Permanent Contract',
+    'temporary_contract'=>'Temporary Contract',
+    'permanent_contract_list'=>'Permanent Contract List',
+    'temporary_contract_list'=>'Temporary Contract List',
+    'position'=>'Position',
+    'basic_salary'=>'Basic Salary',
+    'basic_salary.required'=>'Basic Salary is required',
+    'end'=>'End',
+    'selected_books'=>'Selected Levels',
+    'book_salary_rate'=>'Book Salary Rate',
+    'taxi_fare'=>'Taxi Fare',
+    'food_deduction'=>'Food Deduction',
+    'food_allowance'=>'Food Allowance',
+    'credit_card'=>'Credit Card',
+    'salary_advance'=>'Salary Advance',
+    'year'=>'Year',
+    'month'=>'Month',
+    'year.required'=>'Year is required',
+    'month.required'=>'Month is required',
+    'total_salary'=>'Total Salary',
+    'gross_salary'=>'Gross Salary',
+    'total_deduction'=>'Total Deduction',
+    'advance_deduction'=>'Advance Deduction',
+    'tax'=>'tax',
+    'net_salary'=>'Net Salary',
+    'pay_all'=>'Pay All',
+    'calculate'=>'Calculate',
+
+    'temporary_teachers_payroll'=>'Temporary Teachers Payroll',
+    'permanent_teachers_payroll'=>'Permanent Teachers Payroll',
+    'salary_advance_payments'=>'Salary Advance Payments',
+
+    'attendance_status'=>'Attendance Status',
+    'employee_attendance'=>'Employee Attendance',
+    'total_present_days'=>'Total Present Days',
     // -----------end hr -------------------
 
     //  -----------------------start Warehouse ------------------------

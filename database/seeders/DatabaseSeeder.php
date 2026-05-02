@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             CourseTypeSeeder::class,
             UserSeeder::class,
             FeeTypeSeeder::class,
+            MonthSeeder::class,
+            GenderSeeder::class,
         ]);
     }
 }

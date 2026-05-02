@@ -366,7 +366,20 @@ class StudentCourseResultEntry extends Component
 
         $course = Course::find($course_id);
         if (!$course) return;
-   
+        
+        $book = $course->book;
+        if (!$book) {
+            return $this->dispatch('alert', type: 'error', message: 'Book is not assigned to this course.');
+        }
+
+        if (is_null($book->pass_mark)) {
+            return $this->dispatch('alert', type: 'error', message: 'Pass mark is not defined for this book.');
+        }
+
+        if (is_null($book->makeup_mark)) {
+            return $this->dispatch('alert', type: 'error', message: 'Makeup mark is not defined for this book.');
+        }
+        
         try {
 
             $exam_percentages = $course->book?->examTypes

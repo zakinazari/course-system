@@ -1,7 +1,7 @@
 <?php
 use App\Models\Settings\Menu;
 use App\Models\Settings\Permission;
-
+use Morilog\Jalali\Jalalian;
 if (!function_exists('read')) {
     function read($role = [], $menu_id = null)
     {
@@ -207,6 +207,49 @@ if (!function_exists('getImage')) {
                 $base64 = null;
             }
             return $base64;
+        }
+    }
+
+    // 
+    if (!function_exists('jalaliToGregorianMonthRange')) {
+        // year = jalai year, month= jalali month
+        function jalaliToGregorianMonthRange($year, $month)
+        {
+            $month = str_pad($month, 2, '0', STR_PAD_LEFT);
+
+            $date = "{$year}-{$month}-01";
+
+            $start = Jalalian::fromFormat('Y-m-d', $date)
+                ->toCarbon()
+                ->startOfDay();
+
+            $end = Jalalian::fromFormat('Y-m-d', $date)
+                ->addMonths(1)
+                ->subDay()
+                ->toCarbon()
+                ->endOfDay();
+
+            return [$start, $end];
+        }
+    }
+
+    if (! function_exists('tax')) {
+
+        function tax($salary)
+        {
+            if ($salary <= 5000) {
+                return 0;
+            }
+
+            if ($salary <= 12500) {
+                return ($salary - 5000) * 0.02;
+            }
+
+            if ($salary <= 100000) {
+                return 150 + (($salary - 12500) * 0.10);
+            }
+
+            return 8900 + (($salary - 100000) * 0.20);
         }
     }
 }

@@ -37,6 +37,7 @@
         'registration_date' => __('label.registration_date'),
         'status' => __('label.status'),
         'branch_id' => __('label.branch'),
+        'gender_id' => __('label.gender'),
     ];
 @endphp
 
@@ -79,6 +80,8 @@
                             {{ ucfirst($student->status) }}
                         @elseif($field==='branch_id')
                             {{ $student->branch?->name }}
+                        @elseif($field==='gender_id')
+                            {{ $student->gender?->name }}
                         @else
                             {{ $student->$field }}
                         @endif
