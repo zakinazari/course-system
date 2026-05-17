@@ -7,7 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Branch;
-use App\Models\Warehouse\WarehouseCategory;
+use App\Models\CenterSettings\Section;
 use App\Models\Warehouse\Warehouse;
 use Auth;
 class WarehouseList extends Component
@@ -51,7 +51,7 @@ class WarehouseList extends Component
     }
     
     // ---------------------------------end generals-------------
-    public $branches, $categories;
+    public $branches, $sections;
     public function mount($active_menu_id = null)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -61,11 +61,11 @@ class WarehouseList extends Component
         // -------------start for activing menu in sidebar ----------------------
 
         $this->branches =  Branch::all();
-        $this->categories =  WarehouseCategory::all();
-
+        $this->sections =  Section::all();
     }
 
-     public $warehouse_id,$name,$branch_id,$category_id;
+     public $warehouse_id,$name,$branch_id,$section_id;
+     public $type='branch';
 
      public function resetInputFields(){
         $this->resetExcept([
@@ -75,7 +75,7 @@ class WarehouseList extends Component
             'modalId',
             'search',
             'branches',
-            'categories',
+            'sections',
         ]);
     }
     public $search = [
@@ -85,7 +85,7 @@ class WarehouseList extends Component
 
     public function render()
     {
-        $warehouses = Warehouse::with('branch','category','inventories')
+        $warehouses = Warehouse::with('branch','section')
         ->when(!empty($this->search['name']), function ($query) {
             $query->where('name', 'like', '%' . $this->search['name'] . '%');
         })
@@ -101,10 +101,12 @@ class WarehouseList extends Component
     {
         $rules =  [
             'name' => 'required|string|max:255|unique:warehouses,name,' . ($this->editMode ? $this->warehouse_id : 'NULL') . ',id',
-            'category_id'=>'required',
+            'section_id'=>'required',
+            'type'=>'required',
             
         ];
-        if (!Auth::user()->branch_id) {
+
+        if (!Auth::user()->branch_id && $this->type != 'central') {
             $rules['branch_id'] = 'required';
         }
 
@@ -116,7 +118,8 @@ class WarehouseList extends Component
         return [
             'name.required' => __('label.name.required'),
             'branch_id.required' => __('label.branch.required'),
-            'category_id.required' => __('label.category.required'),
+            'section_id.required' => __('label.category.required'),
+            'type.required' => __('label.type.required'),
         ];
     }
     
@@ -131,23 +134,48 @@ class WarehouseList extends Component
 
         try {
 
+            // جلوگیری از ایجاد بیش از یک warehouse مرکزی
+            if ($this->type === 'central') {
+
+                $exists = Warehouse::where('type', 'central')
+                    ->where('section_id', $this->section_id)
+                    ->whereNull('branch_id')
+                    ->when($this->editMode, function ($q) {
+                        $q->where('id', '!=', $this->warehouse_id);
+                    })
+                    ->exists();
+
+                if ($exists) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: 'Central warehouse for this section already exists'
+                    );
+                }
+            }
+
             $warehouse = Warehouse::create([
                 'name' => $this->name,
-                'category_id' => $this->category_id,
-                'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
+                'section_id' => $this->section_id,
+                'type' => $this->type,
+                'branch_id' => $this->type === 'central'
+                    ? null
+                    : (Auth::user()->branch_id ?: $this->branch_id),
             ]);
 
-            // ---start system log-----------
             SystemLog::create([
                 'user_id' => Auth::user()->id,
-                'section' => __('label.warehouse').' ('.$warehouse->name.' ID:'.$warehouse->id.')',
+                'section' => __('label.warehouse') . ' (' . $warehouse->name . ' ID:' . $warehouse->id . ')',
                 'type_id' => 2,
             ]);
-            // ---end system log-------------
+
             $this->closeModal();
+
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
-            
+
         } catch (\Exception $e) {
+
             $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
         }
     }
@@ -159,8 +187,9 @@ class WarehouseList extends Component
         $this->warehouse_id = $id;    
         $warehouse = Warehouse::find($id);
         $this->name = $warehouse->name;
-        $this->category_id = $warehouse->category_id;
+        $this->section_id = $warehouse->section_id;
         $this->branch_id = $warehouse->branch_id;
+        $this->type = $warehouse->type;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -173,12 +202,33 @@ class WarehouseList extends Component
 
         $this->validate();
         try {
+            
+            if ($this->type === 'central') {
 
+                $exists = Warehouse::where('type', 'central')
+                    ->where('section_id', $this->section_id)
+                    ->whereNull('branch_id')
+                    ->where('id', '!=', $this->warehouse_id)
+                    ->exists();
+
+                if ($exists) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: 'Central warehouse for this section already exists'
+                    );
+                }
+            }
+        
             $warehouse = Warehouse::findOrFail($this->warehouse_id);
             $warehouse->update([
                 'name' => $this->name,
-                'category_id' => $this->category_id,
-                'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
+                'section_id' => $this->section_id,
+                'type' => $this->type,
+                'branch_id' => $this->type === 'central'
+                    ? null
+                    : (Auth::user()->branch_id ?: $this->branch_id),
             ]);
             // ---start system log-----------
             SystemLog::create([

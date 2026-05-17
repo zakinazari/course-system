@@ -209,7 +209,7 @@
                                 </p>
                                 
                                 <a class="app-academy-md-50 btn btn-label-primary d-flex align-items-center" href="{{ route('course-enrollments',['menu_id' =>$active_menu_id,'course_id'=>$course->id]) }}">
-                                <span class="me-2 small">{{ __('label.enrollment') }}</span><i class="bx bx-chevron-right lh-1 scaleX-n1-rtl"></i>
+                                <span class="me-2 small">{{ __('label.details') }}</span><i class="bx bx-chevron-right lh-1 scaleX-n1-rtl"></i>
                                 </a>
                                 
                             </div>

@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\Financial\FeeType;
+use App\Models\CenterSettings\Section;
 use Auth;
 class FeeTypeList extends Component
 {
@@ -49,7 +50,7 @@ class FeeTypeList extends Component
     }
     
     // ---------------------------------end generals-------------
-
+    public $sections = [];
     public function mount($active_menu_id = null)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -57,9 +58,11 @@ class FeeTypeList extends Component
         $this->active_menu_id = $active_menu_id;
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
+
+         $this->sections = Section::all();
     }
 
-     public $fee_type_id,$name,$code,$fee_amount,$has_fees;
+     public $fee_type_id,$name,$code,$fee_amount,$has_fees,$section_id;
 
      public function resetInputFields(){
         $this->resetExcept([
@@ -68,17 +71,22 @@ class FeeTypeList extends Component
             'table_name',
             'modalId',
             'search',
+            'sections',
         ]);
     }
     public $search = [
             'name' => null,
+            'section_id' => null,
         ];
 
     public function render()
     {
-        $fee_types = FeeType::with('studentFees')
+        $fee_types = FeeType::with('section')
         ->when(!empty($this->search['name']), function ($query) {
             $query->where('name', 'like', '%' . $this->search['name'] . '%');
+        })
+        ->when(!empty($this->search['section_id']), function ($query) {
+            $query->where('section_id', $this->search['section_id']);
         })
         ->paginate($this->perPage);
 
@@ -91,6 +99,7 @@ class FeeTypeList extends Component
             'name' => 'required',
             'code' => 'required|string|max:255|unique:fee_types,code,' . ($this->editMode ? $this->fee_type_id : 'NULL') . ',id',
             'fee_amount' => 'required|numeric|min:0',
+            'section_id' => 'required',
         ];
     }
     // Localized messages
@@ -100,6 +109,7 @@ class FeeTypeList extends Component
             'name.required' => __('label.name.required'),
             'code.required'   => __('label.code.required'),
             'fee_amount.required'      => __('label.amount.required'),
+            'section_id.required'   => __('label.section.required'),
         ];
     }
     
@@ -118,6 +128,7 @@ class FeeTypeList extends Component
                 'name' => $this->name,
                 'code' => $this->code,
                 'fee_amount' => $this->fee_amount,
+                'section_id' => $this->section_id,
             ]);
 
             // ---start system log-----------
@@ -144,6 +155,7 @@ class FeeTypeList extends Component
         $this->name = $fee_type->name;
         $this->code = $fee_type->code;
         $this->fee_amount = $fee_type->fee_amount;
+        $this->section_id = $fee_type->section_id;
         $this->has_fees = $fee_type->studentFees()->exists();
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
@@ -162,6 +174,7 @@ class FeeTypeList extends Component
                 'name' => $this->name,
                 'code' => $this->code,
                 'fee_amount' => $this->fee_amount,
+                'section_id' => $this->section_id,
             ]);
             // ---start system log-----------
             SystemLog::create([

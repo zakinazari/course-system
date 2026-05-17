@@ -9,6 +9,7 @@ use App\Models\Settings\SystemLog;
 use App\Models\Hr\Position;
 use App\Models\Hr\Employee;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Section;
 use App\Models\Hr\PermanentContract;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
@@ -79,6 +80,7 @@ class EmployeePermanentContractList extends Component
     public $positions = [];
     public $employees = [];
     public $branches = [];
+    public $sections = [];
     public function mount($active_menu_id = null,$employee_id)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -90,11 +92,13 @@ class EmployeePermanentContractList extends Component
         $this->employee_id = $employee_id;
         $this->positions =  Position::all();
         $this->branches =  Branch::all();
+        $this->sections =  Section::all();
     }
 
     public $position_id;
     public $employee_id;
     public $branch_id;
+    public $section_id;
 
     public $contract_id;
     public $start_date;
@@ -116,6 +120,7 @@ class EmployeePermanentContractList extends Component
             'employees',
             'employee_id',
             'branches',
+            'sections',
         ]);
     }
     public $search = [
@@ -130,7 +135,7 @@ class EmployeePermanentContractList extends Component
     public function render()
     {
         $search = $this->search;
-        $contracts = PermanentContract::with('position','branch')
+        $contracts = PermanentContract::with('position','branch','section')
         ->where('employee_id',$this->employee_id)
         ->when(!empty($this->search['position_id']), function ($query) {
             $query->whereHas('position', function($q) {
@@ -166,12 +171,14 @@ class EmployeePermanentContractList extends Component
                 Rule::unique('permanent_contracts')
                     ->ignore($this->contract_id)
                     ->where(function ($q) use ($branch_id) {
-                        return $q->where('branch_id', $branch_id)
+                        return $q
                             ->where('status', 'active');
+                            // ->where('branch_id', $branch_id); فقط یک قرارداد میتواند داشته باشد
                     }),
             ],
 
             'position_id' => 'required|exists:positions,id',
+            'section_id' => 'required|exists:sections,id',
             'basic_salary' => 'required|numeric|min:1',
 
             'start_date' => 'required|date',
@@ -197,7 +204,9 @@ class EmployeePermanentContractList extends Component
             'basic_salary.required' => __('label.basic_salary.required'),
             'start_date.required' => __('label.start_date.required'),
             'end_date.required' => __('label.end_date.required'),
-            'employee_id.unique' => 'This employee already has an active contract in this branch.',
+            'branch_id.required' => __('label.branch.required'),
+            'section_id.required' => __('label.section.required'),
+            'employee_id.unique' => 'This employee already has an active contract.',
         ];
     }
 
@@ -216,6 +225,7 @@ class EmployeePermanentContractList extends Component
             $contract = PermanentContract::create([
                 'position_id'  => $this->position_id,
                 'employee_id'  => $this->employee_id,
+                'section_id'  => $this->section_id,
                 'branch_id'  => Auth::user()->branch_id ?: $this->branch_id,
                 'basic_salary' => $this->basic_salary,
                 'taxi_fare' => $this->taxi_fare,
@@ -254,6 +264,7 @@ class EmployeePermanentContractList extends Component
         $this->contract_id = $contract->id;
         $this->employee_id = $contract->employee_id;
         $this->position_id = $contract->position_id;
+        $this->section_id = $contract->section_id;
         $this->branch_id = $contract->branch_id;
         $this->basic_salary = $contract->basic_salary;
         $this->taxi_fare = $contract->taxi_fare;
@@ -284,6 +295,7 @@ class EmployeePermanentContractList extends Component
             $contract->update([
                 'position_id'  => $this->position_id,
                 'employee_id'  => $this->employee_id,
+                'section_id'  => $this->section_id,
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
                 'basic_salary' => $this->basic_salary,
                 'taxi_fare' => $this->taxi_fare,

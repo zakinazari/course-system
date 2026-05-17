@@ -83,6 +83,7 @@
                             <th>{{ __('label.date') }}</th>
                             <th>{{ __('label.status') }}</th>
                             <th>{{ __('label.payment') }}</th>
+                            <th>{{ __('label.section') }}</th>
                             @if(!auth()->user()->branch_id)
                             <th>{{ __('label.branch') }}</th>
                             @endif
@@ -113,6 +114,7 @@
                                     <i class="bx bx-money text-white"></i>
                                 </a>
                             </td>
+                            <td>{{ $advance->section?->name }}</td>
                             @if(!auth()->user()->branch_id)
                             <td>{{ $advance->branch?->name }}</td>
                             @endif
@@ -178,6 +180,22 @@
                             </div>
                             @endif
                             </div>
+                        <div class="col mb-3">
+                                <label>{{ __('label.section') }}<span style="color:red;">*</span></label>
+                                <div wire:ignore>
+                                <select  class="form-control select2" id="advance_form_section_id" wire:model.lazy ="section_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                    @foreach($sections as $section)
+                                    <option value="{{ $section->id }}" wire:key="sections-section">
+                                        {{ $section->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                </div>
+                              
+                            </div>
+                           @error('section_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                           
                         <div class="mb-3">
                               <label>{{ __('label.amount') }}<span style="color:red;">*</span></label>
                               <input type="number" wire:model.lazy="total_amount" class="form-control" min="0">
@@ -245,3 +263,44 @@
 
 </div>
 
+@script
+<script>
+document.addEventListener("livewire:initialized", function () {
+
+    function initSelect2() {
+
+        $('.select2').each(function () {
+            const $select = $(this);
+            const $modal  = $select.closest('.modal');
+
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+
+            $select.select2({
+                width: '100%',
+                dropdownParent: $modal.length ? $modal : $(document.body)
+            });
+        });
+
+
+        $('#advance_form_section_id').off('change').on('change', function () {
+            @this.set('section_id', $(this).val());
+            
+        });
+
+    }
+
+    initSelect2();
+
+    Livewire.hook('morphed', () => {
+        initSelect2();
+    });
+
+    $(document).on('shown.bs.modal', function () {
+        initSelect2();
+    });
+});
+</script>
+@endscript

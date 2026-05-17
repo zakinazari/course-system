@@ -83,6 +83,7 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="position_id">
                                 {{ __('label.position') }}
                             </th>
+                            
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="basic_salary">
                                 {{ __('label.basic_salary') }}
@@ -106,6 +107,10 @@
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
+                            </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="section_id">
+                                {{ __('label.section') }}
                             </th>
                             @if(!auth()->user()->branch_id)
                             <th>
@@ -135,6 +140,7 @@
                               <span class="badge bg-label-info me-1" style="font-size:10px;">{{ ucfirst($contract->status) }}</span>
                               @endif
                             </td>
+                            <td>{{ $contract->section?->name }}</td>
                             @if(!auth()->user()->branch_id)
                             <td>{{ $contract->branch?->name }}</td>
                             @endif
@@ -215,11 +221,27 @@
                             </div>
                              
                         </div>
-                         <div class="mb-3">
-                              <label>{{ __('label.basic_salary') }}<span style="color:red;">*</span></label>
-                              <input type="number" wire:model.lazy="basic_salary" class="form-control" min="0">
-                              @error('basic_salary') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                         </div>
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label>{{ __('label.section') }}<span style="color:red;">*</span></label>
+                                <div wire:ignore>
+                                <select  class="form-control select2" id="permanet_form_section_id" wire:model.lazy ="section_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                    @foreach($sections as $section)
+                                    <option value="{{ $section->id }}" wire:key="section-section">
+                                        {{ $section->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                </div>
+                                @error('section_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label>{{ __('label.basic_salary') }}<span style="color:red;">*</span></label>
+                                <input type="number" wire:model.lazy="basic_salary" class="form-control" min="0">
+                                @error('basic_salary') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col mb-3">
                                 <label>{{ __('label.taxi_fare') }}</label>
@@ -305,6 +327,9 @@ document.addEventListener("livewire:initialized", function () {
 
         $('#permanet_form_position_id').off('change').on('change', function () {
             @this.set('position_id', $(this).val());
+        });
+        $('#permanet_form_section_id').off('change').on('change', function () {
+            @this.set('section_id', $(this).val());
         });
 
     }

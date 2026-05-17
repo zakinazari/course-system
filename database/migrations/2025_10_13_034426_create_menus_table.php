@@ -24,6 +24,7 @@ return new class extends Migration
             $table->mediumInteger('grand_parent_id')->nullable();
             $table->smallInteger('type_id');
             $table->smallInteger('section_id');
+            $table->string('slug',length: 64)->unique()->nullable();
             $table->timestamps();
         });
     }

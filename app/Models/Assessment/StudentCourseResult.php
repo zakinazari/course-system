@@ -42,4 +42,9 @@ class StudentCourseResult extends Model
     {
         return $this->hasMany(StudentCourseResultLog::class, 'student_course_result_id');
     }
+
+    public function examScores()
+    {
+        return $this->hasMany(StudentExamScore::class, 'course_id', 'course_id');
+    }
 }

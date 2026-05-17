@@ -26,6 +26,7 @@ return new class extends Migration
             $table->text('note')->nullable();
             // برای یونت درسی است 
             $table->integer('unit_number')->nullable();
+            $table->text('unite_note')->nullable();
             $table->enum('lesson_status', ['ongoing','finished'])->default('finished');
 
             $table->timestamps();

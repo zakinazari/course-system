@@ -280,8 +280,6 @@ class StudentList extends Component
         }
     }
 
-    
-
 
     public function edit($id)
     {

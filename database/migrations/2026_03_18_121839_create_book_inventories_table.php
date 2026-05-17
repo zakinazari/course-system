@@ -11,8 +11,8 @@ return new class extends Migration
     {
         Schema::create('book_inventories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
-            $table->foreignId('book_id')->nullable()->constrained('books')->nullOnDelete();
+            $table->foreignId('warehouse_id')->constrained();
+            $table->foreignId('book_id')->constrained();
             $table->integer('quantity')->default(0);
             $table->timestamps();
 

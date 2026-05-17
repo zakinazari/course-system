@@ -168,6 +168,10 @@
                                 {{ __('label.add_to_course') }}
                             </th>
                             <th>
+                                {{ __('label.profile') }}
+                            </th>
+
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="phone_no">
                                 {{ __('label.phone_no') }}
                             </th>
@@ -221,13 +225,23 @@
                             <td>{{ $student->last_name }}</td>
                             <td>{{ $student->father_name }}</td>
                             <td>
-                                <a class="btn btn-success"
+                                <a class="btn btn-info"
                                     href="{{ route('special-course-list', [
                                             'menu_id'   => $this->active_menu_id,
                                             'student_id' => $student->id,
                                         ]) }}">
                                     {{ __('label.add_to_course') }}
                                 </a>
+                            </td>
+                            <td>
+                                <a class="btn btn-success btn-icon rounded-pill"
+                                    href="{{ route('student-profile', [
+                                            'menu_id'   => $this->active_menu_id,
+                                            'student_id' => encrypt($student->id),
+                                        ]) }}">
+                                    <i class="bx bx-user text-white"></i>
+                                </a>
+                                
                             </td>
                             <td>{{ $student->phone_no }}</td>
                             <td>{{ $student->whats_app }}</td>

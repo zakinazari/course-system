@@ -14,6 +14,7 @@ use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
+use App\Models\CenterSettings\Time;
 use App\Models\Financial\StudentCourseFee;
 use App\Models\Academic\CourseWaitingList;
 use App\Models\Hr\Employee;
@@ -38,6 +39,7 @@ class CourseEnrollments extends Component
     public $pdfOrientation ='landscape';
     public $course =[];
     public $target_courses = [];
+    public $merge_courses = [];
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
     public function closeModal(){
         $this->resetInputFields();
@@ -127,10 +129,24 @@ class CourseEnrollments extends Component
 
         $this->course_id = $course_id;
         $course = Course::findOrFail($course_id);
-        $this->target_courses = Course::where('program_id',$course->program_id)
+        $this->target_courses = Course::with('book')
+        ->whereHas('book', function($q) use ($course) {
+            $q->where('level_number', $course->book?->level_number + 1);
+        })
+        ->where('program_id',$course->program_id)
         ->whereNotIn('status',['archived','cancelled'])
         ->where('id','<>',$this->course_id)
         ->where('branch_id',$course->branch_id)->get();
+
+        $this->merge_courses = Course::with('book')
+        ->whereHas('book', function($q) use ($course) {
+            $q->where('level_number', $course->book?->level_number);
+        })
+        ->where('program_id',$course->program_id)
+        ->whereNotIn('status',['archived','cancelled'])
+        ->where('id','<>',$this->course_id)
+        ->where('branch_id',$course->branch_id)->get();
+
         $this->student_id = $student_id;
     }
 
@@ -145,6 +161,7 @@ class CourseEnrollments extends Component
             'course',
             'course_id',
             'target_courses',
+            'merge_courses',
         ]);
     }
     public $search = [
@@ -454,9 +471,16 @@ class CourseEnrollments extends Component
         $this->resetErrorBag('end_date');
         $this->resetErrorBag('mid_exam_date');
         $this->resetErrorBag('final_exam_date');
+        
+    }
+
+    public function updatedPromoteTimeId(){
+        $this->resetErrorBag('promote_time_id');
     }
 
     public $new_level;
+    public $course_times = [];
+    public $promote_time_id;
     public function updatedPromoteType(){
         $this->resetErrorBag('promote_type');
         if ($this->promote_type == 2) {
@@ -471,6 +495,7 @@ class CourseEnrollments extends Component
 
             if ($this->new_level) {
                 $this->total_teaching_days = $this->new_level->total_teaching_days;
+                $this->course_times = Time::all();
             }
 
         } else {
@@ -481,6 +506,8 @@ class CourseEnrollments extends Component
             $this->end_date = null;
             $this->mid_exam_date = null;
             $this->final_exam_date = null;
+            $this->course_times = [];
+            $this->promote_time_id =null;
         }
 
     }
@@ -513,12 +540,14 @@ class CourseEnrollments extends Component
                 'end_date' => 'required',
                 'mid_exam_date' => 'required',
                 'final_exam_date' => 'required',
+                'promote_time_id' => 'required',
             ],[
                 'total_teaching_days.required'   => __('label.total_teaching_days.required'),
                 'start_date.required'   => __('label.start_date.required'),
                 'end_date.required'   => __('label.end_date.required'),
                 'mid_exam_date.required'   => __('label.mid_exam_date.required'),
                 'final_exam_date.required'   => __('label.final_exam_date.required'),
+                'promote_time_id.required'   => __('label.time.required'),
             ]);
         }
 
@@ -554,7 +583,7 @@ class CourseEnrollments extends Component
                     'program_id' => $source_course->program_id,
                     'book_id' => $this->new_level->id,
                     'shift_id' => $source_course->shift_id,
-                    'time_id' => $source_course->time_id,
+                    'time_id' => $this->promote_time_id,
                     'classroom_id' => $source_course->classroom_id,
                     'min_capacity' => $this->new_level->min_capacity,
                     'max_capacity' => $this->new_level->max_capacity,

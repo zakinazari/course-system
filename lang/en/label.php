@@ -358,6 +358,9 @@ return [
     'failed'=>'Failed',
     'waiting'=>'Waiting',
     'enrolled'=>'Enrolled',
+    'student_courses'=>'Student Courses',
+    'result_sheet'=>'Result Sheet',
+    'exam_scores'=>'Exam Scores',
     //----------------end students--------------------
 
     //----------------start course------------------
@@ -423,7 +426,7 @@ return [
 
     'merge_courses'=>'Merge courses',
     'merge'=>'Merge',
-    'change_time'=>'Change Time',
+    'change_time'=>'Change Class',
     'change'=>'Change',
     'promote_type'=>'Promote Type',
     'existing_course'=>'Existing Course',
@@ -471,6 +474,7 @@ return [
     // -----------end Assessment------------------------
     
     // ----------start Financial------------------------
+    'student_profile'=>'Student Profile',
     'financial_profile'=>'Financial Profile',
     'fees'=>'Fees',
     'loading'=>'Loading...',
@@ -565,6 +569,32 @@ return [
     'request_exemption'=>'Request Exemption',
     'cancel_exemption'=>'Cancel Exemption',
 
+
+    'expense_category'=>'Expense Category',
+
+    'asset_category'=>'Asset Category',
+    'code.unique'=>'This code has already been taken',
+
+    'expense_date'=>'Expense Date',
+    'expense_date.required'=>'Expense date is required',
+    'unit.required'=>'Unit is required',
+
+    'expense_list'=>'Expense List',
+    'asset_list'=>'Asset List',
+
+     'purchase_price'=>'Purchase Price',
+     'purchase_date'=>'Purchase Date',
+    'purchase_date.required'=>'Purchase date is required',
+    'account_type'=>'Account Type',
+    'balance'=>'Balance',
+    'treasury_account_not_found'=>'Treasury Account Not Found',
+    'central_warehouse'=>'Central Warehouse',
+    'branch_warehouse'=>'Branch Warehouse',
+    'central_warehouse.required'=>'Central Warehouse is required',
+    'branch_warehouse.required'=>'Branch Warehouse is required',
+    'inventory_not_found'=>'This book does not exist in the selected warehouse',
+    'insufficient_stock' => 'Not enough book quantity available in the selected warehouse',
+    
     // ----------end Financial------------------------
 
     // -----------start hr -----------------
@@ -624,6 +654,23 @@ return [
     'no_change_made'=>'No change made',
     'book_inventory_list'=>'Book Inventory List',
     'book_purchase_list'=>'Book Purchase List',
+    'book_transfer_list'=>'Book Transfer List',
     'book.required'=>'Book is required',
+    'warehouse_type'=>'Warehouse Type',
+    'book_transfer'=>'Book Transfer',
+    'central'=>'Central',
+    'branch'=>'Branch',
+    'available_quantity'=>'Available Quantity',
+    'out_of_stock'=>'Out of stock!',
+    'shop'=>'Shop',
+    'purchased_by'=>'Purchased By',
+    'external_money_in'=>'External Money In',
+    'opening_balance'=>'Opening Balance',
+    'capital_injection'=>'Capital Injection',
+    'loan_received'=>'Loan Received',
+    'fund_type'=>'Fund Type',
+    'fund_type.required'=>'Fund Type is required',
+    'account'=>'Account',
+    'transaction_date'=>'Transaction Date',
     // -----------------------end Warehouse --------------------------
 ];

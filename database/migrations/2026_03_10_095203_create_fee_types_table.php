@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('fee_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->foreignId('section_id')->constrained('sections');
             $table->string('code')->unique();
             $table->decimal('fee_amount',10,2);
             $table->timestamps();

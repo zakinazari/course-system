@@ -12,6 +12,7 @@ class TeacherAttendance extends Model
         'teacher_id',
         'status',
         'note',
+        'unit_note',
         'recorded_by',
         'attendance_date',
         'unit_number',

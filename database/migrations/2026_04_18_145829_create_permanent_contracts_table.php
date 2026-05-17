@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('position_id')->constrained('positions');
             $table->foreignId('employee_id')->constrained('employees');
             $table->foreignId('branch_id')->constrained('branches');
+            $table->foreignId('section_id')->constrained('sections');
             $table->decimal('basic_salary', 10, 2)->default(0);
             $table->decimal('taxi_fare', 10, 2)->default(0);
             $table->decimal('credit_card', 10, 2)->default(0);

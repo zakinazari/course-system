@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
             $table->foreignId('branch_id')->constrained('branches');
+            $table->foreignId('section_id')->constrained('sections');
             $table->decimal('total_amount', 10, 2); 
             $table->decimal('remaining_amount', 10, 2)->default(0);
 

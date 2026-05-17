@@ -114,13 +114,14 @@ class StudentAttendanceList extends Component
 
         public $teacher_status = 'present'; // پیشفرض
         public $teacher_note = null;
-
+        
         // UNIT SYSTEM
         public $total_days = 0;
         public $current_unit_status = 'finished';
         public $current_unit_number = 1;
         // برای radio در UI
         public $unit_status = 'finished';
+        public $unit_note = null;
 
      public function resetInputFields(){
         $this->resetExcept([
@@ -209,6 +210,7 @@ class StudentAttendanceList extends Component
             // اگر امروز ثبت شده → همان را نشان بده
             $this->current_unit_number = $today->unit_number ?? 1;
             $this->unit_status = $today->lesson_status ?? 'finished';
+            $this->unit_note = $today->unit_note ?? null;
             $this->teacher_note = $today->note ?? null;
             $this->teacher_status = $today->status ?? 'present';
 
@@ -229,6 +231,7 @@ class StudentAttendanceList extends Component
 
             // پیشفرض‌ها برای روز جدید
             $this->unit_status = 'finished';
+            $this->unit_note = null;
             $this->teacher_status = 'present';
             $this->teacher_note = null;
         }
@@ -452,6 +455,7 @@ class StudentAttendanceList extends Component
                     'status' => $this->teacher_status ?? 'present',
                     'lesson_status' => $this->unit_status ?? 'finished',
                     'unit_number' => $unit_number,
+                    'unit_note' => $this->unit_note,
                     'note' => $this->teacher_note,
                     'recorded_by' => Auth::id(),
                 ]

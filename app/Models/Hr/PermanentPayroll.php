@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 class PermanentPayroll extends Model
 {
-     protected $fillable = [
+    protected $fillable = [
         'employee_id',
         'branch_id',
         'permanent_contract_id',

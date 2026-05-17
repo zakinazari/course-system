@@ -22,7 +22,10 @@ use App\Models\Warehouse\BookInventory;
 use App\Models\Warehouse\BookInventoryMovement;
 use App\Models\User;
 use App\Notifications\BookExemptionRequestNotification;
-
+use App\Enums\TransactionCategory;
+use App\Enums\Action;
+use App\Services\TransactionService;
+use App\Models\Financial\Account;
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -305,6 +308,8 @@ class StudentCourseFees extends Component
 
         $this->validate();
 
+        $course = Course::with('program')->findOrFail($this->course_id);
+        
         DB::beginTransaction();
 
         try {
@@ -378,8 +383,34 @@ class StudentCourseFees extends Component
                 ]
             );
 
+            // -----------start transaction-----------------------------
+                $account_id = Account::where('branch_id', $this->student->branch_id)
+                    ->where('category', 'treasury')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+
+                TransactionService::income(
+                    $account_id,
+                    $this->student->branch_id,
+                    $paid,
+                    TransactionCategory::COURSE_FEE,
+                    'StudentCourseFee',
+                    $studentCourseFee->id,
+                    $course->program->section_id,
+                    Action::CREATE
+                );
+            // -----------start transaction-----------------------------
+
+
             //  کتاب‌ها
-           
             // گرفتن warehouseهای مربوط به branch
             $warehouseIds = Warehouse::where('branch_id', $this->student->branch_id)
                 ->pluck('id');
@@ -393,7 +424,7 @@ class StudentCourseFees extends Component
                     'physical_book_id' => $book['id'],
                 ])->first();
 
-                StudentBookFee::updateOrCreate(
+                $student_book_fee = StudentBookFee::updateOrCreate(
                     [
                         'student_id' => $this->student->id,
                         'physical_book_id' => $book['id'],
@@ -454,6 +485,33 @@ class StudentCourseFees extends Component
                         'note' => 'Sold to student ID: ' . $this->student->student_code,
                         'user_id' => auth()->id(),
                     ]);
+
+                    $physical_book = PhysicalBook::with('book.program')->find($book['id']);
+                    // ----------------start transaction-----------------------
+
+                    $account_id = Account::where('branch_id', $this->student->branch_id)
+                    ->where('category', 'treasury')
+                    ->value('id');
+
+                    if (!$account_id) {
+
+                        return $this->dispatch(
+                            'alert',
+                            type: 'error',
+                            message: __('label.treasury_account_not_found')
+                        );
+                    }
+                    TransactionService::income(
+                        $account_id,
+                        $this->student->branch_id,
+                        $book['price'],
+                        TransactionCategory::BOOK_SALE,
+                        'StudentBookFee',
+                        $student_book_fee->id,
+                        $physical_book->book->program->section_id,
+                        Action::CREATE
+                    );
+                    // -----------------end transaction-----------------------
                 }
             }
 
@@ -662,19 +720,48 @@ class StudentCourseFees extends Component
         if(!delete(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
-
+         DB::beginTransaction();
         try {
 
-            $fee = StudentCourseFee::findOrFail($id);
-            SystemLog::create([
+            $fee = StudentCourseFee::with('course.program')->findOrFail($id);
+            $payment_amount = StudentCourseFeePayment::where('student_course_fee_id',$fee->id)->sum('amount');
+            // -----------start transaction-----------------------------
+            $account_id = Account::where('branch_id', $fee->branch_id)
+            ->where('category', 'treasury')
+            ->value('id');
+
+            if (!$account_id) {
+
+                return $this->dispatch(
+                    'alert',
+                    type: 'error',
+                    message: __('label.treasury_account_not_found')
+                );
+            }
+            TransactionService::expense(
+                $account_id,
+                $fee->branch_id,
+                $payment_amount,
+                TransactionCategory::COURSE_FEE,
+                'StudentCourseFee',
+                $fee->id,
+                $fee->course->program?->section_id,
+                Action::DELETE
+            );
+            // -----------start transaction-----------------------------
+
+             SystemLog::create([
                 'st_id' => $this->student->id,
                 'user_id' => Auth::user()->id,
                 'section' => 'Student Course Fee ('.$fee->course?->name.' ID:'.$fee->id.')',
                 'type_id' => 4,
             ]);
+
             $fee->delete();
+            DB::commit();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
         } catch (\Exception $e) {
+             DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
         }
     }
@@ -793,7 +880,7 @@ class StudentCourseFees extends Component
     
     public function storeInstallment()
     {
-        $fee = StudentCourseFee::find($this->selected_fee_id);
+        $fee = StudentCourseFee::with('course.program')->find($this->selected_fee_id);
 
         if (!$fee) {
             $this->dispatch('alert', type: 'error', message: 'Fee not found');
@@ -840,7 +927,30 @@ class StudentCourseFees extends Component
                 'notes' => 'Installment payment',
                 'user_id' => auth()->id(),
             ]);
+            // -------------------start transaction----------------------
+            $account_id = Account::where('branch_id', $fee->branch_id)
+                    ->where('category', 'treasury')
+                    ->value('id');
 
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+            TransactionService::income(
+                $account_id,
+                $fee->branch_id,
+                $this->install_amount,
+                TransactionCategory::COURSE_FEE,
+                'StudentCourseFeeInstallment',
+                $installment->id,
+                $fee->course->program->section_id,
+                Action::CREATE
+            );
+            // -------------------end transaction------------------------
             //  آپدیت fee 
             $fee->paid_amount += $this->install_amount;
             $fee->remaining_amount = $fee->total_amount - $fee->paid_amount;

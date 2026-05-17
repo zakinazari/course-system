@@ -48,6 +48,17 @@
                     <div class="col-md-3">
                         <input type="text" class="form-control" placeholder="{{ __('label.name') }}" wire:model="search.name">
                     </div>
+                     <div class="col-md-3" wire:ignore>
+                        <label class="form-label">{{ __('label.section') }}</label>
+                        <select class="form-select select2" wire:model.defer="search.section_id" id ="search_section_id">
+                        <option value="">{{ __('label.all') }}</option>
+                        @foreach($sections as $section)
+                                <option value="{{ $section->id }}"  wire:key="section-search-{{ $section->id }}">
+                                    {{ $section->name }}
+                                </option>
+                        @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary">
                             {{ __('label.search') }}
@@ -75,6 +86,7 @@
                             <th>{{ __('label.name') }}</th>
                             <th>{{ __('label.code') }}</th>
                             <th>{{ __('label.fee_amount') }}</th>
+                            <th>{{ __('label.section') }}</th>
                             <th>{{ __('label.actions') }}</th>
                         </tr>
                     </thead>
@@ -85,6 +97,7 @@
                             <td>{{ $fee->name }}</td>
                             <td>{{ $fee->code }}</td>
                             <td>{{ $fee->fee_amount }}</td>  
+                            <td>{{ $fee->section?->name }}</td>  
                             <td>
                                 
                                 <div class="dropdown position-static">
@@ -96,12 +109,10 @@
                                             <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $fee->id }})"
                                             ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
-                                        @if($fee->studentFees?->count() ==0 )
                                             @if(delete(Auth::user()->role_ids,$active_menu_id))
                                                 <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $fee->id }},'{{$table_name}}')"
                                                 ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
                                             @endif
-                                        @endif
                                     </div>
                                 </div>
                                
@@ -148,7 +159,22 @@
                                 @error('fee_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                        <div class="col mb-3" wire:ignore>
+                              <label class="form-label">{{ __('label.section') }} <span style="color:red;">*</span></label>
+                              <select class="form-select select2" wire:model="section_id" id ="section_id">
+                                 <option value="">{{ __('label.select') }}</option>
+                                 @foreach($sections as $section)
+                                       <option value="{{ $section->id }}"  wire:key="section-add-edit-{{ $section->id }}">
+                                          {{ $section->name }}
+                                       </option>
+                                 @endforeach
+                              </select>
+                           </div>
+                           @error('section_id')
+                              <div class="invalid-feedback d-block">{{ $message }}</div>
+                           @enderror
                     </div>
+                    
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
                         <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
@@ -160,3 +186,48 @@
    
 </div>
 
+@script
+<script>
+document.addEventListener("livewire:initialized", function () {
+
+    function initSelect2() {
+
+        $('.select2').each(function () {
+            const $select = $(this);
+            const $modal  = $select.closest('.modal');
+
+           
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            $select.select2({
+                width: '100%',
+                dropdownParent: $modal.length ? $modal : $(document.body)
+            });
+        });
+
+        $('#search_section_id').off('change').on('change', function () {
+            @this.set('search.section_id', $(this).val());
+        });
+
+        $('#section_id')
+        .off('change')
+        .on('change', function () {
+            $wire.set('section_id', $(this).val());
+        });
+    }
+
+    initSelect2();
+
+    Livewire.hook('morphed', () => {
+        initSelect2();
+    });
+
+    $(document).on('shown.bs.modal', function () {
+        initSelect2();
+    });
+
+});
+</script>
+@endscript

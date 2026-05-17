@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Section;
 use App\Models\Hr\Position;
 use App\Models\Hr\Employee;
 use App\Models\Hr\EmployeeSalaryAdvance;
@@ -14,6 +15,9 @@ use App\Models\Hr\EmployeeSalaryAdvancePayment;
 use Carbon\Carbon;
 use Auth;
 use DB;
+use App\Enums\TransactionCategory;
+use App\Services\TransactionService;
+use App\Enums\Action;
 class EmployeeSalaryAdvanceList extends Component
 {
     // -------start generals--------------------
@@ -58,6 +62,7 @@ class EmployeeSalaryAdvanceList extends Component
     
     // ---------------------------------end generals-------------
     public $branches = [];
+    public $sections = [];
     public function mount($active_menu_id = null,$employee_id)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -68,11 +73,13 @@ class EmployeeSalaryAdvanceList extends Component
 
         $this->employee_id = $employee_id;
         $this->branches =  Branch::all();
+        $this->sections =  Section::all();
 
     }
 
     public $employee_id;
     public $branch_id;
+    public $section_id;
 
     public $advance_id;
     public $total_amount;
@@ -88,6 +95,7 @@ class EmployeeSalaryAdvanceList extends Component
             'modalId',
             'search',
             'employees',
+            'sections',
             'employee_id',
             'branches',
         ]);
@@ -101,7 +109,7 @@ class EmployeeSalaryAdvanceList extends Component
     public function render()
     {
         $search = $this->search;
-        $advances = EmployeeSalaryAdvance::with('branch')
+        $advances = EmployeeSalaryAdvance::with('branch','section')
         ->where('employee_id',$this->employee_id)
 
         ->when(!empty($this->search['status']), function($q){
@@ -121,6 +129,7 @@ class EmployeeSalaryAdvanceList extends Component
     {
         $rules = [
             'employee_id'   => 'required|exists:employees,id',
+            'section_id'   => 'required|exists:sections,id',
             'total_amount' => 'required|numeric|min:1',
         ];
         if (!Auth::user()->branch_id) {
@@ -134,6 +143,7 @@ class EmployeeSalaryAdvanceList extends Component
         return [
             'total_amount.required' => __('label.amount.required'),
             'branch_id.required'   => __('label.branch.required'),
+            'section_id.required'   => __('label.section.required'),
         ];
     }
 
@@ -148,13 +158,27 @@ class EmployeeSalaryAdvanceList extends Component
         DB::beginTransaction();
 
         try {
+
             $advance = EmployeeSalaryAdvance::create([
                 'employee_id' => $this->employee_id,
+                'section_id' => $this->section_id,
                 'branch_id'  => Auth::user()->branch_id ?: $this->branch_id,
                 'total_amount' => $this->total_amount,
                 'remaining_amount' => $this->total_amount,
                 'note' => $this->note,
             ]);
+
+            // -----------start transaction-----------------------------
+            TransactionService::expense(
+                $advance->branch_id,
+                $advance->total_amount,
+                TransactionCategory::SALARY_ADVANCE,
+                'EmployeeSalaryAdvance',
+                $advance->id,
+                $advance->section_id,
+                Action::CREATE,
+            );
+            // -----------start transaction-----------------------------
 
             // // ---start system log-----------
             SystemLog::create([
@@ -183,6 +207,7 @@ class EmployeeSalaryAdvanceList extends Component
         $advance = EmployeeSalaryAdvance::findOrFail($id);
 
         $this->advance_id = $advance->id;
+        $this->section_id = $advance->section_id;
         $this->branch_id = $advance->branch_id;
         $this->total_amount = $advance->total_amount;
         $this->note = $advance->note;
@@ -205,13 +230,29 @@ class EmployeeSalaryAdvanceList extends Component
         try {
 
             $advance = EmployeeSalaryAdvance::findOrFail($this->advance_id);
+            // -----------start transaction-----------------------------
+            TransactionService::adjust(
+                'expense', 
+                $advance->branch_id,
+                $advance->total_amount,
+                $this->total_amount,
+                TransactionCategory::SALARY_ADVANCE,
+                'EmployeeSalaryAdvance',
+                $advance->id,
+                $advance->section_id,
+                Action::UPDATE,
+            );
+            // -----------end transaction-----------------------------
 
             $advance->update([
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
+                'section_id' => $this->section_id,
                 'total_amount' => $this->total_amount,
                 'remaining_amount' => $this->total_amount,
                 'note' => $this->note,
             ]);
+
+           
 
             // // ---start system log-----------
             SystemLog::create([
@@ -261,6 +302,19 @@ class EmployeeSalaryAdvanceList extends Component
             ]);
             // ---end system log-------------
             $advance->delete();
+
+            // -----------start transaction-----------------------------
+            TransactionService::income(
+                $advance->branch_id,
+                $advance->total_amount,
+                TransactionCategory::SALARY_ADVANCE,
+                'EmployeeSalaryAdvance',
+                $advance->id,
+                $advance->section_id,   
+                Action::DELETE,
+            );
+            // -----------start transaction-----------------------------
+
             DB::commit();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
         } catch (\Exception $e) {

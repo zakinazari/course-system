@@ -56,13 +56,13 @@
             <div class="card mb-4">
             <div class="card-body ">
                 <div class="user-avatar-section">
-                <div class="d-flex align-items-center flex-column">
-                    <img class="img-fluid rounded my-4" src="{{ $student->photo?->thumbnail_url ?? asset('default.png') }}" height="110" width="110" alt="User avatar">
-                    <div class="user-info text-center">
-                    <h5 class="mb-2"> {{ $student->name }} {{ $student->last_name }}</h5>
-                    <span class="badge bg-label-secondary">{{ $student->student_code }}</span>
+                    <div class="d-flex align-items-center flex-column">
+                        <img class="img-fluid rounded my-4" src="{{ $student->photo?->thumbnail_url ?? asset('default.png') }}" height="110" width="110" alt="User avatar">
+                        <div class="user-info text-center">
+                        <h5 class="mb-2"> {{ $student->name }} {{ $student->last_name }}</h5>
+                        <span class="badge bg-label-secondary">{{ $student->student_code }}</span>
+                        </div>
                     </div>
-                </div>
                 </div>
                 <!-- <div class="d-flex justify-content-around flex-wrap my-4 py-3">
                 <div class="d-flex align-items-start me-4 mt-3 gap-3">

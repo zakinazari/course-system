@@ -125,11 +125,10 @@
                                     <div class="dropdown-menu">
                                         @if(delete(Auth::user()->fine_ids,$active_menu_id))
                                             @if(Auth::user()->isAdmin() || Auth::user()->isDeveloper())
-                                                @if($fine->status=='unpaid')
+                                                
                                                     <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $fine->id }},'{{$table_name}}')"
                                                     ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
-                                                
-                                                @endif
+                                              
                                             @endif
                                         @endif
                                     </div>

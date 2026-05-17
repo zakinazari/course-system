@@ -188,11 +188,7 @@
                                             Unit: {{ $current_unit_number ?? 1 }}
                                         </small>
                                     </div>
-
-                                </div>
-
-                                {{-- UNIT STATUS (NEW) --}}
-                                <div class="d-flex gap-2 flex-wrap mt-3">
+                                     <div class="d-flex gap-2 flex-wrap mt-3">
 
                                     <div class="form-check form-check-success">
                                         <label class="d-flex align-items-center gap-1">
@@ -215,7 +211,15 @@
                                     </div>
 
                                 </div>
+                                </div>
 
+                                {{-- UNIT STATUS (NEW) --}}
+                               
+                                 <textarea class="form-control"
+                                        rows="2"
+                                        wire:model="unit_note"
+                                        placeholder="Unite note (optional)">
+                                </textarea>
                             </div>
 
                             {{-- ================= RIGHT SIDE (TEACHER) ================= --}}
@@ -298,7 +302,6 @@
                                 {{ __('label.name') }}
                             </th>
 
-                    
 
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_name">

@@ -209,13 +209,18 @@ class StudentCourseResultList extends Component
 
                     // اعمال فیلتر وضعیت
             if ($this->result_status === 'excellent' && $cs->result->total < 90) continue;
-            if ($this->result_status === 'accepted' && ($cs->result?->status === 'failed' || $cs->result?->total >= 90)) continue;
+            if ($this->result_status === 'accepted' && ($cs->result?->status === 'failed')) continue;
             if ($this->result_status === 'weak' && $cs->result?->status === 'passed') continue;
             
             $filteredStudents->push($cs);
         }
 
-        $this->students = $filteredStudents->values();
+        // مرتب‌سازی بر اساس مجموع
+        $filteredStudents = $filteredStudents
+            ->sortByDesc(fn($student) => $student->result->total)
+            ->values();
+
+        $this->students = $filteredStudents;
 
         // ------فیلدهای انتخاب شده 
         if (empty($this->selectedFields)) {

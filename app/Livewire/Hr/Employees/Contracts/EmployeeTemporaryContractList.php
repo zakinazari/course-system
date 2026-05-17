@@ -12,6 +12,7 @@ use App\Models\Hr\TemporaryContract;
 use App\Models\Hr\BookSalaryRate;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Section;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -39,6 +40,7 @@ class EmployeeTemporaryContractList extends Component
         'no',
         'employee_id',
         'position_id',
+        'section_id',
         'branch_id',
         'taxi_fare',
         'credit_card',
@@ -81,6 +83,7 @@ class EmployeeTemporaryContractList extends Component
     public $positions = [];
     public $employees = [];
     public $branches = [];
+    public $sections = [];
     public $books = [];
     public $selected_books = [];
     public function mount($active_menu_id = null,$employee_id)
@@ -95,11 +98,13 @@ class EmployeeTemporaryContractList extends Component
         $this->positions =  Position::all();
         $this->books =  Book::all();
         $this->branches =  Branch::all();
+        $this->sections =  Section::all();
     }
 
     public $position_id;
     public $employee_id;
     public $branch_id;
+    public $section_id;
 
     public $contract_id;
     public $start_date;
@@ -120,6 +125,7 @@ class EmployeeTemporaryContractList extends Component
             'employees',
             'books',
             'branches',
+            'sections',
             'employee_id',
         ]);
     }
@@ -136,7 +142,7 @@ class EmployeeTemporaryContractList extends Component
     public function render()
     {
         $search = $this->search;
-        $contracts = TemporaryContract::with('position','branch')
+        $contracts = TemporaryContract::with('position','branch','section')
         ->where('employee_id',$this->employee_id)
     
         ->when(!empty($this->search['position_id']), function ($query) {
@@ -180,6 +186,7 @@ class EmployeeTemporaryContractList extends Component
             ],
 
             'position_id' => 'required|exists:positions,id',
+            'section_id' => 'required|exists:sections,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
 
@@ -212,6 +219,8 @@ class EmployeeTemporaryContractList extends Component
             'selected_books.min'      => 'At least one book must be selected',
             'branch_id.required'   => __('label.branch.required'),
             'employee_id.unique' => 'This employee already has an active contract in this branch.',
+            'position_id.required'   => __('label.position.required'),
+            'section_id.required'   => __('label.section.required'),
         ];
     }
 
@@ -266,6 +275,7 @@ class EmployeeTemporaryContractList extends Component
             $contract = TemporaryContract::create([
                 'position_id'  => $this->position_id,
                 'employee_id'  => $this->employee_id,
+                'section_id'  => $this->section_id,
                 'branch_id'  => Auth::user()->branch_id ?: $this->branch_id,
                 'taxi_fare'  => $this->taxi_fare,
                 'credit_card'  => $this->credit_card,
@@ -314,6 +324,7 @@ class EmployeeTemporaryContractList extends Component
         $this->contract_id = $contract->id;
         $this->employee_id = $contract->employee_id;
         $this->position_id = $contract->position_id;
+        $this->section_id = $contract->section_id;
         $this->branch_id = $contract->branch_id;
         $this->taxi_fare = $contract->taxi_fare;
         $this->credit_card = $contract->credit_card;
@@ -352,8 +363,9 @@ class EmployeeTemporaryContractList extends Component
             $contract->update([
                 'position_id'  => $this->position_id,
                 'employee_id'  => $this->employee_id,
+                'section_id'  => $this->section_id,
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
-                'employee_id'  => $this->_id,
+                'employee_id'  => $this->employee_id,
                 'taxi_fare'  => $this->taxi_fare,
                 'credit_card'  => $this->credit_card,
                 'food_deduction'  => $this->food_deduction,

@@ -272,6 +272,7 @@
                                         href="{{ route('student-financial-profile', [
                                                 'menu_id'   => $this->active_menu_id,
                                                 'student_id' => encrypt($student_id),
+                                                'slug' => 'student_fees',
                                             ]) }}">
                                             <span class="small">{{ __('label.financial_profile') }}</span>
                                         </a>

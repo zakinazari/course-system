@@ -5,6 +5,7 @@ namespace App\Models\Hr;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CenterSettings\Month;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Section;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,7 @@ class EmployeeSalaryAdvance extends Model
      protected $fillable = [
         'employee_id',
         'branch_id',
+        'section_id',
         'total_amount',
         'remaining_amount',
         'status',
@@ -27,6 +29,10 @@ class EmployeeSalaryAdvance extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+    public function section()
+    {
+        return $this->belongsTo(Section::class);
     }
 
     public function employee()

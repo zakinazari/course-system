@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\CenterSettings\Branch;
 use App\Models\CenterSettings\Gender;
+use App\Models\Assessment\StudentCourseResult;
+use App\Models\Assessment\StudentExamScore;
+use App\Models\Assessment\StudentAttendance;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +53,17 @@ class Student extends Model
                     ->withPivot(['id','status', 'enrolled_at'])
                     ->withTimestamps();
     }
+
+    public function courseResults()
+    {
+        return $this->hasMany(StudentCourseResult::class, 'student_id');
+    }
+
+    public function examScores()
+    {
+        return $this->hasMany(StudentExamScore::class, 'student_id');
+    }
+
     
     public function branch(): BelongsTo
     {

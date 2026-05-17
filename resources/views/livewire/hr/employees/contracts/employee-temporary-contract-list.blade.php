@@ -104,6 +104,11 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
                             </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="section_id">
+                                {{ __('label.section') }}
+                            </th>
+                            
                              @if(!auth()->user()->branch_id)
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="branch_id">
@@ -138,6 +143,7 @@
                               @endif
                             </td>
                             
+                            <td>{{ $contract->section?->name }}</td>
                             @if(!auth()->user()->branch_id)
                             <td>{{ $contract->branch?->name }}</td>
                             @endif
@@ -192,23 +198,23 @@
                 </div>
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body" >
-                         @error('employee_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        @error('employee_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        @if(!auth()->user()->branch_id)
+                        <div class="col mb-3">
+                            <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
+                            <select class="form-select @error('branch_id') is-invalid @enderror" wire:model.lazy="branch_id" id ="branch_id">
+                                <option value="">{{ __('label.select') }}</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}"  wire:key="branch-{{ $branch->id }}">
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            
+                        </div>
+                        @endif
                         <div class="row">
-                            @if(!auth()->user()->branch_id)
-                            <div class="col mb-3">
-                                <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
-                                <select class="form-select @error('branch_id') is-invalid @enderror" wire:model.lazy="branch_id" id ="branch_id">
-                                    <option value="">{{ __('label.select') }}</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}"  wire:key="branch-{{ $branch->id }}">
-                                            {{ $branch->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                               
-                            </div>
-                            @endif
                             <div class="col mb-3">
                                 <label>{{ __('label.position') }}<span style="color:red;">*</span></label>
                                 <div wire:ignore>
@@ -224,6 +230,22 @@
                               
                             </div>
                            @error('position_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+
+                            <div class="col mb-3">
+                                <label>{{ __('label.section') }}<span style="color:red;">*</span></label>
+                                <div wire:ignore>
+                                <select  class="form-control select2" id="temporary_form_section_id" wire:model.lazy ="section_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                    @foreach($sections as $section)
+                                    <option value="{{ $section->id }}" wire:key="sections-section">
+                                        {{ $section->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                </div>
+                              
+                            </div>
+                           @error('section_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                            
                         </div>
 
@@ -425,6 +447,10 @@ document.addEventListener("livewire:initialized", function () {
 
         $('#temporary_form_position_id').off('change').on('change', function () {
             @this.set('position_id', $(this).val());
+            
+        });
+        $('#temporary_form_section_id').off('change').on('change', function () {
+            @this.set('section_id', $(this).val());
             
         });
 

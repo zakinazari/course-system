@@ -9,7 +9,10 @@ use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Branch;
 use App\Models\Academic\Student;
 use App\Models\Financial\ExamFine;
-
+use App\Enums\TransactionCategory;
+use App\Enums\Action;
+use App\Services\TransactionService;
+use App\Models\Financial\Account;
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -150,7 +153,7 @@ class ExamFineList extends Component
         if (!delete(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
-
+        DB::beginTransaction();
         try {
 
             $exam_fine = ExamFine::find($id);
@@ -162,11 +165,39 @@ class ExamFineList extends Component
                 'type_id' => 4,
             ]);
 
-            $exam_fine->delete();
+            // -----------------------------
+            //  Transaction reverse (expense)
+            // -----------------------------
+            $account_id = Account::where('branch_id', $this->student->branch_id)
+                    ->where('category', 'treasury')
+                    ->value('id');
 
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+
+            TransactionService::expense(
+                $account_id,
+                $this->student->branch_id,
+                $exam_fine->amount,
+                TransactionCategory::EXAM_FINE,
+                'ExamFine',
+                $exam_fine->id,
+                $exam_fine->course->program->section_id,
+                Action::DELETE
+            );
+
+            $exam_fine->delete();
+            DB::commit();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
 
         } catch (\Exception $e) {
+             DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : '.$e->getMessage());
         }
     }
@@ -233,7 +264,7 @@ class ExamFineList extends Component
         DB::beginTransaction();
        try {
 
-            $exam_fine = ExamFine::find($this->exam_fine_id);
+            $exam_fine = ExamFine::with('course.program')->find($this->exam_fine_id);
 
             if (!$exam_fine) {
                 return;
@@ -247,6 +278,32 @@ class ExamFineList extends Component
                 'status' => 'paid',
                 'payment_date' => now(),
             ]);
+
+            // ----------------start transaction-----------------------
+            $account_id = Account::where('branch_id', $this->student->branch_id)
+                    ->where('category', 'treasury')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+
+            TransactionService::income(
+                $account_id,
+                $this->student->branch_id,
+                $exam_fine->amount,
+                TransactionCategory::EXAM_FINE,
+                'ExamFine',
+                $exam_fine->id,
+                $exam_fine->course->program->section_id,
+                Action::CREATE
+            );
+            // -----------------end transaction-----------------------
 
             DB::commit();
             $this->dispatch('close-modal', id: "payExamFineModal");

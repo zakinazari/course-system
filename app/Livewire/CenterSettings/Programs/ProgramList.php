@@ -5,6 +5,7 @@ namespace App\Livewire\CenterSettings\Programs;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\CenterSettings\Program;
+use App\Models\CenterSettings\Section;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use Auth;
@@ -49,7 +50,7 @@ class ProgramList extends Component
     }
     
     // ---------------------------------end generals-------------
-
+    public $sections = [];
     public function mount($active_menu_id = null)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -57,9 +58,11 @@ class ProgramList extends Component
         $this->active_menu_id = $active_menu_id;
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
+
+        $this->sections = Section::all();
     }
 
-    public $name, $program_id,$status = 'active';
+    public $name, $program_id,$status = 'active',$section_id;
 
      public function resetInputFields(){
         $this->resetExcept([
@@ -68,6 +71,7 @@ class ProgramList extends Component
             'table_name',
             'modalId',
             'search',
+            'sections',
         ]);
     }
     public $search = [
@@ -77,9 +81,12 @@ class ProgramList extends Component
         
     public function render()
     {
-        $programs = Program::query()
+        $programs = Program::with('section')
         ->when(!empty($this->search['name']), function ($query) {
             $query->where('name', 'like', '%' . $this->search['name'] . '%');
+        })
+        ->when(!empty($this->search['section_id']), function ($query) {
+            $query->where('section_id', $this->search['section_id']);
         })
         ->paginate($this->perPage);
 
@@ -89,7 +96,8 @@ class ProgramList extends Component
     protected function rules()
     {
         return [
-            'name' => 'required|string|max:255|unique:programs,name,' . $this->program_id,
+            'name' => 'required|string|max:255|unique:programs,name,' . $this->program_id.',id',
+            'section_id' => 'required',
         ];
     }
     // Localized messages
@@ -100,6 +108,7 @@ class ProgramList extends Component
             'name.string'   => __('label.program_name.string'),
             'name.max'      => __('label.program_name.max'),
             'name.unique'   => __('label.program_name.unique'),
+            'section_id.required'   => __('label.section.required'),
         ];
     }
     
@@ -117,6 +126,7 @@ class ProgramList extends Component
             $program = Program::create([
                 'name' => $this->name,
                 'status' => $this->status,
+                'section_id' => $this->section_id,
             ]);
 
             // ---start system log-----------
@@ -141,6 +151,7 @@ class ProgramList extends Component
         $this->program_id = $id;    
         $program = Program::find($id);
         $this->name = $program->name;
+        $this->section_id = $program->section_id;
         $this->status = $program->status;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
@@ -158,6 +169,7 @@ class ProgramList extends Component
             $program->update([
                 'name' => $this->name,
                 'status' => $this->status,
+                'section_id' => $this->section_id,
             ]);
             // ---start system log-----------
             $program = SystemLog::create([

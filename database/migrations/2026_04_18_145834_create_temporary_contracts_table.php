@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('position_id')->constrained('positions');
             $table->foreignId('employee_id')->constrained('employees');
+            $table->foreignId('section_id')->constrained('sections');
             $table->foreignId('branch_id')->constrained('branches');
             
             $table->decimal('taxi_fare', 10, 2)->default(0);

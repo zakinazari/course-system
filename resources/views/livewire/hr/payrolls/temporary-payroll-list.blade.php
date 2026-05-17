@@ -142,7 +142,7 @@
                 </form>
 
                 <!-- perPage -->
-                <div class="d-flex align-items-center gap-1 mt-3 justify-content-end">
+                <!-- <div class="d-flex align-items-center gap-1 mt-3 justify-content-end">
                     <span>{{ __('label.show') }}</span>
                     <select class="form-select w-auto" wire:model.live="perPage">
                         <option value="5">5</option>
@@ -151,7 +151,7 @@
                         <option value="50">50</option>
                     </select>
                     <span>{{ __('label.entries') }}</span>
-                </div>
+                </div> -->
             </div>
             @if(!empty($selected_employees))
             <div class="text-nowrap table-responsive">

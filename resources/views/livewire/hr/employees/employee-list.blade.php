@@ -224,7 +224,7 @@
                                             'menu_id'   => $this->active_menu_id,
                                             'employee_id' => encrypt($employee->id),
                                         ]) }}">
-                                    <i class="bx bx-show text-white"></i>
+                                    <i class="bx bx-user text-white"></i>
                                 </a>
                                 
                             </td>

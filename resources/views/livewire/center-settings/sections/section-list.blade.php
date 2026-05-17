@@ -20,7 +20,7 @@
 
     <div class="card">
        
-       <div class="card-header">
+        <div class="card-header">
       
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <h5 class="card-title mb-2 mb-md-0">
@@ -77,29 +77,27 @@
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
-                        @foreach($categories as $i => $category)
+                        @foreach($sections as $i => $section)
                         <tr>
-                            <td>{{ ($categories->currentPage() - 1) * $categories->perPage() + $i + 1 }}</td>
-                            <td>{{ $category->name }}</td> 
+                            <td>{{ ($sections->currentPage() - 1) * $sections->perPage() + $i + 1 }}</td>
+                            <td>{{ $section->name }}</td>
+
                             <td>
-                                @if(count($category?->warehouse) == 0)
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu">
                                         @if(edit(Auth::user()->role_ids,$active_menu_id))
-                                            <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $category->id }})"
+                                            <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $section->id }})"
                                             ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
-                                   
                                         @if(delete(Auth::user()->role_ids,$active_menu_id))
-                                            <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $category->id }},'{{$table_name}}')"
+                                            <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $section->id }},'{{$table_name}}')"
                                             ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
                                         @endif
                                     </div>
                                 </div>
-                               @endif
                             </td>
                         </tr>
                         @endforeach
@@ -107,14 +105,14 @@
                 </table>
             </div>
             <div class="mt-4 justify-content-end px-3">
-                {{ $categories->links() }}
+                {{ $sections->links() }}
             </div>
         </div>
     </div>
     
     <!--/ Bootstrap Table with Header Dark -->
     <div class="modal fade" id="{{$modalId}}" tabindex="-1" aria-hidden="true" wire:ignore.self> 
-        <div class="modal-dialog modal-lg" branch="document">
+        <div class="modal-dialog" section="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@if($editMode) {{ __('label.editing') }}  @else {{ __('label.adding') }} @endif @if(App::getLocale() =='en') {{ $active_menu?->name_en }} @elseif(App::getLocale()=='fa') {{ $active_menu?->name }} @endif</h5>
@@ -126,7 +124,7 @@
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.name') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name">
-                               @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>

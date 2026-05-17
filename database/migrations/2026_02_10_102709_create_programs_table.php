@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('section_id')->constrained('sections');
             $table->string('name');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();

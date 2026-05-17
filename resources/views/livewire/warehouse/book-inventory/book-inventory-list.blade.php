@@ -130,6 +130,11 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="quantity">
                                 {{ __('label.quantity') }}
                             </th>
+
+                            @if(!auth()->user()->branch_id)
+                            <th>{{ __('label.branch') }}</td>
+                            @endif
+                            
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
@@ -149,6 +154,9 @@
                                     </span>
                                 @endif
                             </td>
+                            @if(!auth()->user()->branch_id) 
+                            <td>{{ $inventory->warehouse?->branch?->name }}</td>
+                            @endif 
                         </tr>
                         @endforeach
                     </tbody>

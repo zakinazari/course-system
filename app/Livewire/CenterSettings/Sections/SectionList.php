@@ -1,29 +1,30 @@
 <?php
 
-namespace App\Livewire\Warehouse\Category;
+namespace App\Livewire\CenterSettings\Sections;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\CenterSettings\Section;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
-use App\Models\Warehouse\WarehouseCategory;
 use Auth;
-class WarehouseCategoryList extends Component
+class SectionList extends Component
 {
     // -------start generals--------------------
     use WithPagination;
-    public $perPage = 10;
+    public $perPage = 5;
     protected $paginationTheme = 'bootstrap';   
     public $editMode = false;
     public $active_menu_id;
     public $active_menu;
-    public $modalId = 'warehouse-category-list-addEditModal';
-    public $table_name='warehose_categories';
+    public $modalId = 'section-list-addEditModal';
+    public $table_name='sections';
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
     public function closeModal(){
         $this->resetInputFields();
         $this->resetValidation();
         $this->dispatch('close-modal', id: $this->modalId);
+
     }
     public function openModal(){
         $this->resetInputFields();
@@ -42,7 +43,6 @@ class WarehouseCategoryList extends Component
     {
         $this->resetPage();
     }
-
     public function applySearch()
     {
         $this->resetPage();
@@ -59,9 +59,9 @@ class WarehouseCategoryList extends Component
         // -------------start for activing menu in sidebar ----------------------
     }
 
-     public $category_id,$name;
+    public $name, $section_id;
 
-     public function resetInputFields(){
+    public function resetInputFields(){
         $this->resetExcept([
             'active_menu_id',
             'active_menu',
@@ -74,21 +74,22 @@ class WarehouseCategoryList extends Component
             'name' => null,
         ];
 
+
     public function render()
     {
-        $categories = WarehouseCategory::with('warehouse')
+        $sections = Section::query()
         ->when(!empty($this->search['name']), function ($query) {
             $query->where('name', 'like', '%' . $this->search['name'] . '%');
         })
-        ->orderBy('id','desc')
         ->paginate($this->perPage);
-        return view('livewire.warehouse.category.warehouse-category-list',compact('categories'));
+
+        return view('livewire.center-settings.sections.section-list',compact('sections'));
     }
 
     protected function rules()
     {
         return [
-            'name' => 'required|string|max:255|unique:warehouse_categories,name,' . ($this->editMode ? $this->category_id : 'NULL') . ',id',
+            'name' => 'required|string|max:255|unique:sections,name,' . $this->section_id,
         ];
     }
     // Localized messages
@@ -96,6 +97,7 @@ class WarehouseCategoryList extends Component
     {
         return [
             'name.required' => __('label.name.required'),
+            'name.unique'   => __('label.name.unique'),
         ];
     }
     
@@ -110,14 +112,13 @@ class WarehouseCategoryList extends Component
 
         try {
 
-            $category = WarehouseCategory::create([
+            $section = Section::create([
                 'name' => $this->name,
             ]);
-
             // ---start system log-----------
             SystemLog::create([
                 'user_id' => Auth::user()->id,
-                'section' => __('label.warehouse_category').' ('.$category->name.' ID:'.$category->id.')',
+                'section' => __('label.section').' ('.$section->name.' ID:'.$section->id.')',
                 'type_id' => 2,
             ]);
             // ---end system log-------------
@@ -133,9 +134,9 @@ class WarehouseCategoryList extends Component
     public function edit($id)
     {
         $this->resetValidation(); 
-        $this->category_id = $id;    
-        $category = WarehouseCategory::find($id);
-        $this->name = $category->name;
+        $this->section_id = $id;    
+        $section = Section::find($id);
+        $this->name = $section->name;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -148,14 +149,14 @@ class WarehouseCategoryList extends Component
 
         $this->validate();
         try {
-            $category = WarehouseCategory::findOrFail($this->category_id);
-            $category->update([
+            $section = Section::findOrFail($this->section_id);
+            $section->update([
                 'name' => $this->name,
             ]);
-            // ---start system log-----------
+             // ---start system log-----------
             SystemLog::create([
                 'user_id' => Auth::user()->id,
-                'section' => __('label.warehouse_category').' ('.$category->name.' ID:'.$category->id.')',
+                'section' => __('label.section').' ('.$section->name.' ID:'.$section->id.')',
                 'type_id' => 3,
             ]);
             // ---end system log-------------
@@ -186,18 +187,19 @@ class WarehouseCategoryList extends Component
         }
 
         try {
-            $category = WarehouseCategory::findOrFail($id);
-             // ---start system log-----------
+            $section = Section::findOrFail($id);
+            // ---start system log-----------
             SystemLog::create([
                 'user_id' => Auth::user()->id,
-                'section' => __('label.warehouse_category').' ('.$category->name.' ID:'.$category->id.')',
+                'section' => __('label.section').' ('.$section->name.' ID:'.$section->id.')',
                 'type_id' => 4,
             ]);
             // ---end system log-------------
-            $category->delete();
+            $section->delete();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
         } catch (\Exception $e) {
             $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
         }
     }
+
 }

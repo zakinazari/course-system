@@ -7,29 +7,25 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Section;
 class Warehouse extends Model
 {
      protected $fillable = [
         'name',
-        'category_id',
+        'section_id',
+        'type',
         'branch_id'
     ];
 
-    public function category()
+    public function section()
     {
-        return $this->belongsTo(WarehouseCategory::class, 'category_id');
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
     
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'branch_id');
-    }
-
-    
-    public function inventories()
-    {
-        return $this->hasMany(BookInventory::class);
     }
 
     protected static function booted()

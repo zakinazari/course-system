@@ -2,6 +2,7 @@
 
 namespace App\Models\Hr;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Section;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ class PermanentContract extends Model
         'position_id',
         'employee_id',
         'branch_id',
+        'section_id',
         'basic_salary',
         'taxi_fare',
         'credit_card',
@@ -34,6 +36,10 @@ class PermanentContract extends Model
     public function position()
     {
         return $this->belongsTo(Position::class);
+    }
+    public function section()
+    {
+        return $this->belongsTo(Section::class);
     }
 
     public function employee()

@@ -22,12 +22,16 @@ class StudentFinancialProfile extends Component
     public $fee_types;
     // -------end generals-------------
     
-    public function mount($active_menu_id = null, $student_id = null)
+    public function mount($active_menu_id = null, $student_id = null,$slug = null)
     {
         // -------------start for activing menu in sidebar ----------------------
-        $this->dispatch('setActiveMenuFromPage', $active_menu_id);
-        $this->active_menu_id = $active_menu_id;
-        $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
+        if($slug){
+            $this->active_menu_id = Menu::where('slug',$slug)->value('id');
+        }else{
+            $this->active_menu_id = $active_menu_id;
+        }
+          $this->dispatch('setActiveMenuFromPage', $this->active_menu_id);
+        $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($this->active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
         $student_id = decrypt($student_id);
         $this->student =Student::with('photo')->findOrFail($student_id);

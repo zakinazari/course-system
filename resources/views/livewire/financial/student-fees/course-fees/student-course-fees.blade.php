@@ -90,7 +90,7 @@
             <!-- دکمه Add New Record -->
             @if(add(Auth::user()->role_ids,$active_menu_id))
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
-                    <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }} 
+                    <i class="bi bi-plus-lg"></i> {{ __('label.add_new_record') }}
                 </button>
             @endif
 
@@ -238,7 +238,6 @@
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
                         <div class="row">
-
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.student_course') }}</label>
                                 <select  class="form-select @error('course_id') is-invalid @enderror" wire:model.lazy ="course_id">

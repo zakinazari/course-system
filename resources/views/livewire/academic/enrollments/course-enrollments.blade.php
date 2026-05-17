@@ -249,9 +249,7 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="enrolled_at">
                                 {{ __('label.enrolled_date') }}
                             </th>
-                            <th>
-                                {{ __('label.change_time') }}
-                            </th>
+                     
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
@@ -271,16 +269,7 @@
                             <td>{{ $student->last_name }}</td>
                             <td>{{ $student->father_name }}</td>
                             <td>{{ $student->pivot->enrolled_at }}</td>
-                            <td>
-                                @if(edit(Auth::user()->role_ids,$active_menu_id) && $this->course->status!='archived')
-                                <button
-                                    class="btn btn-success btn-sm rounded-pill"
-                                    wire:click="changeTime({{ $student->pivot->id }})">
-                                    {{ __('label.change_time') }}
-                                </button>
-                                @endif
-                            </td>
-                            
+                       
                             <td>
                                 @if($student->pivot->status==='active')
                                 <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
@@ -416,7 +405,11 @@
                                 <select class="form-select select2 @error('status') is-invalid @enderror" id="promote_target_course_id">
                                     <option value="">{{ __('label.select') }}</option>
                                     @foreach($target_courses as $t_course)
-                                    <option value="{{ $t_course->id }}"  wire:key="promote-course-option-{{ $t_course->id }}">{{ $t_course->name }}</option>
+                                    <option value="{{ $t_course->id }}"  wire:key="promote-course-option-{{ $t_course->id }}">{{ $t_course->name }} 
+                                        <span class="badge rounded-pill {{ $course->status_badge_class }}">
+                                            ({{ __('label.' . $t_course->status) }})
+                                        </span>
+                                    </option>
                                     @endforeach
                                 </select>
                                 @error('target_course_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -435,7 +428,20 @@
                                 @error('book_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
-
+                        <div class="row">
+                            <div class="col mb-3">
+                              <label class="form-label">{{ __('label.time') }} <span style="color:red;">*</span></label>
+                              <select class="form-select select2 @error('time_id') is-invalid @enderror" wire:model.lazy="promote_time_id" id ="option_promote_time_id">
+                                 <option value="">{{ __('label.select') }}</option>
+                                    @foreach($course_times as $time)
+                                        <option value="{{ $time->id }}"  wire:key="time-{{ $time->id }}">
+                                            {{ $time->start_time->format('h:i A') }} - {{ $time->end_time->format('h:i A') }}
+                                        </option>
+                                    @endforeach
+                              </select>
+                                @error('promote_time_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                           </div>
+                        </div>
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.start_date') }} <span style="color:red;">*</span></label>
@@ -488,8 +494,8 @@
                                 <label class="form-label">{{ __('label.course') }}</label>
                                 <select class="form-select select2 @error('status') is-invalid @enderror" multiple id="merging_course_ids">
                                     <option value="" disabled>{{ __('label.select') }}</option>
-                                    @foreach($target_courses as $t_course)
-                                    <option value="{{ $t_course->id }}"  wire:key="merge-course-option-{{ $t_course->id }}">{{ $t_course->name }}</option>
+                                    @foreach($merge_courses as $m_course)
+                                    <option value="{{ $m_course->id }}"  wire:key="merge-course-option-{{ $m_course->id }}">{{ $m_course->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('merging_course_ids') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -591,8 +597,12 @@ document.addEventListener("livewire:initialized", function () {
             $wire.set('merging_course_ids', $(this).val());
         });
         
-         $('#change_time_target_course_id').off('change').on('change', function () {
+        $('#change_time_target_course_id').off('change').on('change', function () {
             $wire.set('target_course_id', $(this).val());
+        });
+
+        $('#option_promote_time_id').off('change').on('change', function () {
+            $wire.set('promote_time_id', $(this).val());
         });
 
         // -----------search student------------------

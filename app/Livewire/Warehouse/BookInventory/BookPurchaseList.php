@@ -16,6 +16,12 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+
+use App\Enums\TransactionCategory;
+use App\Enums\Action;
+use App\Services\TransactionService;
+use App\Models\Financial\Account;
+
 use Carbon\Carbon;
 use Auth;
 use DB;
@@ -83,7 +89,7 @@ class BookPurchaseList extends Component
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
 
-        $this->warehouses =  Warehouse::all();
+        $this->warehouses =  Warehouse::where('type','central')->get();
         $this->books =  PhysicalBook::all();
         $this->search['from'] = now()->format('Y-m-d');
         $this->search['to'] = now()->format('Y-m-d');
@@ -227,7 +233,7 @@ class BookPurchaseList extends Component
                 'quantity' => $new_quantity
             ]);
 
-            BookInventoryMovement::create([
+            $movement = BookInventoryMovement::create([
                 'book_inventory_id' => $inventory->id,
                 'quantity_before' => $before,
                 'quantity_change' => $change,
@@ -237,6 +243,37 @@ class BookPurchaseList extends Component
                 'note' => $this->note,
                 'user_id' => auth()->id(),
             ]);
+            
+            // -----------start transaction-----------------------------
+            $account_id = Account::where('type','central')
+                    ->where('category', 'treasury')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+
+            $total_amount = $this->quantity * $this->unit_price;
+
+            $warehouse = $inventory->warehouse;
+            
+            TransactionService::expense(
+                $account_id,
+                null,
+                $total_amount,
+                TransactionCategory::BOOK_PURCHASE,
+                'BookInventoryMovement',
+                $movement->id,
+                $warehouse->section_id,
+                Action::CREATE
+            );
+
+            // -----------end transaction-----------------------------
 
             // // ---start system log-----------
             SystemLog::create([
@@ -320,6 +357,41 @@ class BookPurchaseList extends Component
             $book_movement->quantity_change = $this->quantity;
             $book_movement->unit_price = $this->unit_price;
             $book_movement->save();
+
+            // -----------start transaction-----------------------------
+            $account_id = Account::where('type','central')
+                    ->where('category', 'treasury')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+
+            $old_total = $this->old_quantity * $this->old_unit_price;
+            $new_total = $this->quantity * $this->unit_price;
+
+            $warehouse = $inventory->warehouse;
+            
+            TransactionService::adjust(
+                $account_id,
+                'expense',
+                null,
+                $old_total,
+                $new_total,
+                TransactionCategory::BOOK_PURCHASE,
+                'BookInventoryMovement',
+                $this->purchase_id,
+                $warehouse->section_id,
+                Action::UPDATE
+            );
+
+            // -----------end transaction-----------------------------
+
             
             // ثبت system log
             SystemLog::create([
@@ -363,6 +435,38 @@ class BookPurchaseList extends Component
             $new_quantity = $old_quantity-$purchase->quantity_change;
             $inventory->quantity = $new_quantity;
             $inventory->save();
+
+             // -----------start transaction-----------------------------
+            $account_id = Account::where('type','central')
+                    ->where('category', 'treasury')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+
+            $total_amount = $purchase->quantity_change * $purchase->unit_price;
+
+            $warehouse = $inventory->warehouse;
+            
+            TransactionService::income(
+                $account_id,
+                null,
+                $total_amount,
+                TransactionCategory::BOOK_PURCHASE,
+                'BookInventoryMovement',
+                $purchase->id,
+                $warehouse->section_id,
+                Action::DELETE
+            );
+
+            // -----------end transaction-----------------------------
+
             // ---start system log-----------
             SystemLog::create([
                 'user_id' => Auth::user()->id,

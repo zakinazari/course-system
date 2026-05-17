@@ -10,5 +10,11 @@ class Program extends Model
     protected $fillable = [
         'name',
         'status',
+        'section_id',
     ];
+
+    public function section()
+    {
+        return $this->belongsTo(Section::class, 'section_id');
+    }
 }

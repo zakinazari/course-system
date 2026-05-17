@@ -86,7 +86,7 @@
                         <tr>
                             <th>{{ __('label.NO') }}</th>
                             <th>{{ __('label.name') }}</th>
-                            <th>{{ __('label.category') }}</th>
+                            <th>{{ __('label.section') }}</th>
                             @if(!auth()->user()->branch_id)
                             <th>{{ __('label.branch') }}</td>
                             @endif
@@ -98,12 +98,12 @@
                         <tr>
                             <td>{{ ($warehouses->currentPage() - 1) * $warehouses->perPage() + $i + 1 }}</td>
                             <td>{{ $warehouse->name }}</td> 
-                            <td>{{ $warehouse->category?->name }}</td>
+                            <td>{{ $warehouse->section?->name }}</td>
                             @if(!auth()->user()->branch_id) 
                             <td>{{ $warehouse->branch?->name }}</td>
                             @endif 
                             <td>
-                                @if(count($warehouse->inventories) == 0)
+                        
                                 <div class="dropdown position-static">
                                     
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -121,7 +121,6 @@
                                         @endif
                                     </div>
                                 </div>
-                                  @endif
                             </td>
                         </tr>
                         @endforeach
@@ -144,7 +143,32 @@
                 </div>
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
-                        
+                        <div class="col mb-3">
+                            <label class="form-label d-block">{{ __('label.warehouse_type') }}</label>
+                            <div class="form-check form-check-inline">
+                                <input name="type" 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    id="status-active" 
+                                    value="central" 
+                                    
+                                    wire:model.lazy="type"  @checked($type === 'central' || is_null($type))>
+                                <label class="form-check-label" for="status-active">{{ __('label.central') }}</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input name="type" 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    id="status-inactive" 
+                                    value="branch" 
+                                    wire:model.lazy="type"  @checked($type === 'branch')>
+                                <label class="form-check-label" for="status-inactive">{{ __('label.branch') }}</label>
+                            </div>
+                            @error('type') 
+                                <div class="invalid-feedback d-block">{{ $message }}</div> 
+                            @enderror
+                        </div>
+                        @if($type==='branch')
                         <div class="row">
                             @if(!auth()->user()->branch_id)
                             <div class="col mb-3">
@@ -161,6 +185,7 @@
                            </div>
                            @endif
                         </div>
+                        @endif
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.name') }} <span style="color:red;">*</span></label>
@@ -170,16 +195,16 @@
                         </div>
                         <div class="row">
                             <div class="col mb-3">
-                                <label class="form-label">{{ __('label.category') }} <span style="color:red;">*</span></label>
-                                <select class="form-select @error('category_id') is-invalid @enderror" wire:model.lazy="category_id" id ="category_id">
+                                <label class="form-label">{{ __('label.section') }} <span style="color:red;">*</span></label>
+                                <select class="form-select @error('section_id') is-invalid @enderror" wire:model.lazy="section_id" id ="section_id">
                                     <option value="">{{ __('label.select') }}</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}"  wire:key="category-{{ $category->id }}">
-                                            {{ $category->name }}
+                                    @foreach($sections as $section)
+                                        <option value="{{ $section->id }}"  wire:key="section-{{ $section->id }}">
+                                            {{ $section->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('category_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                @error('section_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>

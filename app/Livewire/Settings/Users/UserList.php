@@ -233,7 +233,7 @@ class UserList extends Component
                 'name'  => $this->name,
                 'email' => $this->email,
                 'role_id' => $this->role_id,
-                'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
+                'branch_id' => $this->branch_id ?: null,
                 'is_active' => $this->is_active,
             ];
 

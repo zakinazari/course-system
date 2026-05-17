@@ -4,6 +4,9 @@ namespace App\Models\Warehouse;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CenterSettings\PhysicalBook;
+use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 class BookInventory extends Model
 {
      protected $fillable = [
@@ -27,5 +30,27 @@ class BookInventory extends Model
     public function movements()
     {
         return $this->hasMany(BookInventoryMovement::class, 'book_inventory_id');
+    }
+
+    protected static function booted()
+    {
+        static::addGlobalScope('branch', function (Builder $builder) {
+
+            if (!Auth::check()) {
+                return;
+            }
+
+            $user = Auth::user();
+
+            // developer/admin همه را ببینند
+            if ($user->isDeveloper() || $user->isAdmin()) {
+                return;
+            }
+
+            // فیلتر بر اساس warehouse.branch_id
+            $builder->whereHas('warehouse', function ($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        });
     }
 }

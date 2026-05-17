@@ -14,6 +14,10 @@ use App\Models\Financial\StudentOtherFee;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use App\Enums\TransactionCategory;
+use App\Enums\Action;
+use App\Services\TransactionService;
+use App\Models\Financial\Account;
 class StudentOtherFees extends Component
 {
     
@@ -149,7 +153,10 @@ class StudentOtherFees extends Component
         }
 
         $this->validate();
+        $section_id = FeeType::findOrFail($this->fee_type_id)->section_id;
+        DB::beginTransaction();
         try{
+            
             $fee = StudentOtherFee::create([
                 'amount' => $this->amount,
                 'notes' => $this->note,
@@ -159,6 +166,32 @@ class StudentOtherFees extends Component
                 'branch_id' => $this->student?->branch_id,
                 'user_id' => auth()->id(),
             ]);
+            
+            // ----------------start transaction-----------------------
+            $account_id = Account::where('branch_id', $this->student->branch_id)
+                    ->where('category', 'treasury')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+            TransactionService::income(
+                $account_id,
+                $this->student->branch_id,
+                $this->amount,
+                TransactionCategory::OTHER_FEE,
+                'StudentOtherFee',
+                $fee->id,
+                $section_id,
+                Action::CREATE
+            );
+            // -----------------end transaction-----------------------
+
             // ---start system log-----------
             SystemLog::create([
                 'student_id' => $this->student_id,
@@ -167,10 +200,11 @@ class StudentOtherFees extends Component
                 'type_id' => 2,
             ]);
             // ---end system log-------------
+             DB::commit();
             $this->closeModal();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
         }catch (\Exception $e) {
-        
+            DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.store_error').' : '. $e->getMessage());
         }
     }
@@ -194,10 +228,11 @@ class StudentOtherFees extends Component
         }
 
         $this->validate();
+        DB::beginTransaction();
         try {
             $fee = StudentOtherFee::find($this->fee_id);
             $fee->update([
-                'amount' => $this->amount,
+                // 'amount' => $this->amount,
                 'notes' => $this->note,
                 'branch_id' => Auth::user()->branch_id ?: $this->branch_id,
             ]);
@@ -210,9 +245,10 @@ class StudentOtherFees extends Component
             ]);
             // ---end system log-------------
             $this->closeModal();
+             DB::commit();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_updated'));
         } catch (\Exception $e) {
-        
+            DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.update_error').' : '. $e->getMessage());
         }
     }
@@ -233,14 +269,10 @@ class StudentOtherFees extends Component
         if (!delete(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
-
+        DB::beginTransaction();
         try {
 
-            $fee = StudentOtherFee::where('id', $id)
-                ->where('student_id', $this->student_id)
-                ->where('fee_type_id', $this->fee_type_id)
-                ->first();
-
+            $fee = StudentOtherFee::with('feeType')->find($id);
             if (!$fee) {
                 return;
             }
@@ -252,11 +284,37 @@ class StudentOtherFees extends Component
                 'type_id' => 4,
             ]);
 
-            $fee->delete();
+            // -----------start transaction-------------------
+            $account_id = Account::where('branch_id', $fee->branch_id)
+                    ->where('category', 'treasury')
+                    ->value('id');
 
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+            TransactionService::expense(
+                $account_id,
+                $fee->branch_id,
+                $fee->amount,
+                TransactionCategory::OTHER_FEE,
+                'StudentOtherFee',
+                $fee->id,
+                $fee->feeType->section_id,
+                Action::DELETE
+            );
+            // -----------end transaction-------------------
+
+            $fee->delete();
+            DB::commit();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
 
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : '.$e->getMessage());
         }
     }

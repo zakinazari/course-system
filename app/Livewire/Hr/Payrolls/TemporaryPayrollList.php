@@ -27,6 +27,10 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use Carbon\Carbon;
 use Auth;
 use DB;
+use App\Enums\TransactionCategory;
+use App\Enums\Action;
+use App\Services\TransactionService;
+use App\Models\Financial\Account;
 class TemporaryPayrollList extends Component
 {
     // -------start generals--------------------
@@ -347,8 +351,6 @@ class TemporaryPayrollList extends Component
 
     public function savePayroll()
     {
-        
-
         if (empty($this->selected_employees)) {
             $this->dispatch('alert', type: 'error', message: 'No employees selected');
             return;
@@ -359,24 +361,29 @@ class TemporaryPayrollList extends Component
         try {
 
             [$start, $end] = jalaliToGregorianMonthRange($this->year, $this->month);
+
             $branch_id = Auth::user()->branch_id ?: $this->branch_id;
-      
+
             $employees = $this->selected_employees;
 
-            //  attendances 
+            // =========================
+            // attendances
+            // =========================
             $attendances = TeacherAttendance::where('status', '!=', 'absent')
-            ->whereIn('teacher_id', $employees->pluck('id'))
-            ->whereHas('course', function ($q) use($branch_id){
-                $q->where('branch_id', $branch_id);
-            })
-            ->whereBetween('attendance_date', [$start, $end])
-            ->with('course')
-            ->get()
-            ->groupBy('teacher_id');
+                ->whereIn('teacher_id', $employees->pluck('id'))
+                ->whereHas('course', function ($q) use ($branch_id) {
+                    $q->where('branch_id', $branch_id);
+                })
+                ->whereBetween('attendance_date', [$start, $end])
+                ->with('course')
+                ->get()
+                ->groupBy('teacher_id');
 
-            //  advances 
+            // =========================
+            // advances
+            // =========================
             $employee_advances = EmployeeSalaryAdvance::whereIn('employee_id', $employees->pluck('id'))
-                ->where('branch_id',$branch_id)
+                ->where('branch_id', $branch_id)
                 ->where('status', 'active')
                 ->orderBy('created_at')
                 ->get()
@@ -384,7 +391,13 @@ class TemporaryPayrollList extends Component
 
             foreach ($employees as $employee) {
 
-                $contract = $employee->activeTemporaryContract->where('branch_id',$branch_id)->first();
+                $contract = $employee->activeTemporaryContract
+                    ->where('branch_id', $branch_id)
+                    ->first();
+
+                if (!$contract) {
+                    continue;
+                }
 
                 // =========================
                 // 1 GROSS SALARY
@@ -394,89 +407,81 @@ class TemporaryPayrollList extends Component
                 $gross_salary = $result['gross_salary'];
                 $details = $result['details'];
 
-                $remaining_salary = $gross_salary;
-                $advance_deduction = 0;
-
-              
-                $advances = $employee_advances->get($employee->id, collect());
-
-                foreach ($advances as $advance) {
-
-                    if ($remaining_salary <= 0) break;
-
-                    //  مقدار واقعی پرداخت‌شده تا حالا
-                    $total_paid = EmployeeSalaryAdvancePayment::where([
-                        'employee_salary_advance_id' => $advance->id,
-                        'employee_id' => $employee->id,
-                        'month_id' => $this->month,
-                        'year' => $this->year,
-                    ])->sum('amount');
-
-                    //  remaining 
-                    $real_remaining = $advance->total_amount - $total_paid;
-
-                    if ($real_remaining <= 0) {
-                        $advance->remaining_amount = 0;
-                        $advance->status = 'completed';
-                        $advance->save();
-                        continue;
-                    }
-
-                    //  مقدار قابل پرداخت
-                    $deduct = min($real_remaining, $remaining_salary);
-
-                    //  update or create payment
-                    // EmployeeSalaryAdvancePayment::updateOrCreate(
-                    //     [
-                    //         'employee_salary_advance_id' => $advance->id,
-                    //         'employee_id' => $employee->id,
-                    //         'month_id' => $this->month,
-                    //         'year' => $this->year,
-                    //     ],
-                    //     [
-                    //         'amount' => $deduct,
-                    //         'payment_date' => now(),
-                    //     ]
-                    // );
-
-                    //-----------------
-                    // $advance->remaining_amount = $real_remaining - $deduct;
-
-                    // if ($advance->remaining_amount <= 0) {
-                    //     $advance->remaining_amount = 0;
-                    //     $advance->status = 'completed';
-                    // }
-
-                    // $advance->save();
-
-                    // update payroll calc
-                    $remaining_salary -= $deduct;
-                    $advance_deduction += $deduct;
-                }
-
                 // =========================
-                // 2️ DEDUCTIONS
+                // 2 DEDUCTIONS
                 // =========================
                 $tax = tax($gross_salary);
+
                 $food_deduction = $contract->food_deduction ?? 0;
 
-                $total_deductions = $tax + $food_deduction + $advance_deduction;
-
                 // =========================
-                // 3️ ALLOWANCES
+                // 3 ALLOWANCES
                 // =========================
                 $taxi_fare = $contract->taxi_fare ?? 0;
+
                 $credit_card = $contract->credit_card ?? 0;
 
                 $total_allowances = $taxi_fare + $credit_card;
 
                 // =========================
-                // 4 NET SALARY
+                // salary after tax/allowance
+                // advance باید از این مقدار کم شود
+                // نه از gross salary
                 // =========================
-                $net_salary = $gross_salary - $total_deductions + $total_allowances;
+                $salary_after_tax = $gross_salary - $tax - $food_deduction + $total_allowances;
 
                 // =========================
-                // 5️ SAVE
+                // ADVANCE CALCULATION
+                // فقط snapshot
+                // =========================
+                $advance_deduction = 0;
+
+                $remaining_salary = $salary_after_tax;
+
+                $advances = $employee_advances->get($employee->id, collect());
+
+                foreach ($advances as $advance) {
+
+                    if ($remaining_salary <= 0) {
+                        break;
+                    }
+
+                    $real_remaining = $advance->remaining_amount;
+
+                    if ($real_remaining <= 0) {
+                        continue;
+                    }
+
+                    $deduct = min($real_remaining, $remaining_salary);
+
+                    if ($deduct <= 0) {
+                        break;
+                    }
+
+                    $advance_deduction += $deduct;
+
+                    $remaining_salary -= $deduct;
+                }
+
+                // =========================
+                // TOTAL DEDUCTIONS
+                // =========================
+                $total_deductions =
+                    $tax +
+                    $food_deduction +
+                    $advance_deduction;
+
+                // =========================
+                // NET SALARY
+                // =========================
+                $net_salary = $salary_after_tax - $advance_deduction;
+
+                if ($net_salary < 0) {
+                    $net_salary = 0;
+                }
+
+                // =========================
+                // SAVE PAYROLL
                 // =========================
                 $payroll = TemporaryPayroll::updateOrCreate(
                     [
@@ -488,52 +493,78 @@ class TemporaryPayrollList extends Component
                     ],
                     [
                         'gross_salary' => $gross_salary,
+
                         'tax' => $tax,
-                        'taxi_fare' => $taxi_fare,
-                        'credit_card' => $credit_card,
-                        'total_allowances'=>$total_allowances,
 
                         'food_deduction' => $food_deduction,
+
+                        'taxi_fare' => $taxi_fare,
+                        'credit_card' => $credit_card,
+
+                        'total_allowances' => $total_allowances,
+
                         'advance_deduction' => $advance_deduction,
+
                         'total_deductions' => $total_deductions,
+
                         'net_salary' => $net_salary,
+
                         'status' => 'pending',
+
                         'user_id' => auth()->id(),
                     ]
                 );
 
+                // =========================
+                // refresh details
+                // =========================
                 TemporaryPayrollDetail::where('temporary_payroll_id', $payroll->id)->delete();
-                
+
                 foreach ($details as $detail) {
 
                     TemporaryPayrollDetail::create([
                         'temporary_payroll_id' => $payroll->id,
+
                         'employee_id' => $employee->id,
+
                         'book_id' => $detail['book_id'],
 
                         'amount_snapshot' => $detail['amount_snapshot'],
+
                         'total_days_snapshot' => $detail['total_days_snapshot'],
+
                         'daily_rate_snapshot' => $detail['daily_rate_snapshot'],
 
                         'attendance_count' => $detail['attendance_count'],
+
                         'total_salary' => $detail['total_salary'],
                     ]);
                 }
             }
 
             DB::commit();
+
             $this->selected_employees = null;
-            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
+
+            $this->dispatch(
+                'alert',
+                type: 'success',
+                message: __('label.successfully_done')
+            );
 
         } catch (\Exception $e) {
 
             DB::rollBack();
 
-            $this->dispatch('alert', type: 'error', message: __('label.store_error') . ' : ' . $e->getMessage());
+            $this->dispatch(
+                'alert',
+                type: 'error',
+                message: __('label.store_error') . ' : ' . $e->getMessage()
+            );
         }
     }
 
-    public function payPayroll()
+   public function payPayroll()
     {
         if (empty($this->selected_employees)) {
             $this->dispatch('alert', type: 'error', message: 'No employees selected');
@@ -546,7 +577,6 @@ class TemporaryPayrollList extends Component
 
             $branch_id = Auth::user()->branch_id ?: $this->branch_id;
 
-            // =====start adavnce deduction---------------------------
             $employees = $this->selected_employees;
 
             foreach ($employees as $employee) {
@@ -558,69 +588,157 @@ class TemporaryPayrollList extends Component
                     'month_id' => $this->month,
                 ])->first();
 
-                if (!$payroll || $payroll->status == 'paid') continue;
-
-                $remaining_salary = $payroll->gross_salary;
-
-                $advances = EmployeeSalaryAdvance::where('employee_id', $employee->id)
-                    ->where('branch_id', $branch_id)
-                    ->where('status', 'active')
-                    ->orderBy('created_at')
-                    ->get();
-
-                foreach ($advances as $advance) {
-
-                    if ($remaining_salary <= 0) break;
-
-                    $real_remaining = $advance->remaining_amount;
-
-                    if ($real_remaining <= 0) continue;
-
-                    $deduct = min($real_remaining, $remaining_salary);
-
-                    EmployeeSalaryAdvancePayment::create([
-                        'employee_salary_advance_id' => $advance->id,
-                        'employee_id' => $employee->id,
-                        'month_id' => $this->month,
-                        'year' => $this->year,
-                        'amount' => $deduct,
-                        'payment_date' => now(),
-                    ]);
-
-                    //   update 
-                    $advance->remaining_amount -= $deduct;
-
-                    if ($advance->remaining_amount <= 0) {
-                        $advance->status = 'completed';
-                    }
-
-                    $advance->save();
-
-                    $remaining_salary -= $deduct;
+                if (!$payroll || $payroll->status == 'paid') {
+                    continue;
                 }
-            }
 
-            // =====end adavnce deduction---------------------------
-            
-            TemporaryPayroll::whereIn('employee_id', collect($this->selected_employees)->pluck('id'))
-                ->where('branch_id',$branch_id)
-                ->where('year', $this->year)
-                ->where('month_id', $this->month)
-                ->update([
+                // =========================
+                // CONTRACT
+                // =========================
+                $contract = TemporaryContract::find($payroll->temporary_contract_id);
+
+                // =========================
+                // ADVANCE PAYMENT
+                // فقط همان مقدار snapshot شده در payroll
+                // =========================
+                $remaining_advance_deduction = $payroll->advance_deduction;
+
+                if ($remaining_advance_deduction > 0) {
+
+                    $advances = EmployeeSalaryAdvance::where('employee_id', $employee->id)
+                        ->where('branch_id', $branch_id)
+                        ->where('status', 'active')
+                        ->orderBy('created_at')
+                        ->get();
+
+                    foreach ($advances as $advance) {
+
+                        if ($remaining_advance_deduction <= 0) {
+                            break;
+                        }
+
+                        $real_remaining = $advance->remaining_amount;
+
+                        if ($real_remaining <= 0) {
+                            continue;
+                        }
+
+                        // فقط همان مقدار payroll
+                        $deduct = min($real_remaining, $remaining_advance_deduction);
+
+                        if ($deduct <= 0) {
+                            continue;
+                        }
+
+                        // ثبت payment
+                        EmployeeSalaryAdvancePayment::create([
+                            'employee_salary_advance_id' => $advance->id,
+                            'employee_id' => $employee->id,
+                            'month_id' => $this->month,
+                            'year' => $this->year,
+                            'amount' => $deduct,
+                            'payment_date' => now(),
+                        ]);
+
+                        // update advance
+                        $advance->remaining_amount -= $deduct;
+
+                        if ($advance->remaining_amount <= 0) {
+
+                            $advance->remaining_amount = 0;
+                            $advance->status = 'completed';
+                        }
+
+                        $advance->save();
+
+                        // ---------- start SALARY_ADVANCE_SETTLEMENT------------------
+                        $account_id = Account::where('branch_id', $branch_id)
+                            ->where('category', 'treasury')
+                            ->value('id');
+
+                        if (!$account_id) {
+
+                            return $this->dispatch(
+                                'alert',
+                                type: 'error',
+                                message: __('label.treasury_account_not_found')
+                            );
+                        }
+                        TransactionService::income(
+                            $account_id,
+                            $branch_id,
+                            $deduct,
+                            TransactionCategory::SALARY_ADVANCE_SETTLEMENT,
+                            'EmployeeSalaryAdvancePayment',
+                            $payment->id,
+                            $advance->section_id,
+                            Action::CREATE
+                        );
+                        // --------------end SALARY_ADVANCE_SETTLEMENT------------------
+                        
+                        // کم شدن از snapshot payroll
+                        $remaining_advance_deduction -= $deduct;
+                    }
+                }
+
+                // =========================
+                // TRANSACTION
+                // فقط پول واقعی پرداخت‌شده
+                // =========================
+                if ($payroll->net_salary > 0) {
+                    $account_id = Account::where('branch_id', $branch_id)
+                        ->where('category', 'treasury')
+                        ->value('id');
+
+                    if (!$account_id) {
+
+                        return $this->dispatch(
+                            'alert',
+                            type: 'error',
+                            message: __('label.treasury_account_not_found')
+                        );
+                    }
+                    TransactionService::expense(
+                        $account_id,
+                        $branch_id,
+                        $payroll->net_salary,
+                        TransactionCategory::TEMPORARY_SALARY_PAYMENT,
+                        'TemporaryPayroll',
+                        $payroll->id,
+                        $contract?->section_id,
+                        Action::CREATE
+                    );
+                }
+
+                // =========================
+                // UPDATE PAYROLL
+                // =========================
+                $payroll->update([
                     'status' => 'paid',
                     'paid_by' => auth()->id(),
                     'payment_date' => now(),
                 ]);
+            }
 
             DB::commit();
+
             $this->selected_employees = null;
-            $this->dispatch('alert', type: 'success', message: 'Payroll paid successfully');
+
+            $this->dispatch(
+                'alert',
+                type: 'success',
+                message: 'Payroll paid successfully'
+            );
 
         } catch (\Exception $e) {
 
             DB::rollBack();
 
-            $this->dispatch('alert', type: 'error', message: $e->getMessage());
+            $this->dispatch(
+                'alert',
+                type: 'error',
+                message: $e->getMessage()
+            );
         }
     }
 

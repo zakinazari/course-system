@@ -14,9 +14,13 @@ return new class extends Migration
         Schema::create('warehouses', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('category_id')->nullable()->constrained('warehouse_categories')->nullOnDelete();                
-            $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
+            $table->foreignId('section_id')->nullable()->constrained('sections')->nullOnDelete();                
+            $table->foreignId('branch_id')->nullable()->constrained('branches');
+            $table->enum('type', ['central', 'branch'])->default('branch');
             $table->timestamps();
+            // indexes
+            $table->index('type');
+           
         });
     }
 

@@ -27,6 +27,10 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use Carbon\Carbon;
 use Auth;
 use DB;
+use App\Enums\TransactionCategory;
+use App\Enums\Action;
+use App\Services\TransactionService;
+use App\Models\Financial\Account;
 class PermanentPayrollList extends Component
 {
     // -------start generals--------------------
@@ -307,195 +311,153 @@ class PermanentPayrollList extends Component
         try {
 
             [$start, $end] = jalaliToGregorianMonthRange($this->year, $this->month);
+
             $branch_id = Auth::user()->branch_id ?: $this->branch_id;
+
             $employees = $this->selected_employees;
 
-            //  teacher attendances
-            $teacher_attendances = TeacherAttendance::where('status', '!=', 'absent')
-            ->whereIn('teacher_id', $employees->pluck('id'))
-            ->whereHas('course', function ($q) use($branch_id){
-                $q->where('branch_id', $branch_id);
-            })
-            ->whereBetween('attendance_date', [$start, $end])
-            ->with('course')
-            ->get()
-            ->groupBy('teacher_id');
+            // preload data (performance)
+            $teacher_attendances = TeacherAttendance::where('status', 'present')
+                ->whereIn('teacher_id', $employees->pluck('id'))
+                ->whereBetween('attendance_date', [$start, $end])
+                ->with('course.time')
+                ->get()
+                ->groupBy('teacher_id');
 
-            //  attendances 
             $attendances = EmployeeAttendance::where('status', '!=', 'absent')
-            ->whereIn('employee_id', $employees->pluck('id'))
-            ->where('branch_id',$branch_id)
-            ->whereBetween('attendance_date', [$start, $end])
-            ->get()
-            ->groupBy('employee_id');
+                ->whereIn('employee_id', $employees->pluck('id'))
+                ->where('branch_id', $branch_id)
+                ->whereBetween('attendance_date', [$start, $end])
+                ->get()
+                ->groupBy('employee_id');
 
-            //  advances 
             $employee_advances = EmployeeSalaryAdvance::whereIn('employee_id', $employees->pluck('id'))
                 ->where('status', 'active')
-                ->where('branch_id',$branch_id)
+                ->where('branch_id', $branch_id)
                 ->orderBy('created_at')
                 ->get()
                 ->groupBy('employee_id');
-            
+
             foreach ($employees as $employee) {
 
                 $contract = $employee->activePermanentContract()
                     ->where('branch_id', $branch_id)
                     ->first();
-                // =========================
-                // 1 GROSS SALARY
-                // =========================
-                $gross_salary = $this->calculateEmployeeSalary(
-                    $employee,
-                    $attendances
-                );
 
-                $total_present_days = $attendances->get($employee->id, collect())->count();
+                if (!$contract) continue;
 
-                $remaining_salary = $gross_salary;
-                $advance_deduction = 0;
+                // =======================
+                // GROSS SALARY
+                // =======================
+                $gross_salary = $this->calculateEmployeeSalary($employee, $attendances);
 
-        
-                $advances = $employee_advances->get($employee->id, collect());
+                $present_days = $attendances->get($employee->id, collect())->count();
 
-                foreach ($advances as $advance) {
-
-                    if ($remaining_salary <= 0) break;
-
-                    //  مقدار واقعی پرداخت‌شده تا حالا
-                    $total_paid = EmployeeSalaryAdvancePayment::where([
-                        'employee_salary_advance_id' => $advance->id,
-                        'employee_id' => $employee->id,
-                        'month_id' => $this->month,
-                        'year' => $this->year,
-                    ])->sum('amount');
-
-                    //  remaining 
-                    $real_remaining = $advance->total_amount - $total_paid;
-
-                    if ($real_remaining <= 0) {
-                        $advance->remaining_amount = 0;
-                        $advance->status = 'completed';
-                        $advance->save();
-                        continue;
-                    }
-
-                    //  مقدار قابل پرداخت
-                    $deduct = min($real_remaining, $remaining_salary);
-
-                    //  update or create payment
-                    // EmployeeSalaryAdvancePayment::updateOrCreate(
-                    //     [
-                    //         'employee_salary_advance_id' => $advance->id,
-                    //         'employee_id' => $employee->id,
-                    //         'month_id' => $this->month,
-                    //         'year' => $this->year,
-                    //     ],
-                    //     [
-                    //         'amount' => $deduct,
-                    //         'payment_date' => now(),
-                    //     ]
-                    // );
-
-                    
-                    // $advance->remaining_amount = $real_remaining - $deduct;
-
-                    // if ($advance->remaining_amount <= 0) {
-                    //     $advance->remaining_amount = 0;
-                    //     $advance->status = 'completed';
-                    // }
-
-                    // $advance->save();
-
-                    // update payroll calc
-                    $remaining_salary -= $deduct;
-                    $advance_deduction += $deduct;
-                }
-
-                // =========================
-                // OVERTIME CALCULATION (SAFE)
-                // =========================
-
+                // =======================
+                // OVERTIME
+                // =======================
+                $overtime_hours = 0;
                 $overtime_amount = 0;
 
                 $teacher_records = $teacher_attendances->get($employee->id, collect());
 
-                if ($teacher_records->isNotEmpty() && $contract) {
+                if ($teacher_records->isNotEmpty()) {
 
-                    $total_hours = 0;
+                    $grouped = $teacher_records->groupBy('attendance_date');
 
-                    foreach ($teacher_records as $att) {
+                    foreach ($grouped as $records) {
 
-                        if (!$att->course?->time) continue;
+                        $daily = 0;
 
-                        $start = $att->course?->time->start_time;
-                        $end   = $att->course?->time->end_time;
+                        foreach ($records as $att) {
+                            if (!$att->course?->time) continue;
 
-                        $hours = $end->diffInMinutes($start) / 60;
+                            $startTime = $att->course->time->start_time;
+                            $endTime = $att->course->time->end_time;
 
-                        $total_hours += $hours;
+                            $daily += $startTime->diffInMinutes($endTime) / 60;
+                        }
+
+                        if ($daily > 8) {
+                            $overtime_hours += ($daily - 8);
+                        }
                     }
 
-                    $monthly_limit = 26 * 8; // 208 ساعت
-
-                    if ($total_hours > $monthly_limit) {
-
-                        $overtime_hours = $total_hours - $monthly_limit;
-
-                        $hourly_rate = $contract->basic_salary / 208;
-
-                        $overtime_amount = $overtime_hours * $hourly_rate * 1.5;
-
-                        // اضافه به معاش
+                    if ($overtime_hours > 0) {
+                        $rate = $contract->basic_salary / 208;
+                        $overtime_amount = $overtime_hours * $rate;
                         $gross_salary += $overtime_amount;
                     }
                 }
 
-                // =========================
-                // 2️ DEDUCTIONS
-                // =========================
+                // =======================
+                // TAX + ALLOWANCES
+                // =======================
                 $tax = tax($gross_salary);
-               
 
-                $total_deductions = $tax + $advance_deduction;
+                $allowances =
+                    ($contract->taxi_fare ?? 0) +
+                    ($contract->credit_card ?? 0);
 
-                // =========================
-                // 3️ ALLOWANCES
-                // =========================
-                $taxi_fare = $contract->taxi_fare ?? 0;
-                $credit_card = $contract->credit_card ?? 0;
+                $total_salary = $gross_salary - $tax + $allowances;
 
-                $total_allowances = $taxi_fare + $credit_card;
+                // =======================
+                // ADVANCE (SAFE SNAPSHOT LOGIC)
+                // =======================
+                $advances = $employee_advances->get($employee->id, collect());
 
-                // =========================
-                // 4 NET SALARY
-                // =========================
-                $net_salary = $gross_salary - $total_deductions + $total_allowances;
+                $advance_deduction = 0;
+                $remaining_salary = $total_salary;
 
-                // =========================
-                // 5️ SAVE
-                // =========================
+                foreach ($advances as $advance) {
+
+                    $paid = EmployeeSalaryAdvancePayment::where('employee_salary_advance_id', $advance->id)
+                        ->where('employee_id', $employee->id)
+                        ->sum('amount');
+
+                    $remaining_advance = $advance->total_amount - $paid;
+
+                    if ($remaining_advance <= 0) continue;
+
+                    $deduct = min($remaining_advance, $remaining_salary);
+
+                    if ($deduct <= 0) break;
+
+                    $advance_deduction += $deduct;
+                    $remaining_salary -= $deduct;
+                }
+
+                // =======================
+                // NET SALARY
+                // =======================
+                $net_salary = $total_salary - $advance_deduction;
+
+                // =======================
+                // SNAPSHOT SAVE
+                // =======================
                 PermanentPayroll::updateOrCreate(
                     [
                         'employee_id' => $employee->id,
-                        'permanent_contract_id' => $contract->id,
                         'branch_id' => $branch_id,
                         'year' => $this->year,
                         'month_id' => $this->month,
                     ],
                     [
+                        'permanent_contract_id' => $contract->id,
+
                         'gross_salary' => $gross_salary,
-                        'total_present_days' => $total_present_days,
-                        'over_time_hours' => $total_hours,
-                        'overtime_amount' => $overtime_amount,
-                        'taxi_fare' => $taxi_fare,
-                        'credit_card' => $credit_card,
-                        'total_allowances'=>$total_allowances,
+                        'tax' => $tax,
+
+                        'taxi_fare' => $contract->taxi_fare ?? 0,
+                        'credit_card' => $contract->credit_card ?? 0,
+
+                        'total_allowances' => $allowances,
 
                         'advance_deduction' => $advance_deduction,
-                        'tax' => $tax,
-                        'total_deductions' => $total_deductions,
+                        'total_deductions' => $tax + $advance_deduction,
+
                         'net_salary' => $net_salary,
+
                         'status' => 'pending',
                         'user_id' => auth()->id(),
                     ]
@@ -503,14 +465,14 @@ class PermanentPayrollList extends Component
             }
 
             DB::commit();
-            $this->selected_employees = null;
-            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
+
+            $this->dispatch('alert', type: 'success', message: 'Payroll saved successfully');
 
         } catch (\Exception $e) {
 
             DB::rollBack();
 
-            $this->dispatch('alert', type: 'error', message: __('label.store_error') . ' : ' . $e->getMessage());
+            $this->dispatch('alert', type: 'error', message: $e->getMessage());
         }
     }
 
@@ -541,10 +503,11 @@ class PermanentPayrollList extends Component
         try {
 
             $branch_id = Auth::user()->branch_id ?: $this->branch_id;
-            // =====start adavnce deduction---------------------------
-            $employees = $this->selected_employees;
 
-            foreach ($employees as $employee) {
+            foreach ($this->selected_employees as $employee) {
+                $contract = $employee->activePermanentContract()
+                    ->where('branch_id', $branch_id)
+                    ->first();
 
                 $payroll = PermanentPayroll::where([
                     'employee_id' => $employee->id,
@@ -553,62 +516,117 @@ class PermanentPayrollList extends Component
                     'month_id' => $this->month,
                 ])->first();
 
-                if (!$payroll || $payroll->status == 'paid') continue;
+                if (!$payroll || $payroll->status === 'paid') continue;
 
-                $remaining_salary = $payroll->gross_salary;
+                // =========================
+                // 1. PAY SALARY (NO RECALC)
+                // =========================
+                if ($payroll->net_salary > 0) {
+                    $account_id = Account::where('branch_id', $branch_id)
+                        ->where('category', 'treasury')
+                        ->value('id');
 
-                $advances = EmployeeSalaryAdvance::where('employee_id', $employee->id)
-                    ->where('branch_id', $branch_id)
-                    ->where('status', 'active')
-                    ->orderBy('created_at')
-                    ->get();
+                    if (!$account_id) {
 
-                foreach ($advances as $advance) {
+                        return $this->dispatch(
+                            'alert',
+                            type: 'error',
+                            message: __('label.treasury_account_not_found')
+                        );
+                    }
+                    TransactionService::expense(
+                        $account_id,
+                        $branch_id,
+                        $payroll->net_salary,
+                        TransactionCategory::PERMANENT_SALARY_PAYMENT,
+                        'PermanentPayroll',
+                        $payroll->id,
+                        $contract->section_id,
+                        Action::CREATE
+                    );
+                }
+                // =========================
+                // 2. APPLY ADVANCE DEDUCTIONS (FROM SNAPSHOT LOGIC)
+                // =========================
+                $remaining_to_deduct = $payroll->advance_deduction;
 
-                    if ($remaining_salary <= 0) break;
+                if ($remaining_to_deduct > 0) {
 
-                    $real_remaining = $advance->remaining_amount;
+                    $advances = EmployeeSalaryAdvance::where('employee_id', $employee->id)
+                        ->where('branch_id', $branch_id)
+                        ->where('status', 'active')
+                        ->orderBy('created_at')
+                        ->get();
 
-                    if ($real_remaining <= 0) continue;
+                    foreach ($advances as $advance) {
 
-                    $deduct = min($real_remaining, $remaining_salary);
+                        if ($remaining_to_deduct <= 0) break;
 
-                    EmployeeSalaryAdvancePayment::create([
-                        'employee_salary_advance_id' => $advance->id,
-                        'employee_id' => $employee->id,
-                        'month_id' => $this->month,
-                        'year' => $this->year,
-                        'amount' => $deduct,
-                        'payment_date' => now(),
-                    ]);
+                        $remaining = $advance->remaining_amount;
 
-                    //   update 
-                    $advance->remaining_amount -= $deduct;
+                        if ($remaining <= 0) continue;
 
-                    if ($advance->remaining_amount <= 0) {
-                        $advance->status = 'completed';
+                        $deduct = min($remaining, $remaining_to_deduct);
+
+                        EmployeeSalaryAdvancePayment::create([
+                            'employee_salary_advance_id' => $advance->id,
+                            'employee_id' => $employee->id,
+                            'amount' => $deduct,
+                            'month_id' => $this->month,
+                            'year' => $this->year,
+                            'payment_date' => now(),
+                        ]);
+
+                        $advance->remaining_amount -= $deduct;
+
+                        if ($advance->remaining_amount <= 0) {
+                            $advance->status = 'completed';
+                        }
+
+                        $advance->save();
+
+                        // ---------- start SALARY_ADVANCE_SETTLEMENT------------------
+                        $account_id = Account::where('branch_id', $branch_id)
+                            ->where('category', 'treasury')
+                            ->value('id');
+
+                        if (!$account_id) {
+
+                            return $this->dispatch(
+                                'alert',
+                                type: 'error',
+                                message: __('label.treasury_account_not_found')
+                            );
+                        }
+                        TransactionService::income(
+                            $account_id,
+                            $branch_id,
+                            $deduct,
+                            TransactionCategory::SALARY_ADVANCE_SETTLEMENT,
+                            'EmployeeSalaryAdvancePayment',
+                            $payment->id,
+                            $advance->section_id,
+                            Action::CREATE
+                        );
+                        // --------------end SALARY_ADVANCE_SETTLEMENT------------------
+
+                        $remaining_to_deduct -= $deduct;
                     }
 
-                    $advance->save();
-
-                    $remaining_salary -= $deduct;
                 }
-            }
 
-            // =====end adavnce deduction---------------------------
-
-            PermanentPayroll::whereIn('employee_id', collect($this->selected_employees)->pluck('id'))
-                ->where('branch_id', $branch_id)
-                ->where('year', $this->year)
-                ->where('month_id', $this->month)
-                ->update([
+                // =========================
+                // 3. LOCK PAYROLL
+                // =========================
+                $payroll->update([
                     'status' => 'paid',
                     'paid_by' => auth()->id(),
                     'payment_date' => now(),
                 ]);
+            }
 
             DB::commit();
-            $this->selected_employees = null;
+
             $this->dispatch('alert', type: 'success', message: 'Payroll paid successfully');
 
         } catch (\Exception $e) {

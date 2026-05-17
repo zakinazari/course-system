@@ -4,6 +4,7 @@ namespace App\Models\Hr;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Section;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,7 @@ class TemporaryContract extends Model
     protected $fillable = [
         'position_id',
         'employee_id',
+        'section_id',
         'branch_id',
         'taxi_fare',
         'credit_card',
@@ -33,6 +35,11 @@ class TemporaryContract extends Model
     public function position()
     {
         return $this->belongsTo(Position::class);
+    }
+    
+    public function section()
+    {
+        return $this->belongsTo(Section::class);
     }
 
     public function employee()
