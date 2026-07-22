@@ -20,12 +20,15 @@ return new class extends Migration
             $table->decimal('basic_salary', 10, 2)->default(0);
             $table->decimal('taxi_fare', 10, 2)->default(0);
             $table->decimal('credit_card', 10, 2)->default(0);
-        
+
             $table->date('start_date');
 
             $table->date('end_date')->nullable();
 
             $table->enum('status', ['active', 'inactive', 'ended'])->default('active');
+
+            $table->decimal('security_saving_amount', 10, 2)->default(0);
+            $table->decimal('security_saving_monthly_amount', 10, 2)->default(0);
 
             $table->timestamps();
         });

@@ -10,6 +10,7 @@ class PhysicalBook extends Model
         'name',
         'book_id',
         'price',
+        'minimum_stock',
     ];
 
     public function book()

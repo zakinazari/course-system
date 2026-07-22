@@ -186,20 +186,96 @@
 
                             @if(Auth::user()->isDeveloper() || Auth::user()->isAdmin() || ($attendance_date === now()->format('Y-m-d')))
                             <td>
+
+                            @php
+                                $leave = $employee_leaves[$emp->employee?->id] ?? null;
+                            @endphp
                                 
-                                <div class="d-flex gap-2">
-                                    <div class="form-check form-check-success">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $emp->employee?->id }}" value="present"> <span class="badge bg-success"> Present </span> </label>
-                                    </div>
-                                    <div class="form-check form-check-danger">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $emp->employee?->id }}" value="absent" > <span class="badge bg-danger"> Absent </span></label>
-                                    </div>
-                                    <div class="form-check form-check-warning">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $emp->employee?->id }}" value="late"> <span class="badge bg-warning"> Late </span></label>
-                                    </div>
-                                    <div class="form-check form-check-info">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $emp->employee?->id }}" value="excused" > <span class="badge bg-info"> Excused </span></label>
+                                
+                               <div class="d-flex gap-2">
+
+                                <div class="form-check form-check-success">
+                                    <label>
+                                        <input 
+                                            class="form-check-input" 
+                                            type="radio" 
+                                            wire:model="attendances.{{ $emp->employee?->id }}" 
+                                            value="present"
+                                            @disabled($leave)
+                                        >
+                                        <span class="badge bg-success">Pr</span>
+                                    </label>
                                 </div>
+
+
+                                <div class="form-check form-check-danger">
+                                    <label>
+                                        <input 
+                                            class="form-check-input" 
+                                            type="radio" 
+                                            wire:model="attendances.{{ $emp->employee?->id }}" 
+                                            value="absent"
+                                            @disabled($leave)
+                                        >
+                                        <span class="badge bg-danger">Ab</span>
+                                    </label>
+                                </div>
+
+
+                                <div class="form-check form-check-warning">
+                                    <label>
+                                        <input 
+                                            class="form-check-input" 
+                                            type="radio" 
+                                            wire:model="attendances.{{ $emp->employee?->id }}" 
+                                            value="late"
+                                            @disabled($leave)
+                                        >
+                                        <span class="badge bg-warning">Lt</span>
+                                    </label>
+                                </div>
+
+
+                                <div class="form-check form-check-info">
+                                    <label>
+                                        <input 
+                                            class="form-check-input" 
+                                            type="radio" 
+                                            wire:model="attendances.{{ $emp->employee?->id }}" 
+                                            value="excused"
+                                            @disabled($leave)
+                                        >
+                                        <span class="badge bg-info">Exc</span>
+                                    </label>
+                                </div>
+
+
+                                @if($leave)
+
+                                    <div class="form-check form-check-primary">
+
+                                        <label>
+
+                                            <input 
+                                                class="form-check-input"
+                                                type="radio"
+                                                wire:model="attendances.{{ $emp->employee?->id }}"
+                                                value="leave"
+                                                checked
+                                                disabled
+                                            >
+
+                                            <span class="badge bg-primary">
+                                                {{ $leave?->leaveType?->name }}
+                                            </span>
+
+                                        </label>
+
+                                    </div>
+
+                                @endif
+
+                            </div>
                           
                             </td>
                          

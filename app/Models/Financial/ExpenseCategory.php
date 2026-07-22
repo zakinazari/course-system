@@ -8,5 +8,6 @@ class ExpenseCategory extends Model
 {
     protected $fillable = [
         'name',
+        'type',
     ];
 }

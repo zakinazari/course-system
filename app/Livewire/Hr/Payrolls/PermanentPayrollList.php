@@ -14,6 +14,7 @@ use App\Models\Hr\TemporaryContract;
 use App\Models\Hr\EmployeeSalaryAdvance;
 use App\Models\Hr\EmployeeSalaryAdvancePayment;
 use App\Models\Hr\PermanentPayroll;
+use App\Models\Hr\EmployeeSecuritySaving;
 
 use App\Models\Assessment\TeacherAttendance;
 use App\Models\CenterSettings\Year;
@@ -31,6 +32,7 @@ use App\Enums\TransactionCategory;
 use App\Enums\Action;
 use App\Services\TransactionService;
 use App\Models\Financial\Account;
+use Verta;
 class PermanentPayrollList extends Component
 {
     // -------start generals--------------------
@@ -49,7 +51,8 @@ class PermanentPayrollList extends Component
         'employee_id',
         'status',
         'gross_salary',
-        'total_present_days',
+        'absent_days',
+        'unpaid_leave_days',
         'taxi_fare',
         'credit_card',
         'tax',
@@ -112,6 +115,11 @@ class PermanentPayrollList extends Component
         $this->years =  Year::orderBy('year','desc')->get();
         $this->months =  Month::all();
         $this->branches =  Branch::all();
+
+        $now = Verta::now();
+
+        $this->year = $now->year;
+        $this->month = $now->month;
     }
 
     public $position_id;
@@ -324,7 +332,7 @@ class PermanentPayrollList extends Component
                 ->get()
                 ->groupBy('teacher_id');
 
-            $attendances = EmployeeAttendance::where('status', '!=', 'absent')
+            $attendances = EmployeeAttendance::query()
                 ->whereIn('employee_id', $employees->pluck('id'))
                 ->where('branch_id', $branch_id)
                 ->whereBetween('attendance_date', [$start, $end])
@@ -333,6 +341,7 @@ class PermanentPayrollList extends Component
 
             $employee_advances = EmployeeSalaryAdvance::whereIn('employee_id', $employees->pluck('id'))
                 ->where('status', 'active')
+                ->where('auto_deduct',true)// یعنی اگر این فعال باشد ادوانس از معاش کم میشود 
                 ->where('branch_id', $branch_id)
                 ->orderBy('created_at')
                 ->get()
@@ -349,9 +358,11 @@ class PermanentPayrollList extends Component
                 // =======================
                 // GROSS SALARY
                 // =======================
-                $gross_salary = $this->calculateEmployeeSalary($employee, $attendances);
-
-                $present_days = $attendances->get($employee->id, collect())->count();
+                $result = $this->calculateEmployeeSalary($employee, $attendances);
+            
+                $gross_salary = $result['gross_salary'];
+                $absent_days = $result['absent_days'];
+                $unpaid_leave_days = $result['unpaid_leave_days'];
 
                 // =======================
                 // OVERTIME
@@ -370,6 +381,7 @@ class PermanentPayrollList extends Component
                         $daily = 0;
 
                         foreach ($records as $att) {
+                            
                             if (!$att->course?->time) continue;
 
                             $startTime = $att->course->time->start_time;
@@ -427,15 +439,81 @@ class PermanentPayrollList extends Component
                     $remaining_salary -= $deduct;
                 }
 
+                /*
+                |--------------------------------------------------------------------------
+                | SECURITY SAVING
+                |--------------------------------------------------------------------------
+                |
+                | Security Saving is deducted gradually until the contract target
+                | amount is reached.
+                |
+                */
+
+                $security_saving_deduction = 0;
+
+                if ($contract->security_saving_amount > 0) {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Current Security Saving Balance
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $security_saving_balance =
+                        $contract->securitySavings()
+                            ->where('type', 'deposit')
+                            ->sum('amount')
+
+                        -
+
+                        $contract->securitySavings()
+                            ->whereIn('type', ['refund', 'deduction'])
+                            ->sum('amount');
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Remaining Security Saving
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $remaining_security_saving = max(
+                        0,
+                        $contract->security_saving_amount - $security_saving_balance
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Actual Deduction
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $security_saving_deduction = min(
+                        $contract->security_saving_monthly_amount,
+                        $remaining_security_saving,
+                        $remaining_salary
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Remaining Salary After Security Saving
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $remaining_salary -= $security_saving_deduction;
+                }
+
                 // =======================
                 // NET SALARY
                 // =======================
-                $net_salary = $total_salary - $advance_deduction;
+                $net_salary = $total_salary - $advance_deduction - $security_saving_deduction;
 
+            
                 // =======================
                 // SNAPSHOT SAVE
                 // =======================
-                PermanentPayroll::updateOrCreate(
+                $payroll = PermanentPayroll::updateOrCreate(
                     [
                         'employee_id' => $employee->id,
                         'branch_id' => $branch_id,
@@ -446,15 +524,25 @@ class PermanentPayrollList extends Component
                         'permanent_contract_id' => $contract->id,
 
                         'gross_salary' => $gross_salary,
-                        'tax' => $tax,
 
+                        'absent_days' => $absent_days,
+                        'unpaid_leave_days' => $unpaid_leave_days,
+
+                        'over_time_amount' => $overtime_amount,
+                        'over_time_hours' => $overtime_hours,
+                        
+                        'tax' => $tax,
+                        
                         'taxi_fare' => $contract->taxi_fare ?? 0,
                         'credit_card' => $contract->credit_card ?? 0,
 
                         'total_allowances' => $allowances,
 
                         'advance_deduction' => $advance_deduction,
-                        'total_deductions' => $tax + $advance_deduction,
+
+                        'security_saving_deduction' => $security_saving_deduction,
+
+                        'total_deductions' => $tax + $advance_deduction + $security_saving_deduction,
 
                         'net_salary' => $net_salary,
 
@@ -462,10 +550,45 @@ class PermanentPayrollList extends Component
                         'user_id' => auth()->id(),
                     ]
                 );
+
+                /*
+                |--------------------------------------------------------------------------
+                | SECURITY SAVING TRANSACTION
+                |--------------------------------------------------------------------------
+                */
+              
+                if ($security_saving_deduction > 0) {
+
+                    EmployeeSecuritySaving::updateOrCreate(
+
+                        [
+                            'payroll_id' => $payroll->id,
+                            'payroll_type' => $payroll->getMorphClass(),
+                            'type' => 'deposit',
+                        ],
+
+                        [
+
+                            'employee_id' => $employee->id,
+
+                            'contract_id' => $contract->id,
+                            'contract_type' => $contract->getMorphClass(),
+
+                            'amount' => $security_saving_deduction,
+
+                            'transaction_date' => now(),
+
+                            'user_id' => auth()->id(),
+
+                        ]
+
+                    );
+
+                }
             }
 
             DB::commit();
-
+             $this->selected_employees = null;
             $this->dispatch('alert', type: 'success', message: 'Payroll saved successfully');
 
         } catch (\Exception $e) {
@@ -479,16 +602,98 @@ class PermanentPayrollList extends Component
     public function calculateEmployeeSalary($employee, $attendances)
     {
         $branch_id = Auth::user()->branch_id ?: $this->branch_id;
+
+
         $contract = $employee->activePermanentContract()
-                    ->where('branch_id', $branch_id)
-                    ->first();
-        $gross_salary = 0;
-        $attendance_count = $attendances->get($employee->id, collect())->count();
+            ->where('branch_id', $branch_id)
+            ->first();
 
-        $daily_rate =  round($contract->basic_salary / 26, 2);//26 days===> 26 روز ماه، یعنی یکماه جمعه ها کشیده،
-        $gross_salary = $daily_rate * $attendance_count;
 
-        return $gross_salary;
+        if (!$contract) {
+            return 0;
+        }
+
+
+        $employee_attendances = $attendances
+            ->get($employee->id, collect());
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Absent Days
+        |--------------------------------------------------------------------------
+        */
+
+        $absent_days = $employee_attendances
+            ->where('status', 'absent')
+            ->pluck('attendance_date')
+            ->unique()
+            ->count();
+        /*
+        |--------------------------------------------------------------------------
+        | Unpaid Leave Days
+        |--------------------------------------------------------------------------
+        */
+
+        $unpaid_leave_days = 0;
+
+
+        $leave_attendances = $employee_attendances
+            ->where('status', 'leave');
+        
+
+        foreach ($leave_attendances as $attendance) {
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Find Leave From Contract Morph Relation
+            |--------------------------------------------------------------------------
+            */
+
+            $leave = $contract->leaves()
+                ->where('leave_type_id', $attendance->leave_type_id)
+                ->whereDate('start_date', '<=', $attendance->attendance_date)
+                ->whereDate('end_date', '>=', $attendance->attendance_date)
+                ->where('status', 'approved')
+                ->first();
+
+            if ($leave && !$leave->leaveType?->is_paid) {
+
+                $unpaid_leave_days++;
+
+            }
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total Deduction Days
+        |--------------------------------------------------------------------------
+        */
+
+        $deduction_days = $absent_days + $unpaid_leave_days;
+
+    
+        /*
+        |--------------------------------------------------------------------------
+        | Salary Calculation
+        |--------------------------------------------------------------------------
+        */
+
+        $daily_rate = round($contract->basic_salary / 30, 2);
+
+
+        $deduction = $daily_rate * $deduction_days;
+
+
+        $gross_salary = $contract->basic_salary - $deduction;
+
+        return [
+            'gross_salary' => max(0, $gross_salary),
+            'unpaid_leave_days' => $unpaid_leave_days,
+            'absent_days' => $absent_days,
+        ];
     }
 
     public function payPayroll()
@@ -524,6 +729,7 @@ class PermanentPayrollList extends Component
                 if ($payroll->net_salary > 0) {
                     $account_id = Account::where('branch_id', $branch_id)
                         ->where('category', 'treasury')
+                        ->where('type','branch')
                         ->value('id');
 
                     if (!$account_id) {
@@ -568,7 +774,7 @@ class PermanentPayrollList extends Component
 
                         $deduct = min($remaining, $remaining_to_deduct);
 
-                        EmployeeSalaryAdvancePayment::create([
+                        $payment = EmployeeSalaryAdvancePayment::create([
                             'employee_salary_advance_id' => $advance->id,
                             'employee_id' => $employee->id,
                             'amount' => $deduct,
@@ -588,6 +794,7 @@ class PermanentPayrollList extends Component
                         // ---------- start SALARY_ADVANCE_SETTLEMENT------------------
                         $account_id = Account::where('branch_id', $branch_id)
                             ->where('category', 'treasury')
+                            ->where('type','branch')
                             ->value('id');
 
                         if (!$account_id) {
@@ -626,7 +833,7 @@ class PermanentPayrollList extends Component
             }
 
             DB::commit();
-
+             $this->selected_employees = null;
             $this->dispatch('alert', type: 'success', message: 'Payroll paid successfully');
 
         } catch (\Exception $e) {

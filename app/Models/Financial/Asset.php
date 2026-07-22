@@ -23,6 +23,7 @@ class Asset extends Model
         'unit_id',
         'quantity',
         'purchase_date',
+        'status',
         'note',
         'user_id',
     ];
@@ -107,35 +108,35 @@ class Asset extends Model
         });
 
         // ---------------- update ----------------
-        static::updating(function ($asset) {
+        // static::updating(function ($asset) {
 
-            // فقط اگر branch یا category تغییر کرده باشد
-            if (
-                $asset->isDirty('branch_id') ||
-                $asset->isDirty('asset_category_id')
-            ) {
+        //     // فقط اگر branch یا category تغییر کرده باشد
+        //     if (
+        //         $asset->isDirty('branch_id') ||
+        //         $asset->isDirty('asset_category_id')
+        //     ) {
 
-                DB::transaction(function () use ($asset) {
+        //         DB::transaction(function () use ($asset) {
 
-                    $lastNumber = self::where('branch_id', $asset->branch_id)
-                        ->where('asset_category_id', $asset->asset_category_id)
-                        ->where('id', '!=', $asset->id)
-                        ->max('asset_number');
+        //             $lastNumber = self::where('branch_id', $asset->branch_id)
+        //                 ->where('asset_category_id', $asset->asset_category_id)
+        //                 ->where('id', '!=', $asset->id)
+        //                 ->max('asset_number');
 
-                    $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
+        //             $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
 
-                    $asset->asset_number = $nextNumber;
+        //             $asset->asset_number = $nextNumber;
 
-                    $branchCode = $asset->branch?->code ?? 'B00';
+        //             $branchCode = $asset->branch?->code ?? 'B00';
 
-                    $categoryCode = $asset->category?->code ?? 'CAT';
+        //             $categoryCode = $asset->category?->code ?? 'CAT';
 
-                    $asset->code =
-                        $branchCode . '-' .
-                        strtoupper($categoryCode) . '-' .
-                        str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-                });
-            }
-        });
+        //             $asset->code =
+        //                 $branchCode . '-' .
+        //                 strtoupper($categoryCode) . '-' .
+        //                 str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        //         });
+        //     }
+        // });
     }
 }

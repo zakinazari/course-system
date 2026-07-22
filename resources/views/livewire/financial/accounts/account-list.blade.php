@@ -183,24 +183,24 @@
                                 <div class="invalid-feedback d-block">{{ $message }}</div> 
                             @enderror
                         </div>
-                        @endif
-                        @if($type==='branch')
-                        <div class="row">
-                            @if(!auth()->user()->branch_id)
-                            <div class="col mb-3">
-                              <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
-                              <select class="form-select @error('branch_id') is-invalid @enderror" wire:model.lazy="branch_id" id ="branch_id">
-                                 <option value="">{{ __('label.select') }}</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}"  wire:key="branch-{{ $branch->id }}">
-                                            {{ $branch->name }}
-                                        </option>
-                                    @endforeach
-                              </select>
-                                @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                           </div>
-                           @endif
-                        </div>
+                            @if($type==='branch')
+                            <div class="row">
+                                @if(!auth()->user()->branch_id)
+                                <div class="col mb-3">
+                                <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
+                                <select class="form-select @error('branch_id') is-invalid @enderror" wire:model.lazy="branch_id" id ="branch_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                        @foreach($branches as $branch)
+                                            <option value="{{ $branch->id }}"  wire:key="branch-{{ $branch->id }}">
+                                                {{ $branch->name }}
+                                            </option>
+                                        @endforeach
+                                </select>
+                                    @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            @endif
+                            </div>
+                            @endif
                         @endif
                         <div class="row">
                             <div class="col mb-3">
@@ -213,7 +213,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
-                        <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
+                        <button type="submit" class="btn btn-primary"  wire:loading.attr="disabled" >@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
                     </div>
                 </form>
             </div>

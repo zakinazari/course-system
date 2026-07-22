@@ -124,6 +124,11 @@ class User extends Authenticatable
         return $this->role && $this->role->role_name === 'Super Admin';
     }
 
+    public function isBranchManager(): bool
+    {
+        return $this->role && $this->role->role_name === 'Branch Manager';
+    }
+
     public function isRegularUser(): bool
     {
         return !$this->isDeveloper() && !$this->isAdmin();

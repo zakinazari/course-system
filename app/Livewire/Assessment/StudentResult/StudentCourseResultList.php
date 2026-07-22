@@ -141,6 +141,7 @@ class StudentCourseResultList extends Component
     public $results=[];
     public $exam_types=[];
     public $exam_percentages = [];
+    public $exam_period='all';
     public function render()
     {
         return view('livewire.assessment.student-result.student-course-result-list');
@@ -160,7 +161,11 @@ class StudentCourseResultList extends Component
         if (!$course || !$course->book) return;
 
         // exam types مرتب شده بر اساس id (descending)
-        $this->exam_types = $course->book->examTypes->sortByDesc('id');
+        $this->exam_types = $course->book->examTypes
+        ->when($this->exam_period !== 'all', function ($q) {
+            return $q->where('exam_period', $this->exam_period);
+        })
+        ->sortBy('order');
 
         // درصد هر exam type
         foreach ($this->exam_types as $type) {
@@ -169,6 +174,7 @@ class StudentCourseResultList extends Component
 
         // گرفتن دانش‌آموزان کورس
         $students = CourseStudent::with('student')
+            ->where('status','!=','dropped')
             ->whereHas('courseResult')
             ->where('course_id', $course_id)
             ->get();
@@ -300,6 +306,16 @@ class StudentCourseResultList extends Component
 
 
     public function updatedCourseId($value)
+    {
+        if ($value) {
+            $this->loadCourseStudent();
+        } else {
+            $this->students = collect();
+            $this->results = [];
+        }
+    }
+
+    public function updatedExamPeriod($value)
     {
         if ($value) {
             $this->loadCourseStudent();

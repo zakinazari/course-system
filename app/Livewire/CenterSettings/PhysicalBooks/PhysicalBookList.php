@@ -62,7 +62,7 @@ class PhysicalBookList extends Component
         $this->books = Book::all();
     }
 
-    public $name,$physical_book_id, $book_id,$price;
+    public $name,$physical_book_id, $book_id,$price,$minimum_stock;
 
     public function resetInputFields(){
         $this->resetExcept([
@@ -100,6 +100,7 @@ class PhysicalBookList extends Component
             'name' => 'required|string|max:255|unique:physical_books,name,' . $this->physical_book_id.',id',
             'book_id' => 'required',
             'price' => 'required',
+            'minimum_stock' => 'required',
         ];
     }
     // Localized messages
@@ -110,6 +111,7 @@ class PhysicalBookList extends Component
             'name.unique'   => __('label.name.unique'),
             'book_id.required'   => __('label.book.required'),
             'price.required'   => __('label.book.required'),
+            'minimum_stock.required'   => __('label.minimum_stock.required'),
         ];
     }
     
@@ -128,6 +130,7 @@ class PhysicalBookList extends Component
                 'name' => $this->name,
                 'book_id' => $this->book_id,
                 'price' => $this->price,
+                'minimum_stock' => $this->minimum_stock,
             ]);
             // ---start system log-----------
             SystemLog::create([
@@ -153,6 +156,7 @@ class PhysicalBookList extends Component
         $this->name = $physical_book->name;
         $this->book_id = $physical_book->book_id;
         $this->price = $physical_book->price;
+        $this->minimum_stock = $physical_book->minimum_stock;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -170,6 +174,7 @@ class PhysicalBookList extends Component
                 'name' => $this->name,
                 'book_id' => $this->book_id,
                 'price' => $this->price,
+                'minimum_stock' => $this->minimum_stock,
             ]);
 
             // ---start system log-----------

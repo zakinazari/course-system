@@ -430,7 +430,7 @@ document.addEventListener("livewire:initialized", function () {
             width: '100%',
             minimumInputLength: 2,
             ajax: {
-                url: '/search-students' + menuId,
+                url: '/search-students',
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -448,6 +448,7 @@ document.addEventListener("livewire:initialized", function () {
             let data = e.params.data;
             $wire.set('student_id', data.id);
         });
+
     }
 
     initSelect2();

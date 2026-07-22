@@ -93,12 +93,14 @@ class StudentBookFees extends Component
         $this->modalId = 'student-book-fees-addEditModal'.$this->fee_type_name;
         $this->billModalId = 'student-book-fees-billModal'.$this->fee_type_name;
         
-        $active_courses = $this->student->courses()
-            // ->where('status', 'active') 
-            ->get();
-        $book_ids = $active_courses->pluck('book_id')->unique();
+        // $active_courses = $this->student->courses()
+        //     ->where('status', 'active') 
+        //     ->get();
 
-        $this->physical_books = PhysicalBook::whereIn('book_id', $book_ids)->get();
+        // $book_ids = $active_courses->pluck('book_id')->unique();
+
+        // $this->physical_books = PhysicalBook::whereIn('book_id', $book_ids)->get();
+        $this->physical_books = PhysicalBook::all();
     }
 
     public $fee_type_id;                
@@ -133,7 +135,7 @@ class StudentBookFees extends Component
 
     public function render()
     {
-        $book_fees = StudentBookFee::with('book')
+        $book_fees = StudentBookFee::withoutGlobalScopes()->with('book')
             ->where('student_id',$this->student_id)
             ->orderBy('id','desc')
             ->paginate($this->perPage);
@@ -226,6 +228,7 @@ class StudentBookFees extends Component
             // ----------------start transaction-----------------------
             $account_id = Account::where('branch_id', $this->student->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -260,7 +263,7 @@ class StudentBookFees extends Component
             ]);
 
             DB::commit();
-
+            $this->dispatch('reset-select2');
             $this->closeModal();
 
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
@@ -334,6 +337,7 @@ class StudentBookFees extends Component
             // -----------------------------
             $account_id = Account::where('branch_id', $branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -371,7 +375,7 @@ class StudentBookFees extends Component
             $fee->delete();
 
             DB::commit();
-
+            $this->dispatch('reset-select2');
             $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
 
         } catch (\Exception $e) {
@@ -550,6 +554,7 @@ class StudentBookFees extends Component
             // --------start transaction-------------------------
             $account_id = Account::where('branch_id', $book_fee->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {

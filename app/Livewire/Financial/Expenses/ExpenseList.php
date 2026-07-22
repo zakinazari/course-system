@@ -96,7 +96,7 @@ class ExpenseList extends Component
         // -------------start for activing menu in sidebar ----------------------
 
         $this->branches =  Branch::all();
-        $this->categories =  ExpenseCategory::all();
+        $this->categories =  ExpenseCategory::where('type','expense')->get();
         $this->sections =  Section::all();
         $this->units =  Unit::all();
 
@@ -216,7 +216,7 @@ class ExpenseList extends Component
     {
         $rules =  [
             'name' => 'required',
-            'quantity' => 'required|numeric|min:1',
+            'quantity' => 'required|numeric|min:0',
             'unit_price' => 'required|numeric|min:0',
             'category_id' => 'required',
             'section_id' => 'required',
@@ -331,6 +331,7 @@ class ExpenseList extends Component
             // -----------start transaction-----------------------------
             $account_id = Account::where('branch_id', $expense->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -430,6 +431,7 @@ class ExpenseList extends Component
 
             $account_id = Account::where('branch_id', $expense->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type', 'branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -520,6 +522,7 @@ class ExpenseList extends Component
             // -----------start transaction-----------------------------
             $account_id = Account::where('branch_id', $expense->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {

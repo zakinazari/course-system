@@ -45,7 +45,7 @@
                         </select>
                     </div>
                     @endif
-                    <div class="col-md-3" wire:ignore>
+                    <div class="col-md-3 d-flex flex-column" wire:ignore>
                         <label class="form-label">{{ __('label.program') }}</label>
                         <select class="form-select select2" wire:model.lazy="search.program_id" id ="search_program_id">
                            <option value="">{{ __('label.all') }}</option>
@@ -113,6 +113,14 @@
                            @endforeach
                         </select>
                     </div>
+                    <div class="col md-2">
+                        <label for="course_type_id" class="form-label">{{ __('label.exam_period') }}</label>
+                        <select class="form-select @error('type') is-invalid @enderror" wire:model.lazy="exam_period" id ="exam_period">
+                            <option value="midterm"  wire:key="type-key-medterm">{{ __('label.midterm') }}</option>
+                            <option value="final"  wire:key="type-key-final">{{ __('label.final') }}</option>
+                            <option value="all">{{ __('label.all') }}</option>
+                        </select>
+                    </div>
                     <div class="col-md-1">
                         <button type="submit" class="btn btn-primary">
                             {{ __('label.search') }}
@@ -122,9 +130,9 @@
                 </form>
             </div>
             <br>
-            @if(!empty($students))
+            @if(count($students) > 0)
             <div class="table-responsive text-nowrap">
-                <table class="table table-sm align-middle mb-0" >
+                <table class="table table-sm align-middle mb-0 table-bordered" >
                     <thead class="table-dark table-border-bottom-0 small-table">
                         <tr>
                             <th style="width:15px;">
@@ -151,10 +159,6 @@
                                 </th>
                             @endforeach
                            
-                            <th>
-                                
-                               {{ __('label.total_score') }}
-                            </th>
 
                         </tr>
 
@@ -178,20 +182,38 @@
                                         <span class="badge bg-danger w-100 d-block py-2">
                                             Absent
                                         </span>
+                                    
+                                    @elseif($makeup_fee_required[$cs->student_id] ?? false)
+
+                                        <span class="badge bg-warning w-100 d-block py-2">
+                                            Makeup Fee Required
+                                        </span>
+
                                     @else
-                                        <input class="form-control"
+                                        <input class="form-control mark-input"
+                                            
                                             type="number"
                                             min="0"
                                             max="{{ $exam_percentages[$type->id] ?? 100 }}"
+                                            oninput="
+                                                let max = parseFloat(this.max);
+                                                let value = parseFloat(this.value);
+
+                                                if (!isNaN(value) && value > max) {
+                                                    this.value = max;
+                                                }
+
+                                                if (!isNaN(value) && value < 0) {
+                                                    this.value = 0;
+                                                }
+                                            "
                                             step="0.1"
-                                            wire:model.lazy="results.{{ $cs->student_id }}.{{ $type->id }}">
+                                            wire:model="results.{{ $cs->student_id }}.{{ $type->id }}">
                                     @endif
 
                                 </td>
                             @endforeach
-                            <td wire:key="total-{{ $cs->student_id }}">
-                                 {{ number_format(array_sum($results[$cs->student_id] ?? []), 1) }}
-                            </td>
+
                         </tr>
                         @endforeach
                     </tbody>
@@ -199,14 +221,14 @@
                  
             </div>
 
-                    @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
-                    
-                        <div class="d-flex justify-content-end mt-4 mb-3 px-3">
-                            <button type="button" class="btn btn-primary" wire:click="saveMarks">
-                                <i class="bi bi-save me-1"></i> {{ __('label.save') }}
-                            </button>
-                        </div>
-                    @endif
+                @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
+                
+                    <div class="d-flex justify-content-end mt-4 mb-3 px-3">
+                        <button type="button" class="btn btn-primary" wire:click="saveMarks">
+                            <i class="bi bi-save me-1"></i> {{ __('label.save') }}
+                        </button>
+                    </div>
+                @endif
             @endif
         </div>
     </div>
@@ -285,6 +307,8 @@ document.addEventListener("livewire:initialized", function () {
     });
 
 });
+
+
 </script>
 @endscript
 

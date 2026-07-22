@@ -1,10 +1,5 @@
 <style>
-    @font-face {
-        font-family: 'Vazir';
-        src: url({{ public_path('fonts/Vazir-Regular.ttf') }}) format('truetype');
-        font-weight: normal;
-        font-style: normal;
-    }
+
 
     body, table, th, td {
         font-family: 'Vazir', sans-serif;
@@ -38,22 +33,20 @@
         'status' => __('label.status'),
         'branch_id' => __('label.branch'),
         'gender_id' => __('label.gender'),
+        'occupation_id' => __('label.occupation'),
     ];
 @endphp
 
-<table width="100%">
-    <tr>
-        <td width="20%">
-            <img src="{{ public_path('logo.png') }}" width="80">
-        </td>
-        <td width="60%" style="text-align:center;">
-            <p style="font-size:20px; font-weight:bold; margin:0;">{{ __('label.center_name') }}</p>
-
-            <p style="font-size:18px; font-weight:bold; margin:3px 0 0 0;">Student List</p>
-        </td>
-        <td width="20%"></td>
-    </tr>
-</table>
+<div style="text-align:center;margin-bottom:10px;">
+    <img src="{{ getLogo() }}" alt="Logo" style="height:70px;">
+</div>
+<h2 style="text-align:center;">
+    {{ __('label.center_name') }}
+</h2>
+<!-- Title -->
+<h2 style="text-align:center;">
+    Student List
+</h2>
 <table class="data-table"  cellspacing="0" cellpadding="5" width="100%">
     <thead>
         <tr>
@@ -82,6 +75,9 @@
                             {{ $student->branch?->name }}
                         @elseif($field==='gender_id')
                             {{ $student->gender?->name }}
+
+                        @elseif($field==='occupation_id')
+                            {{ $student->occupation?->name }}
                         @else
                             {{ $student->$field }}
                         @endif

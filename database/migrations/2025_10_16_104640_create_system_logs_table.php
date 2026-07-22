@@ -19,6 +19,17 @@ return new class extends Migration
             $table->text('section')->nullable();
             $table->tinyInteger('type_id');
             $table->timestamps();
+
+
+            $table->index('user_id');
+            $table->index('st_id');
+            $table->index('s_id');
+            $table->index('type_id');
+            $table->index('created_at');
+
+            $table->index(['user_id', 'created_at'], 'idx_user_created_at');
+            $table->index('st_id');
+            $table->index('s_id');
         });
     }
 

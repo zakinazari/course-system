@@ -170,6 +170,7 @@ class StudentOtherFees extends Component
             // ----------------start transaction-----------------------
             $account_id = Account::where('branch_id', $this->student->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -287,6 +288,7 @@ class StudentOtherFees extends Component
             // -----------start transaction-------------------
             $account_id = Account::where('branch_id', $fee->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {

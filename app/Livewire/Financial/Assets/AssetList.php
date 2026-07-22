@@ -12,12 +12,14 @@ use App\Models\CenterSettings\Section;
 use App\Models\CenterSettings\Unit;
 use App\Models\Financial\AssetCategory;
 use App\Models\Financial\Asset;
+use App\Models\Financial\AssetMovement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use App\Models\Hr\Employee;
 use Auth;
 use App\Enums\TransactionCategory;
 use App\Enums\Action;
@@ -35,6 +37,7 @@ class AssetList extends Component
     public $active_menu_id;
     public $active_menu;
     public $modalId = 'assets-list-addEditModal';
+    public $assignModalId = 'assing-modal-addEditModal';
     public $table_name='assets';
 
     public $pdfOrientation = 'landscape';
@@ -51,6 +54,7 @@ class AssetList extends Component
         'purchase_date',
         'note',
         'section_id',
+        'status',
     ];
     
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
@@ -64,6 +68,18 @@ class AssetList extends Component
         $this->resetInputFields();
         $this->resetValidation();
         $this->dispatch('open-modal', id: $this->modalId);
+    }
+    public function closeAssignModal(){
+        $this->resetInputFields();
+        $this->resetValidation();
+        $this->dispatch('close-modal', id: $this->assignModalId);
+
+    }
+
+    public function openAssignModal(){
+        $this->resetInputFields();
+        $this->resetValidation();
+        $this->dispatch('open-modal', id: $this->assignModalId);
     }
      // Hook for real time error message
     public function updated($propertyName)
@@ -96,7 +112,7 @@ class AssetList extends Component
         $this->categories =  AssetCategory::all();
         $this->sections =  Section::all();
         $this->units =  Unit::all();
-        
+        $this->assign_to_employees = Employee::all();
         $this->purchase_date = now()->format('Y-m-d');
     }
 
@@ -133,12 +149,17 @@ class AssetList extends Component
             'branch_id' => null,
             'from' => null,
             'to' => null,
+            'status' => null,
         ];
 
     public function render()
     {
         $assets = $this->loadAssets();
-        return view('livewire.financial.assets.asset-list',compact('assets'));
+
+        return view(
+            'livewire.financial.assets.asset-list',
+            compact('assets')
+        );
     }
 
     public function loadAssets(){
@@ -155,6 +176,9 @@ class AssetList extends Component
         })
         ->when(!empty($this->search['branch_id']), function ($query) {
             $query->where('branch_id',$this->search['branch_id']);
+        })
+        ->when(!empty($this->search['status']), function ($query) {
+            $query->where('status',$this->search['status']);
         })
         ->when(!empty($search['from']) && !empty($search['to']), function($q) use ($search){
             $from = Carbon::parse($search['from'])->startOfDay();
@@ -238,7 +262,6 @@ class AssetList extends Component
 
             $asset = Asset::create([
                 'name' => $this->name,
-                'quantity' => $this->quantity,
                 'purchase_price' => $this->purchase_price,
                 'unit_id' => $this->unit_id,
                 'asset_category_id' => $this->category_id,
@@ -252,6 +275,7 @@ class AssetList extends Component
             // -----------start transaction-----------------------------
             $account_id = Account::where('branch_id', $asset->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -324,6 +348,7 @@ class AssetList extends Component
             // -----------start transaction-----------------------------
             $account_id = Account::where('branch_id', $asset->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -411,6 +436,7 @@ class AssetList extends Component
             // -----------start transaction-----------------------------
             $account_id = Account::where('branch_id', $asset->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -442,4 +468,240 @@ class AssetList extends Component
         $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
         }
     }
+
+
+    public $assign_date;
+    public $assign_note;
+    public $assign_to_employees = [];
+    public $assign_to_employee_id;
+    public function selectToAssign($id)
+    {
+        $this->resetValidation(); 
+        $this->asset_id = $id;    
+        $asset = Asset::find($id);
+        $this->name = $asset->name;
+        $this->assign_date = now()->format('Y-m-d');
+        $this->editMode = true;
+        $this->dispatch('open-modal', id: $this->assignModalId);
+    }
+
+    public function updatedAssignToEmployeeId()
+    {
+        $this->resetValidation('assign_to_employee_id');
+    }
+    public function updatedAssignDate()
+    {
+        $this->resetValidation('assign_to_employee_id');
+    }
+
+    public function assign()
+    {
+        if (!edit(Auth::user()->role_ids, $this->active_menu_id)) {
+            return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
+        }
+
+        $this->validate([
+            'assign_to_employee_id'   => 'required|exists:employees,id',
+      
+            'assign_date' => 'required|date',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            $asset = Asset::findOrFail($this->asset_id);
+
+            $last_movement = AssetMovement::where('asset_id', $asset->id)
+            ->latest('id')
+            ->first();
+
+            if ($last_movement?->type === 'assigned') {
+
+                DB::rollBack();
+
+                return $this->dispatch(
+                    'alert',
+                    type: 'warning',
+                    message: __('label.asset_already_assigned')
+                );
+            }
+
+            AssetMovement::create([
+                'asset_id'      => $asset->id,
+                'employee_id'   => $this->assign_to_employee_id,
+                'section_id'    => $asset->section_id,
+                'branch_id'     => $asset->branch_id,
+                'type'          => 'assigned',
+                'movement_date' => $this->assign_date,
+                'note'          => $this->assign_note,
+                'user_id'       => Auth::id(),
+            ]);
+
+            // اگر در جدول assets فیلد status داری
+            $asset->update([
+                'status' => 'assigned'
+            ]);
+
+            SystemLog::create([
+                's_id' => $this->assign_to_employee_id,
+                'user_id' => Auth::id(),
+                'section' => __('label.asset_assignment') . ' (' . $asset->name . ' ID:' . $asset->id . ')',
+                'type_id' => 2,
+            ]);
+
+            DB::commit();
+
+            $this->closeAssignModal();
+
+            $this->dispatch(
+                'alert',
+                type: 'success',
+                message: __('label.successfully_done')
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->dispatch(
+                'alert',
+                type: 'error',
+                message: $e->getMessage()
+            );
+        }
+    }
+
+
+
+    // ---------asignments
+
+    public $selected_asset_id;
+
+    public function showAssignments($asset_id)
+    {
+
+        $this->selected_asset_id = $asset_id;
+
+        $this->dispatch('open-modal', id: 'assignmentModal');
+    }
+
+    public function getAssignedAssetProperty()
+    {
+        $query = AssetMovement::with('asset','employee:id,name,last_name,employee_code')
+            ->where('asset_id', $this->selected_asset_id)
+            ->orderBy('created_at','desc');
+
+        $paginated = $query->paginate(5, ['*'], 'assignmentPage');
+
+        $lastId = AssetMovement::where('asset_id', $this->selected_asset_id)
+            ->latest('id')
+            ->value('id');
+
+        foreach ($paginated as $item) {
+            $item->is_last = ($item->id == $lastId);
+        }
+
+        return $paginated;
+    }
+
+
+    public $movement_id;
+    public $return_date;
+    public $return_note;
+    public function assetReturn($id)
+    {
+        $this->resetValidation(); 
+
+        $asset_movement = AssetMovement::findOrFail($id);
+
+        $this->movement_id = $asset_movement->id;
+        $this->return_date = now()->format('Y-m-d');
+      
+        $this->editMode = true;
+
+        $this->dispatch('open-modal', id: 'assetReturnModal');
+    }
+
+    public function assetReturnStore()
+    {
+        if (!edit(Auth::user()->role_ids, $this->active_menu_id)) {
+            return $this->dispatch(
+                'alert',
+                type: 'error',
+                message: __('label.permission_message')
+            );
+        }
+
+        DB::beginTransaction();
+
+        try {
+
+            $assigned = AssetMovement::findOrFail($this->movement_id);
+
+            $last_movement = AssetMovement::where('asset_id', $assigned->asset_id)
+                ->latest('id')
+                ->first();
+
+            if ($last_movement && $last_movement->type === 'returned') {
+
+                DB::rollBack();
+
+                return $this->dispatch(
+                    'alert',
+                    type: 'warning',
+                    message: __('label.asset_already_returned')
+                );
+            }
+
+            AssetMovement::create([
+                'asset_id'      => $assigned->asset_id,
+                'employee_id'   => $assigned->employee_id, 
+                'section_id'    => $assigned->section_id,
+                'branch_id'     => $assigned->branch_id,
+                'type'          => 'returned',
+                'movement_date' => $this->return_date,
+                'note'          => $this->return_note,
+                'user_id'       => Auth::id(),
+            ]);
+
+            $asset = Asset::findOrFail($assigned->asset_id);
+
+            $asset->update([
+                'status' => 'warehouse'
+            ]);
+
+            SystemLog::create([
+                's_id' => $assigned->employee_id,
+                'user_id' => Auth::id(),
+                'section' => __('label.asset_returned') . ' (' . $asset->name . ' ID:' . $asset->id . ')',
+                'type_id' => 2,
+            ]);
+
+            DB::commit();
+
+            $this->movement_id = null;
+            $this->return_date = null;
+            $this->return_note = null;
+
+            $this->dispatch('close-modal', id: 'assetReturnModal');
+
+            $this->dispatch(
+                'alert',
+                type: 'success',
+                message: __('label.successfully_done')
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->dispatch(    
+                'alert',
+                type: 'error',
+                message: $e->getMessage()
+            );
+        }
+    }
+    
 }

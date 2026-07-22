@@ -218,13 +218,15 @@
                                  <textarea class="form-control"
                                         rows="2"
                                         wire:model="unit_note"
-                                        placeholder="Unite note (optional)">
+                                        placeholder="Unit note (optional)">
                                 </textarea>
                             </div>
 
                             {{-- ================= RIGHT SIDE (TEACHER) ================= --}}
                             <div class="col-md-6">
-
+                                @php
+                                    $leave = $teacher_leave;
+                                @endphp
                                 <div class="fw-bold mb-2">
                                     Teacher:
                                     {{ $this->course?->teacher?->name }}
@@ -239,8 +241,8 @@
                                             <input class="form-check-input"
                                                 type="radio"
                                                 wire:model="teacher_status"
-                                                value="present">
-                                            <span class="badge bg-success">Present</span>
+                                                value="present" @disabled($leave)>
+                                            <span class="badge bg-success">Pr</span>
                                         </label>
                                     </div>
 
@@ -249,8 +251,17 @@
                                             <input class="form-check-input"
                                                 type="radio"
                                                 wire:model="teacher_status"
-                                                value="absent">
-                                            <span class="badge bg-danger">Absent</span>
+                                                value="absent" @disabled($leave)>
+                                            <span class="badge bg-danger">Ab</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-danger">
+                                        <label class="d-flex align-items-center gap-1">
+                                            <input class="form-check-input"
+                                                type="radio"
+                                                wire:model="teacher_status"
+                                                value="excused" @disabled($leave)>
+                                            <span class="badge bg-info">Exc</span>
                                         </label>
                                     </div>
 
@@ -259,10 +270,37 @@
                                             <input class="form-check-input"
                                                 type="radio"
                                                 wire:model="teacher_status"
-                                                value="late">
-                                            <span class="badge bg-warning">Late</span>
+                                                value="late" @disabled($leave)>
+                                            <span class="badge bg-warning">Lt</span>
                                         </label>
                                     </div>
+
+                                    @if($leave)
+
+                                        <div class="form-check form-check-primary">
+
+                                            <label class="d-flex align-items-center gap-1">
+
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    wire:model="teacher_status"
+                                                    value="leave"
+                                                    checked
+                                                    disabled
+                                                >
+
+                                                <span class="badge bg-primary">
+
+                                                    {{ $leave->leaveType?->name }}
+
+                                                </span>
+
+                                            </label>
+
+                                        </div>
+
+                                        @endif
 
                                 </div>
 
@@ -281,154 +319,193 @@
                 </div>
                 @endif
                 <!-- ==============end teacher attendance--------------------------------- -->
-            <div class="table-responsive text-nowrap">
-                <table class="table">
+                <div class="table-responsive">
+              
+                <table class="table table-sm table-bordered align-middle"
+                    style="font-size:13px; width:100%; table-layout:auto;">
+
                     <thead class="table-dark">
                         <tr>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="no">
-                                {{ __('label.NO') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="payment_status">
+
+                            <th style="width:45px;">NO</th>
+
+                            <th style="width:130px;">
                                 {{ __('label.payment_status') }}
                             </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="student_code">
-                                {{ __('label.student_code') }}
-                            </th>
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="name">
-                                {{ __('label.name') }}
-                            </th>
 
+                            <th>{{ __('label.student_code') }}</th>
+                            <th>{{ __('label.name') }}</th>
+                            <th>{{ __('label.father_name') }}</th>
 
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_name">
-                                {{ __('label.father_name') }}
-                            </th>
-
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
+                            <th style="min-width:170px;">
                                 {{ __('label.status') }}
                             </th>
-                           
-                            <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="absent_days">
+
+                            <th style="width:90px;">
                                 {{ __('label.absent_days') }}
                             </th>
-                             <th>
-                                
+
+                            <th style="min-width:230px;">
+                                {{ __('label.comment') }}
+                            </th>
+
+                            <th style="width:100px;">
                                 {{ __('label.date') }}
                             </th>
-                        </tr>
 
+                        </tr>
                     </thead>
-                    
-                    <tbody class="table-border-bottom-0">
-                        @foreach($students as $i => $cs)
+
+                    <tbody>
+
+                    @foreach($students as $i => $cs)
+
+                        @php
+                            $status = $attendances[$cs->student_id]['status'] ?? null;
+
+                            $absent = $cs->absent_days ?? 0;
+                            $limit = $cs->course?->book?->drop_days ?? 0;
+
+                            $textClass = '';
+
+                            if ($limit > 0 && $absent >= $limit) {
+                                $textClass = 'text-danger fw-bold';
+                            } elseif ($limit > 0 && $absent == ($limit - 1)) {
+                                $textClass = 'text-warning fw-bold';
+                            }
+                        @endphp
+
                         <tr wire:key="student-{{ $cs->student_id }}">
+
                             <td>{{ $i + 1 }}</td>
-                             <td >
+
+                            {{-- PAYMENT --}}
+                            <td>
                                 @if($cs->payment_status === 'not_registered')
-                                    <span class="text-warning">Not Registered</span>
+                                    <span class="text-warning">Not Reg</span>
                                 @elseif($cs->payment_status === 'paid')
-                                    <span class="text-success">Fully Paid</span>
+                                    <span class="text-success">Paid</span>
                                 @else
                                     <span class="text-danger">
-                                       {{ __('label.due') }}: {{ number_format($cs->remaining_amount) }} 
+                                        Due {{ number_format($cs->remaining_amount) }}
                                     </span>
                                 @endif
                             </td>
+
                             <td>
-                                @php
-                                $absent = $cs->absent_days ?? 0;
-                                    $limit = $cs->course?->book?->drop_days ?? 0;
-                                @endphp
-
-                                @if($absent >= $limit && $limit > 0)
-                                    <span class="text-danger fw-bold">
-                                        {{ $cs->student?->student_code }}
-                                    </span>
-
-                                @elseif($limit > 0 && $absent == ($limit - 1))
-                                    <span class="text-warning fw-bold">
-                                        {{ $cs->student?->student_code }}
-                                    </span>
-
-                                @else
+                                <span class="{{ $textClass }}">
                                     {{ $cs->student?->student_code }}
-                                @endif
+                                </span>
                             </td>
+
                             <td>
-                                @if($absent >= $limit && $limit > 0)
-                                    <span class="text-danger fw-bold">
-                                        {{ $cs->student?->name }}
-                                    </span>
-                                @elseif($limit > 0 && $absent == ($limit - 1))
-                                    <span class="text-warning fw-bold">
-                                        {{ $cs->student?->name }}
-                                    </span>
-                                @else
+                                <span class="{{ $textClass }}">
                                     {{ $cs->student?->name }}
-                                @endif
-
+                                </span>
                             </td>
-                        
-                            <td>
-                                @if($absent >= $limit && $limit > 0)
-                                    <span class="text-danger fw-bold">
-                                        {{ $cs->student?->father_name }}
-                                    </span>
-                                @elseif($limit > 0 && $absent == ($limit - 1))
-                                    <span class="text-warning fw-bold">
-                                        {{ $cs->student?->father_name }}
-                                    </span>
 
-                                @else
+                            <td>
+                                <span class="{{ $textClass }}">
                                     {{ $cs->student?->father_name }}
-                                @endif
+                                </span>
                             </td>
+
+                            {{-- STATUS --}}
+                            <td>
+
                             @if(Auth::user()->isDeveloper() || Auth::user()->isAdmin() || ($attendance_date === now()->format('Y-m-d')))
-                            <td>
-                                
-                                <div class="d-flex gap-2">
-                                    <div class="form-check form-check-success">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="present"> <span class="badge bg-success"> Present </span> </label>
-                                    </div>
-                                    <div class="form-check form-check-danger">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="absent" > <span class="badge bg-danger"> Absent </span></label>
-                                    </div>
-                                    <div class="form-check form-check-warning">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="late"> <span class="badge bg-warning"> Late </span></label>
-                                    </div>
-                                    <div class="form-check form-check-info">
-                                    <label><input class="form-check-input" type="radio" wire:model="attendances.{{ $cs->student_id }}" value="excused" > <span class="badge bg-info"> Excused </span></label>
+
+                                <div class="d-flex gap-2 flex-wrap">
+
+                                    <label class="d-flex align-items-center gap-1">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            wire:model="attendances.{{ $cs->student_id }}.status"
+                                            value="present">
+
+                                        <span class="badge bg-success"
+                                            style="font-size:11px;padding:4px 8px;">
+                                            pr
+                                        </span>
+                                    </label>
+
+                                    <label class="d-flex align-items-center gap-1">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            wire:model="attendances.{{ $cs->student_id }}.status"
+                                            value="absent">
+
+                                        <span class="badge bg-danger"
+                                            style="font-size:11px;padding:4px 8px;">
+                                            ab
+                                        </span>
+                                    </label>
+
+                                    <label class="d-flex align-items-center gap-1">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            wire:model="attendances.{{ $cs->student_id }}.status"
+                                            value="late">
+
+                                        <span class="badge bg-warning text-dark"
+                                            style="font-size:11px;padding:4px 8px;">
+                                            lt
+                                        </span>
+                                    </label>
+
+                                    <label class="d-flex align-items-center gap-1">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            wire:model="attendances.{{ $cs->student_id }}.status"
+                                            value="excused">
+
+                                        <span class="badge bg-info"
+                                            style="font-size:11px;padding:4px 8px;">
+                                            exc
+                                        </span>
+                                    </label>
+
                                 </div>
-                          
-                            </td>
-                         
-                            <td>
-                                @if($absent >= $limit && $limit > 0)
-                                    <span class="text-danger fw-bold">
-                                       {{ $cs?->absent_days > 0 ? $cs?->absent_days: ''}}
-                                    </span>
-                                @elseif($limit > 0 && $absent == ($limit - 1))
-                                    <span class="text-warning fw-bold">
-                                        {{ $cs?->absent_days > 0 ? $cs?->absent_days: ''}}
-                                    </span>
 
-                                @else
-                                    {{ $cs?->absent_days > 0 ? $cs?->absent_days: ''}}
-                                @endif
-
-                            </td>
-                              <td>@if(!empty($cs?->attendance_date)) {{ $cs?->attendance_date?->format('Y/m/d') }} @endif</td>
                             @endif
+
+                            </td>
+
+                            {{-- ABSENT DAYS --}}
+                            <td>
+                                <span class="{{ $textClass }}">
+                                    {{ $cs->absent_days > 0 ? $cs->absent_days : '' }}
+                                </span>
+                            </td>
+
+                            {{-- COMMENT --}}
+                            <td>
+                                <textarea
+                                    class="form-control form-control-sm"
+                                    rows="2"
+                                    style="font-size:13px;"
+                                    wire:model="attendances.{{ $cs->student_id }}.note">
+                                </textarea>
+                            </td>
+
+                            {{-- DATE --}}
+                            <td>
+                                {{ $cs?->attendance_date?->format('Y/m/d') }}
+                            </td>
+
                         </tr>
-                        @endforeach
+
+                    @endforeach
+
                     </tbody>
+
                 </table>
+
+
             </div>
              @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
                   @if(Auth::user()->isDeveloper() || Auth::user()->isAdmin() || ($attendance_date === now()->format('Y-m-d')))
@@ -439,6 +516,14 @@
                     </div>
                     @endif
                 @endif
+
+             @else
+
+                <div class="alert alert-warning text-center mt-3">
+                    🚫 No students found in this course.
+                </div>
+
+    
             @endif
         </div>
     </div>

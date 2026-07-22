@@ -135,6 +135,15 @@
                             <th>
                                 {{ __('label.course') }}
                             </th>
+
+                            <th>
+                                {{ __('label.installments') }}
+                            </th>
+                            
+                            <th>
+                                {{ __('label.status') }}
+                            </th>
+
                             <th>
                                 {{ __('label.fee_amount') }}
                             </th>
@@ -146,6 +155,9 @@
                                 {{ __('label.g_discount_amount') }}
                             </th>
                             <th>
+                                {{ __('label.special_discount_amount') }}
+                            </th>
+                            <th>
                                 {{ __('label.total_amount') }}
                             </th>
                             <th>
@@ -154,16 +166,11 @@
                             <th>
                                 {{ __('label.remaining_amount') }}
                             </th>
-                          
-                            <th>
-                                {{ __('label.status') }}
-                            </th>
-                            <th>
-                                {{ __('label.installments') }}
-                            </th>
+                           
                             <th>
                                 {{ __('label.actions') }}
                             </th>
+                            
                         </tr>
 
                     </thead>
@@ -172,14 +179,15 @@
                         <tr>
                             <td>{{ ($course_fees->currentPage() - 1) * $course_fees->perPage() + $i + 1 }}</td>
                             <td>{{ $fee->course?->name }}</td>
-                            <td>{{ $fee->fee_amount }}</td>
-                            <td>{{ $fee->discount_value }} @if($fee->discount_type=='percentage') % @endif</td>
-                            <td>{{ $fee->g_discount_amount }}</td>
-                            <td>{{ $fee->total_amount }}</td>
-                            <td>{{ $fee->paid_amount }}</td>
-                            <td>{{ $fee->remaining_amount }}</td>
-
                             <td>
+                                <a class="btn btn-success btn-icon rounded-pill"
+                                href="javascript:void(0);"
+                                wire:click="showInstallments({{ $fee->id }})">
+                                    <i class="bx bx-money text-white"></i>
+                                </a>
+                            </td>
+
+                              <td>
                                 @if($fee->status=='unpaid')
                                 <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($fee->status) }}</span>
                                 @elseif($fee->status=='partial')
@@ -188,13 +196,24 @@
                                 <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($fee->status) }}</span>
                                 @endif
                             </td>
-                            <td>
-                                <a class="btn btn-success btn-icon rounded-pill"
-                                href="javascript:void(0);"
-                                wire:click="showInstallments({{ $fee->id }})">
-                                    <i class="bx bx-money text-white"></i>
-                                </a>
+
+                            <td>{{ $fee->fee_amount }}</td>
+                            <td>{{ $fee->discount_value }} @if($fee->discount_type=='percentage') % @endif</td>
+                            <td>{{ $fee->g_discount_amount }}</td>
+                            <td>{{ $fee->special_discount_amount }}
+                             @if($fee->special_discount_status=='failed')
+                                <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($fee->special_discount_status) }}</span>
+                                @elseif($fee->special_discount_status=='droped')
+                                <span class="badge bg-label-secondary me-1" style="font-size:10px;">{{ ucfirst($fee->special_discount_status) }}</span>
+                                @elseif($fee->special_discount_status=='makeup')
+                                <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ ucfirst($fee->special_discount_status) }}</span>
+                                @endif
+           
                             </td>
+                            <td>{{ $fee->total_amount }}</td>
+                            <td>{{ $fee->paid_amount }}</td>
+                            <td>{{ $fee->remaining_amount }}</td>
+
                             <td>
                                 
                                 <div class="dropdown position-static">
@@ -203,8 +222,8 @@
                                     </button>
                                     <div class="dropdown-menu">
                                         @if(edit(Auth::user()->role_ids,$active_menu_id))
-                                            <!-- <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $fee->id }})"
-                                            ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a> -->
+                                            <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $fee->id }})"
+                                            ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
                                         @if(delete(Auth::user()->role_ids,$active_menu_id))
                                             @if(Auth::user()->isAdmin() || Auth::user()->isDeveloper())
@@ -237,18 +256,73 @@
                 
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
+                        @if(!$this->editMode)
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.student_course') }}</label>
                                 <select  class="form-select @error('course_id') is-invalid @enderror" wire:model.lazy ="course_id">
                                     <option value="">{{ __('label.select') }}</option>
                                     @foreach($student_courses as $course)
-                                    <option value="{{ $course->id }}">{{ $course->name }}</option>
+                                    <option value="{{ $course->id }}">{{ $course->name }} </option>
                                     @endforeach
                                 </select>
                                 @error('course_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                        @endif
+                        @if($special_discount_status)
+
+                        <div class="mt-2">
+
+                            @if($specialDiscount)
+
+                                <div class="alert alert-success py-2 px-3 mb-0 small">
+                                    <i class="bx bx-check-circle me-1"></i>
+
+                                    <strong>
+                                        {{ ucfirst($special_discount_status) }}
+                                    </strong>
+
+                                    student is eligible for a special discount based on a previous enrollment in the same program and book.
+
+                                    <div class="mt-1 text-muted">
+                                        {{ $durationDays }} / {{ $discountLimit }} days
+                                    </div>
+                                </div>
+
+                            @else
+
+                                <div class="alert alert-warning py-2 px-3 mb-0 small">
+                                    <i class="bx bx-time-five me-1"></i>
+
+                                    <strong>
+                                        {{ ucfirst($special_discount_status) }}
+                                    </strong>
+
+                                    student found in the same program and book, but no special discount is currently available.
+
+                                    <div class="mt-1 text-muted">
+
+                                        @if($discountLimit)
+
+                                            Discount period expired
+                                            ({{ $durationDays }} / {{ $discountLimit }} days)
+
+                                        @else
+
+                                            No discount rule defined for this status
+
+                                        @endif
+
+                                    </div>
+                                </div>
+
+                            @endif
+
+                        </div>
+
+                    @endif
+   
                         
                         <!-- ---------physical Books------------------ -->
                         @if(count($selected_physical_books) > 0)
@@ -300,7 +374,13 @@
                                             </span>
                                         </strong>
                                     </div>
-
+                                    <div class="row">
+                                        <div class="col mb-3">
+                                            <label for="nameBasic" class="form-label" >{{ __('label.exemption_reason') }} </label>
+                                            <textarea type="text" id="nameBasic" class="form-control @error('exemption_reason') is-invalid @enderror" wire:model.lazy="exemption_reason"></textarea>
+                                            @error('exemption_reason') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             @endif
@@ -338,7 +418,7 @@
                                     @endif
                                 </label>
                                 <div wire:ignore>
-                                    <select  class="form-select select2 @error('discount_provider_id') is-invalid @enderror" wire:model.lazy="discount_provider_id" id="discount_provider_id">
+                                    <select  class="form-select @error('discount_provider_id') is-invalid @enderror" wire:model.lazy="discount_provider_id">
                                         <option value="">{{ __('label.select') }}</option>
                                         @foreach($discount_providers as $provider)
                                         <option value="{{ $provider->id }}">{{ $provider->name }} {{ $provider->last_name }}</option>
@@ -395,6 +475,15 @@
                                  @error('g_discount_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                             @endif
+                            @if(!empty($special_discount_amount))
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.special_discount_amount') }}</label>
+                                <div class="form-control bg-light">
+                                    {{ $special_discount_amount }}&nbsp;
+                                </div>
+                                 @error('special_discount_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                            @endif
                             <div class="col mb-3">
                                 <label class="form-label">{{ __('label.total_amount') }}</label>
                                 <div class="form-control bg-light">
@@ -403,7 +492,7 @@
                                  @error('total_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                         </div>
-
+                         @if(!$this->editMode)
                         <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.payment_type') }}</label>
@@ -422,6 +511,7 @@
                                 </div>
                             @endif
                         </div>
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
@@ -443,7 +533,7 @@
                 </div>
                 
                 <div class="modal-body">
-                    @if($course_fee?->payment_type=='installment')
+                    @if($course_fee?->payment_type=='installment' && add(Auth::user()->role_ids,$active_menu_id))
                      <div class="text-end">
                         <button
                             class="btn btn-primary btn-sm mb-2"
@@ -457,6 +547,10 @@
                             <tr>
                                 <th>
                                     {{ __('label.NO') }}
+                                </th>
+
+                                <th>
+                                    {{ __('label.amount') }}
                                 </th>
                                 <th>
                                     {{ __('label.amount') }}
@@ -509,7 +603,7 @@
                                 @elseif($installment->status == 'paid')
 
                                 <!-- <span class="badge bg-success">{{ __('label.paid') }}</span> -->
-                                    <button class="btn btn-primary btn-sm" wire:click="loadInstallmentForPrint({{ $installment->id }})">
+                                <button class="btn btn-primary btn-sm" wire:click="loadInstallmentForPrint({{ $installment->id }})">
                                     <i class="bx bx-printer"></i> {{ __('label.print') }}
                                 </button>
                                 @endif
@@ -589,7 +683,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">{{ __('label.pay') }}</h5>
+                    <h5 class="modal-title">{{ __('label.remaining_amount') }}: <span style="color:red;"> {{ $show_remaining_amount }}</span> </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -597,7 +691,7 @@
                     <div class="modal-body">
 
                         <div class="mb-3">
-                            <label class="form-label">{{ __('label.amount') }} <span style="color:red;">*</span></label>
+                            <label class="form-label">{{ __('label.amount') }} <span style="color:red;">*</span> </label>
                             <input type="text" class="form-control @error('install_amount') is-invalid @enderror" wire:model.lazy="install_amount"/>
                              @error('install_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>

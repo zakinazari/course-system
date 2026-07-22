@@ -283,17 +283,9 @@ class SpecialCourseList extends Component
             ], false);
             
             if($this->placement_test_id){// placement student
-                PlacementTest::find($this->placement_test_id)->update([
-                    'status'=>'enrolled',
-                ]);
+                PlacementTest::find($this->placement_test_id)->delete();
             } 
-            
-            if($this->waiting_list_id){// Waiting_list student
-                CourseWaitingList::find($this->waiting_list_id)->update([
-                    'status'=>'enrolled',
-                ]);
-            } 
-
+        
             
             // --------active course-----------
             $course->status= 'ongoing';
@@ -377,7 +369,7 @@ class SpecialCourseList extends Component
                     'shift_id' => $this->shift_id,
                 ],
                 [
-                    'status' => 'waiting',
+                    'status' => 'placement',
                     'user_id' => Auth::Id(),
                 ]
             );

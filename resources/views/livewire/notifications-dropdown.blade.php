@@ -38,7 +38,7 @@
 
                             <div class="flex-shrink-0 me-3">
                                 <div class="avatar">
-                                    <span class="avatar-initial rounded-circle bg-label-primary">
+                                    <span class="avatar-initial rounded-circle bg-label-warning">
                                         <i class="bx bx-calendar"></i>
                                     </span>
                                 </div>
@@ -48,15 +48,15 @@
                                  wire:click="readNotification('{{ $notification->id }}')"
                                  style="cursor:pointer">
 
-                                <h6 class="mb-1">
+                               <h6 class="mb-1 text-warning" style="font-size: 0.9rem;">
                                     {{ $notification->data['title'] }}
                                 </h6>
 
-                                <p class="mb-0">
+                                <p class="mb-0 " style="font-size: 0.82rem;">
                                     {{ $notification->data['message'] }}
                                 </p>
 
-                                <small class="text-muted">
+                                <small class="text-muted" style="font-size: 0.72rem;">
                                     {{ $notification->created_at->diffForHumans() }}
                                 </small>
                             </div>

@@ -33,10 +33,16 @@ return new class extends Migration
 
             $table->date('purchase_date');
 
+            $table->enum('status', [
+                'warehouse',
+                'assigned'
+            ])->default('warehouse');
+            
             $table->text('note')->nullable();
 
             $table->foreignId('user_id')->constrained();
 
+        
             $table->timestamps();
 
             $table->index(['branch_id', 'purchase_date']);

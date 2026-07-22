@@ -25,6 +25,9 @@ return new class extends Migration
             $table->decimal('daily_rate_snapshot', 10, 2);
             $table->integer('attendance_count')->default(0);
 
+            $table->decimal('unpaid_leave_days', 5, 2)->default(0);
+            $table->decimal('payable_days', 5, 2)->default(0);
+
             $table->decimal('total_salary', 10, 2)->default(0);
 
             $table->timestamps();

@@ -148,6 +148,10 @@
                                     <span class="badge bg-label-danger me-1">
                                         {{ $inventory->quantity }}
                                     </span>
+                                @elseif($inventory->quantity <= $inventory->book->minimum_stock)
+                                    <span class="badge bg-label-warning me-1">
+                                        {{ $inventory->quantity }}
+                                    </span>
                                 @else
                                     <span class="badge bg-label-success me-1">
                                         {{ $inventory->quantity }}
@@ -213,3 +217,21 @@ document.addEventListener("livewire:initialized", function () {
 });
 </script>
 @endscript
+
+<script>
+document.addEventListener('livewire:initialized', () => {
+
+    Livewire.on('clear-url', () => {
+
+        const url = new URL(window.location);
+
+        url.searchParams.delete('inventory');
+        url.searchParams.delete('book_id');
+        url.searchParams.delete('warehouse_id');
+
+        window.history.replaceState({}, '', url);
+
+    });
+
+});
+</script>

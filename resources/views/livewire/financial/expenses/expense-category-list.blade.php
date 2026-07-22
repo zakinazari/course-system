@@ -127,6 +127,26 @@
                                 @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                        @if($editMode)
+                        <div class="row">
+                            <div class="col mb-3">
+
+                                <label class="form-label"> {{ __('label.type') }} <span style="color:red;">*</span></label>
+
+                                <select class="form-select" wire:model.live="type">
+
+                                    <option value="expense">{{ __('label.expense') }}</option>
+                                    <option value="permanent_payroll">{{ __('label.permanent_payroll') }}</option>
+
+                                    <option value="temporary_payroll">{{ __('label.temporary_payroll') }}</option>
+
+                                </select>
+                                    @error('contract_type') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+
+                            </div>
+                        </div>
+
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>

@@ -119,7 +119,7 @@ class CourseFeesReport extends Component
     public function loadFeesPayment(){
 
         $search = $this->search;
-        $this->fees = StudentCourseFeePayment::with('studentCourseFee','studentCourseFee.branch','studentCourseFee.course')
+        $this->fees = StudentCourseFeePayment::with('studentCourseFee','studentCourseFee.branch','studentCourseFee.course','studentCourseFee.student')
             ->when(!empty($search['branch_id']), function ($query) use ($search) {
                 $query->whereHas('studentCourseFee', fn($q) => $q->where('branch_id', $search['branch_id']));
             })
@@ -148,7 +148,6 @@ class CourseFeesReport extends Component
 
     public function exportPdf()
     {
-        
         $pdf = Pdf::loadView(
             'livewire.financial.student-fees.reports.course-fees-report-pdf',
             [
@@ -174,7 +173,6 @@ class CourseFeesReport extends Component
         ];
         return $rules;
     }
-
 
     public function updatedSearch()
     {

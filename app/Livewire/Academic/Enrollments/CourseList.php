@@ -73,6 +73,10 @@ class CourseList extends Component
     public $teachers=[];
     public $classrooms=[];
 
+
+    public $action;
+    public $exam_type;
+    public $course_ids;
     public function mount($active_menu_id = null)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -96,6 +100,10 @@ class CourseList extends Component
             $this->loadClassroomAndTeacher($this->branch_id);
         }
 
+        $this->action = request('action');
+        $this->exam_type = request('exam_type');
+        $this->course_ids = request('courses');
+        
     }
 
       public $name,$course_id,$program_id,$book_id,$course_type_id,$total_teaching_days,$shift_id,$start_time,$end_time,$start_date,$end_date,
@@ -130,8 +138,22 @@ class CourseList extends Component
             'course_type_id' => null,
             'shift_id' => null,
             'teacher_id' => null,
+            'status' => null,
         ];
-        
+
+    public function clearFilter()
+    {
+        $this->action = null;
+        $this->exam_type = null;
+        $this->course_ids = null;
+
+        $this->resetPage();
+
+        $this->js(
+            "history.replaceState({}, '', window.location.pathname)"
+        );
+    }
+
     public function render()
     {
         $today = now()->toDateString();
@@ -177,6 +199,69 @@ class CourseList extends Component
             ->when(!empty($this->search['teacher_id']), function ($query) {
                 $query->where('teacher_id',$this->search['teacher_id']);
             })
+            ->when(!empty($this->search['status']), function ($query) {
+                $query->where('status',$this->search['status']);
+            })
+            ->when(
+                $this->action === 'upcoming'
+                && ! empty($this->course_ids),
+                function ($query) {
+
+                    $query->whereIn(
+                        'id',
+                        explode(',', $this->course_ids)
+                    );
+
+                }
+            )
+            ->when(
+                $this->action === 'exam_tomorrow'
+                && ! empty($this->course_ids),
+                function ($query) {
+
+                    $query->whereIn(
+                        'id',
+                        explode(',', $this->course_ids)
+                    );
+
+                }
+            )
+
+            ->when(
+                $this->action === 'missing-attendance' && !empty($this->course_ids),
+                function ($query) {
+
+                    $query->whereIn(
+                        'id',
+                        explode(',', $this->course_ids)
+                    );
+
+                }
+            )
+            ->when(
+                $this->action === 'missing_exam_attendance'
+                && ! empty($this->course_ids),
+                function ($query) {
+
+                    $query->whereIn(
+                        'id',
+                        explode(',', $this->course_ids)
+                    );
+                }
+            )
+            ->when(
+                $this->action === 'course_unit_fallback'
+                && !empty($this->course_ids),
+
+                function ($query) {
+
+                    $query->whereIn(
+                        'id',
+                        explode(',', $this->course_ids)
+                    );
+
+                }
+            )
             ->orderBy('id','desc')
             ->paginate($this->perPage);
 

@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 class NewMeetingNotification extends Notification
 {
      use Queueable;
@@ -21,7 +22,7 @@ class NewMeetingNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; 
+        return ['database', 'broadcast'];
     }
 
     public function toDatabase($notifiable)
@@ -35,4 +36,10 @@ class NewMeetingNotification extends Notification
         ];
     }
 
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage(
+            $this->toDatabase($notifiable)
+        );
+    }
 }

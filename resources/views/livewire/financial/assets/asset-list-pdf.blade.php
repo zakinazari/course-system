@@ -38,6 +38,7 @@
         'note' => __('label.note'),
         'section_id' => __('label.section'),
         'branch_id' => __('label.branch'),
+        'status' => __('label.status'),
     ];
 @endphp
 

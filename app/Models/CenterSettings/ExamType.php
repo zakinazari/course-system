@@ -8,6 +8,8 @@ class ExamType extends Model
 {
     protected $fillable = [
         'name',
+        'exam_period',
+        'order',
     ];
 
     public function books()

@@ -20,6 +20,7 @@ class StudentBookFee extends Model
         'price',
         'payment_date',
         'notes',
+        'reason',
         'user_id',
         'processed_by'
     ];
@@ -42,6 +43,11 @@ class StudentBookFee extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
      // شرط شعبه، سکوپ

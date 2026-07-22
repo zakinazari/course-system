@@ -96,6 +96,7 @@ class ExternalMoneyIn extends Component
     }
     public $search = [
             'account_id' => null,
+            'type' => null,
         ];
 
     public function render()

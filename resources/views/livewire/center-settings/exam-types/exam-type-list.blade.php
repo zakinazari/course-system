@@ -73,6 +73,8 @@
                         <tr>
                             <th>{{ __('label.NO') }}</th>
                             <th>{{ __('label.name') }}</th>
+                            <th>{{ __('label.exam_period') }}</th>
+                            <th>{{ __('label.order') }}</th>
                             <th>{{ __('label.actions') }}</th>
                         </tr>
                     </thead>
@@ -81,6 +83,8 @@
                         <tr>
                             <td>{{ ($exam_types->currentPage() - 1) * $exam_types->perPage() + $i + 1 }}</td>
                             <td>{{ $type->name }}</td>
+                            <td>{{ ucfirst($type->exam_period) }}</td>
+                            <td>{{ $type->order }}</td>
                             <td>
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -126,7 +130,25 @@
                                 @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
-
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="course_type_id" class="form-label">{{ __('label.exam_period') }} <span style="color:red;">*</span></label>
+                                <select class="form-select @error('type') is-invalid @enderror" wire:model.lazy="exam_period" id ="exam_period">
+                                 <option value="">{{ __('label.select') }}</option>
+                                        <option value="midterm"  wire:key="type-key-medterm">{{ __('label.midterm') }}</option>
+                                        <option value="final"  wire:key="type-key-final">{{ __('label.final') }}</option>
+                                </select>
+                                @error('exam_period') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                         <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.order') }} <span style="color:red;">*</span></label>
+                                <input type="number" id="nameBasic" class="form-control @error('order') is-invalid @enderror" wire:model.lazy="order">
+                                @error('order') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>

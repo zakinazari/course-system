@@ -72,7 +72,7 @@
             </div>
         </div>
         <hr>
-        <div class="table-responsive text-nowrap">
+        <div class="text-nowrap">
  
             <div class="mb-3 px-3">
                 <form wire:submit.prevent="applySearch" class="row g-3 align-items-end">
@@ -124,6 +124,15 @@
                             <span class="input-group-text">{{ __('label.to_date') }}</span>
                             <input type="date"  class="form-control" wire:model="search.to">
                         </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">{{ __('label.status') }}</label>
+                        <select class="form-select" wire:model.defer="search.status" id ="">
+                           <option value="">{{ __('label.all') }}</option>
+                            <option value="warehouse">{{ __('label.warehouse') }}</option>
+                            <option value="assigned">{{ __('label.assigned') }}</option>
+
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary">
@@ -183,6 +192,13 @@
                                 {{ __('label.note') }}
                             </th>
                             <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
+                                {{ __('label.status') }}
+                            </th>
+                            <th>
+                                {{ __('label.assignments') }}
+                            </th>
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="purchase_date">
                                 {{ __('label.purchase_date') }}
                             </th>
@@ -207,6 +223,20 @@
                             <td>{{ $asset->purchase_price }}</td>
                             <td>{{ $asset->section?->name }}</td>
                             <td>{{ $asset->note }}</td>
+                            <td>
+                                @if($asset->status=='warehouse')
+                                <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($asset->status) }}</span>
+                                @elseif($asset->status=='assigned')
+                                <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($asset->status) }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                <a class="btn btn-success btn-icon rounded-pill"
+                                href="javascript:void(0);"
+                                wire:click="showAssignments({{ $asset->id }})">
+                                    <i class="bx bx-money text-white"></i>
+                                </a>
+                            </td>
                             <td>{{ $asset->purchase_date?->format('Y/m/d') }}</td>
                             @if(!auth()->user()->branch_id) 
                             <td>{{ $asset->branch?->name }}</td>
@@ -217,6 +247,17 @@
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu">
+                                        @if(edit(Auth::user()->role_ids,$active_menu_id) && $asset->status=='warehouse')
+                                   
+                                        <a class="dropdown-item"
+                                        href="javascript:void(0);"
+                                        wire:click="selectToAssign({{ $asset->id }})">
+                                            <i class="bx bx-user-check me-1 text-primary"></i>
+                                            {{ __('label.assign') }}
+                                        </a>
+
+                                        @endif
+
                                         @if(edit(Auth::user()->role_ids,$active_menu_id))
                                         @if((Auth::user()->id === $asset->user_id && $asset->created_at->format('Y/m/d') == now()->format('Y/m/d')) || Auth::user()->isAdmin() || Auth::user()->isDeveloper())
                                             <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $asset->id }})"
@@ -262,11 +303,6 @@
                         </div>
                     
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>{{ __('label.quantity') }}<span style="color:red;">*</span></label>
-                                <input type="number" wire:model.lazy="quantity" class="form-control" min="1" max="1">
-                                @error('quantity') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
                             <div class="col mb-3">
                                 <div wire:ignore>
                                     <label class="form-label">{{ __('label.unit') }} <span style="color:red;">*</span></label>
@@ -362,7 +398,173 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="{{$assignModalId}}" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" asset="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.assign') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+                <form @if($editMode) wire:submit.prevent="assign" @else wire:submit.prevent="store" @endif>
+                    <div class="modal-body">
+                        
+                    
+                        <div class="row">
+                            <div class="col mb-3">
+                                <div wire:ignore>
+                                    <label class="form-label">{{ __('label.employee') }} <span style="color:red;">*</span></label>
+                                    <select class="form-select select2" wire:model.lazy="assign_to_employee_id" id ="assign_to_employee_id">
+                                        <option value="">{{ __('label.select') }}</option>
+                                        @foreach($assign_to_employees as $employee)
+                                            <option value="{{ $employee->id }}"  wire:key="employee-add-edit-{{ $employee->id }}">
+                                                {{ $employee->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('assign_to_employee_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.assign_date') }} <span style="color:red;">*</span></label>
+                                <input type="date" id="nameBasic" class="form-control @error('assign_date') is-invalid @enderror" wire:model.lazy="assign_date">
+                                @error('assign_date') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="mb-3">
+                                <label>{{ __('label.note') }}</label>
+                                <textarea type="text" wire:model="assign_note" class="form-control"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('label.assign') }} </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="assignmentModal" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-xl" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    
+                    <h5 class="modal-title">{{__('label.assignments')}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                    
+                </div>
+                
+                <div class="modal-body">
+                    @if($this->assignedAsset->count())
+                     <div class="table-responsive text-nowrap">
+                        <table class="table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width:40px;">{{ __('label.NO') }}</th>
+                                    <th>{{ __('label.asset') }}</th>
+                                    <th>{{ __('label.employee_code') }}</th>
+                                    <th>{{ __('label.name') }}</th>
+                                    <th>{{ __('label.status') }}</th>
+                                    <th>{{ __('label.date') }}</th>
+                                    <th>{{ __('label.note') }}</th>
+                                    <th>{{ __('label.actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-border-bottom-0">
+                                @foreach($this->assignedAsset as $i => $assigned)
+                                <tr>
+                                    <td>{{ ($this->assignedAsset->currentPage() - 1) * $this->assignedAsset->perPage() + $i + 1 }}</td>
+                                    <td>{{ $assigned->asset?->name }}</td>
+                                    <td>{{ $assigned->employee?->employee_code }}</td>
+                                    <td>{{ $assigned->employee?->name }} {{ $assigned->employee?->last_name }}</td>
+                                    
+                                    <td>
+                                    @if($assigned->type==='assigned')
+                                    <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($assigned->type) }}</span>
+                                    @elseif($assigned->type==='returned')
+                                    <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($assigned->type) }}</span>
+                                    @elseif($assigned->type==='transfer')
+                                    <span class="badge bg-label-info me-1" style="font-size:10px;">{{ ucfirst($assigned->type) }}</span>
+                                    @endif
+                                    </td>
+
+                                    <td>{{ $assigned->movement_date?->format('Y/m/d h:i A') }}</td>
+                                    <td>{{ $assigned->note }}</td>
+
+                                    <td>
+                                        @if($assigned->is_last && $assigned->type === 'assigned' && $assigned->asset->status==='assigned')
+                                        @if(edit(Auth::user()->role_ids,$active_menu_id))
    
+                                            <div class="dropdown position-static">
+                                                <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                
+                                                    <a class="dropdown-item" href="javascript:void(0);" wire:click="assetReturn({{ $assigned->id }})"
+                                                    ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.return') }}</a>
+                                            
+                                                </div>
+                                            </div>
+                                            @endif
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 justify-content-end px-3">
+                        {{ $this->assignedAsset->links() }}
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('label.close') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+    <div class="modal fade" id="assetReturnModal" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.asset_return') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+                <form  wire:submit.prevent="assetReturnStore" >
+                    <div class="modal-body">
+                        
+                        <div class="col mb-3">
+                            <label for="nameBasic" class="form-label">{{ __('label.return_date') }} <span style="color:red;">*</span></label>
+                            <input type="date" id="nameBasic" class="form-control @error('return_date') is-invalid @enderror" wire:model.lazy="return_date">
+                            @error('return_date') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col mb-3">
+                            <label for="nameBasic" class="form-label">{{ __('label.return_note') }}</label>
+                            <textarea type="text" id="nameBasic" class="form-control @error('return_note') is-invalid @enderror" wire:model.lazy="return_note"></textarea>
+                            @error('return_note') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('label.return') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 
@@ -403,6 +605,10 @@ document.addEventListener("livewire:initialized", function () {
         });
         $('#unit_id').off('change').on('change', function () {
             $wire.set('unit_id', $(this).val());
+        });
+
+        $('#assign_to_employee_id').off('change').on('change', function () {
+            $wire.set('assign_to_employee_id', $(this).val());
         });
 
     }

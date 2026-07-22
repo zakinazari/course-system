@@ -319,10 +319,23 @@
                                 <input type="number" wire:model.lazy="credit_card" class="form-control" min="0" >
                                 @error('credit_card') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col mb-3">
+                          <div class="col mb-3">
                                 <label>{{ __('label.food_deduction') }}</label>
                                 <input type="number" wire:model.lazy="food_deduction" class="form-control" min="0" >
                                 @error('food_deduction') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="row">
+                              
+                            <div class="col mb-3">
+                                <label>{{ __('label.security_saving_amount') }}</label>
+                                <input type="number" wire:model.lazy="security_saving_amount" class="form-control" min="0" >
+                                @error('security_saving_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label>{{ __('label.security_saving_monthly_amount') }}</label>
+                                <input type="number" wire:model.lazy="security_saving_monthly_amount" class="form-control" min="0" >
+                                @error('security_saving_monthly_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row">

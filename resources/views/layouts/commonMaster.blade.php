@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-
+<meta name="user-id" content="{{ auth()->id() }}">
   <title>@yield('title') 
     {{ config('variables.templateName') ? config('variables.templateName') : '' }}
     {{ config('variables.templateSuffix') ? config('variables.templateSuffix') : '' }}</title>
@@ -46,6 +46,13 @@
   @yield('javascript')
 
    @livewireScripts
+
+   @vite(['resources/js/app.js'])
+   <!--  این بخش مربوط نوتیفیکیشن است  -->
+<script>
+    window.user_id = {{ auth()->id() }};
+</script>
+   <!--  این بخش مربوط نوتیفیکیشن است  -->
   @yield('scripts-after-livewire')
 
 <script>

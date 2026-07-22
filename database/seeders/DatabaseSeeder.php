@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             FeeTypeSeeder::class,
             MonthSeeder::class,
             GenderSeeder::class,
+            OccupationSeeder::class,
+            NotificationCategorySeeder::class,
         ]);
     }
 }

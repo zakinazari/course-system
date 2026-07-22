@@ -55,32 +55,90 @@
             <!-- User Card -->
             <div class="card mb-4">
             <div class="card-body ">
-                <div class="user-avatar-section">
-                    <div class="d-flex align-items-center flex-column">
-                        <img class="img-fluid rounded my-4" src="{{ $student->photo?->thumbnail_url ?? asset('default.png') }}" height="110" width="110" alt="User avatar">
-                        <div class="user-info text-center">
-                        <h5 class="mb-2"> {{ $student->name }} {{ $student->last_name }}</h5>
-                        <span class="badge bg-label-secondary">{{ $student->student_code }}</span>
+                 <div class="d-flex flex-column align-items-center">
+
+                    <!-- Avatar -->
+                    <img class="img-fluid rounded-circle shadow border border-3 border-white mb-3"
+                        src="{{ $student->photo?->thumbnail_url ?? asset('default.png') }}"
+                        width="110"
+                        height="110"
+                        alt="Student Avatar">
+
+                    <!-- Information Card -->
+                    <div class="w-100">
+
+                     <!-- Student ID -->
+                        <div class="d-flex justify-content-between align-items-center border rounded px-3 py-2 mb-2 bg-light">
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-id-card text-info fs-4 me-2"></i>
+                                <span class="text-muted">{{ __('label.student_code') }}</span>
+                            </div>
+
+                            <span class="badge bg-label-primary">
+                                {{ $student->student_code }}
+                            </span>
                         </div>
+
+                        <!-- Student Name -->
+                        <div class="d-flex justify-content-between align-items-center border rounded px-3 py-2 mb-2 bg-light">
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-user-circle text-primary fs-4 me-2"></i>
+                                <span class="text-muted">{{ __('label.student') }}</span>
+                            </div>
+
+                            <span class="fw-bold text-dark">
+                                {{ $student->name }} {{ $student->last_name }}
+                            </span>
+                        </div>
+
+                       
+
+                        <!-- Father -->
+                        <div class="d-flex justify-content-between align-items-center border rounded px-3 py-2 mb-2 bg-light">
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-user text-warning fs-4 me-2"></i>
+                                <span class="text-muted">{{ __('label.father_name') }}</span>
+                            </div>
+
+                            <span class="fw-semibold">
+                                {{ $student->father_name ?? '-' }}
+                            </span>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="d-flex justify-content-between align-items-center border rounded px-3 py-2 bg-light">
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-phone text-success fs-4 me-2"></i>
+                                <span class="text-muted">{{ __('label.phone_no') }}</span>
+                            </div>
+
+                            <span class="fw-semibold">
+                                {{ $student->phone_no ?? '-' }}
+                            </span>
+                        </div>
+
                     </div>
+
                 </div>
-                <!-- <div class="d-flex justify-content-around flex-wrap my-4 py-3">
-                <div class="d-flex align-items-start me-4 mt-3 gap-3">
-                    <span class="badge bg-label-primary p-2 rounded"><i class="bx bx-check bx-sm"></i></span>
-                    <div>
-                    <h5 class="mb-0">1.23k</h5>
-                    <span>Tasks Done</span>
+
+                <div class="row g-2 mt-4">
+
+                    <div class="col-12">
+                        <a class="btn btn-primary w-100"
+                        href="{{ route('student-profile', [
+                                'menu_id' => $this->active_menu_id,
+                                'student_id' => encrypt($student->id),
+                                'slug' => 'student_list',
+                            ]) }}" style="">
+                            <i class="bx bx-user me-1"></i>
+                            {{ __('label.student_profile') }}
+                        </a>
                     </div>
+
                 </div>
-                <div class="d-flex align-items-start mt-3 gap-3">
-                    <span class="badge bg-label-primary p-2 rounded"><i class="bx bx-customize bx-sm"></i></span>
-                    <div>
-                    <h5 class="mb-0">568</h5>
-                    <span>Projects Done</span>
-                    </div>
-                </div>
-                </div> -->
-                <h5 class="pb-2 border-bottom mb-4">{{ __('label.fees') }}</h5>
+                
+             
+                <h5 class="pb-2 border-bottom mb-4"></h5>
                 <div class="info-container">
                     <ul class="nav nav-pills flex-column mb-3 fee-menu">
                         <li class="nav-item mb-1">
@@ -93,6 +151,13 @@
                                 <i class="bx bx-book me-2 text-success"></i> {{ __('label.book_fee') }}
                             </a>
                         </li>
+
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'makeup_fee' ? 'active' : '' }}" wire:click="changeTab('makeup_fee')">
+                                <i class="bx bx-refresh me-2 text-secondary"></i> {{ __('label.makeup_fee') }}
+                            </a>
+                        </li>
+
                         <li class="nav-item mb-1">
                             <a class="nav-link {{ $activeTab == 'exam_fine' ? 'active' : '' }}" wire:click="changeTab('exam_fine')">
                                 <i class="bx bx-file me-2 text-danger"></i> {{ __('label.exam_fine') }}
@@ -154,7 +219,18 @@
                                     'active_menu_id' => $active_menu_id,
                                     'student_id' => $student->id
                                 ],
-                                key('book_fee_'.$student->id.'_'.$activeTab)
+                                key('book_fee_'.$student->id)
+                            )
+                        </div>
+
+                        <div style="{{ $activeTab == 'makeup_fee' ? '' : 'display:none' }}">
+                           @livewire(
+                                'financial.student-fees.makeup-fees.student-makeup-fees', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'student_id' => $student->id
+                                ],
+                                key('makeup_fee_'.$student->id)
                             )
                         </div>
 

@@ -30,11 +30,18 @@ class StudentFinancialProfile extends Component
         }else{
             $this->active_menu_id = $active_menu_id;
         }
-          $this->dispatch('setActiveMenuFromPage', $this->active_menu_id);
+
+        $this->dispatch('setActiveMenuFromPage', $this->active_menu_id);
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($this->active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
         $student_id = decrypt($student_id);
         $this->student =Student::with('photo')->findOrFail($student_id);
+        
+        $action = request('action');
+        if($action =='exemption'){
+
+          $this->activeTab = 'book_fee';
+        }
     }
 
     public $activeTab = 'course_fee';

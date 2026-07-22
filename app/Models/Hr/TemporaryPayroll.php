@@ -4,9 +4,12 @@ namespace App\Models\Hr;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Month;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Hr\Employee;
+use App\Models\User;
 class TemporaryPayroll extends Model
 {
      protected $fillable = [
@@ -26,6 +29,7 @@ class TemporaryPayroll extends Model
         'credit_card',
         'food_deduction',
         'advance_deduction',
+        'security_saving_deduction',
 
         'total_deductions',
         'net_salary',
@@ -47,6 +51,7 @@ class TemporaryPayroll extends Model
         'credit_card' => 'decimal:2',
         'food_deduction' => 'decimal:2',
         'advance_deduction' => 'decimal:2',
+        'security_saving_deduction' => 'decimal:2',
 
         'total_deductions' => 'decimal:2',
         'net_salary' => 'decimal:2',
@@ -57,9 +62,36 @@ class TemporaryPayroll extends Model
     // Relationships
     // ======================
 
+    public function securitySavings()
+    {
+        return $this->morphMany(
+            EmployeeSecuritySaving::class,
+            'payroll'
+        );
+    }
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function details()
+    {
+        return $this->hasMany(TemporaryPayrollDetail::class);
+    }
+
+    public function month()
+    {
+        return $this->belongsTo(Month::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function temporaryContract()
@@ -84,6 +116,14 @@ class TemporaryPayroll extends Model
             }
  
             $builder->where('branch_id', $user->branch_id);
+        });
+
+        // security saving delete ---------------------
+
+        static::deleting(function ($payroll) {
+
+            $payroll->securitySavings()->delete();
+
         });
     }
 

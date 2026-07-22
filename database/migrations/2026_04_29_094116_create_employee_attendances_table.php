@@ -20,8 +20,13 @@ return new class extends Migration
                 'present',
                 'absent',
                 'late',
-                'excused'
+                'excused',
+                'leave',
             ]);
+            
+            $table->foreignId('leave_type_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->text('note')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 

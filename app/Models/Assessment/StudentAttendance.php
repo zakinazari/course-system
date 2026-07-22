@@ -5,10 +5,13 @@ namespace App\Models\Assessment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\CenterSettings\Branch;
 use App\Models\Academic\Course;
 use App\Models\Academic\Student;
 use App\Models\Hr\Employee;
-
+use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 class StudentAttendance extends Model
 {
     protected $fillable = [

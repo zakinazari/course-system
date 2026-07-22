@@ -18,8 +18,8 @@ return new class extends Migration
 
             $table->foreignId('teacher_id')->constrained('employees');
 
-            $table->enum('status', ['present', 'absent', 'late']);
-
+            $table->enum('status', ['present', 'absent', 'late','excused','leave']);
+            $table->foreignId('leave_type_id')->nullable()->constrained()->nullOnDelete();
             $table->date('attendance_date');
             $table->foreignId('recorded_by')->nullable()->constrained('users');
 

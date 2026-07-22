@@ -9,4 +9,9 @@ class Shift extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function times()
+    {
+        return $this->hasMany(Time::class)->orderBy('start_time');
+    }
 }

@@ -45,6 +45,8 @@ class EmployeePermanentContractList extends Component
         'start_date',
         'end_date',
         'status',
+        'security_saving_amount',
+        'security_saving_monthly_amount',
     ];
 
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
@@ -108,6 +110,8 @@ class EmployeePermanentContractList extends Component
     public $credit_card=0;
     public $food_allowance=0;
     public $status='active';
+    public $security_saving_amount;
+    public $security_saving_monthly_amount;
 
     public function resetInputFields(){
         $this->resetExcept([
@@ -184,6 +188,21 @@ class EmployeePermanentContractList extends Component
             'start_date' => 'required|date',
 
             'end_date' => 'required|date|after_or_equal:start_date',
+
+            // security saving-------------------
+            'security_saving_amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'lte:basic_salary',
+            ],
+
+            'security_saving_monthly_amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'lte:security_saving_amount',
+            ],
         ];
 
         if (!Auth::user()->branch_id) {
@@ -233,6 +252,8 @@ class EmployeePermanentContractList extends Component
                 'start_date'   => $this->start_date,
                 'end_date'     => $this->end_date,
                 'status'     => $this->status,
+                'security_saving_amount'     => $this->security_saving_amount,
+                'security_saving_monthly_amount'     => $this->security_saving_monthly_amount,
             ]);
 
             // // ---start system log-----------
@@ -273,6 +294,8 @@ class EmployeePermanentContractList extends Component
         $this->end_date = $contract->end_date ? $contract->end_date->format('Y-m-d')
         : null;
          $this->status = $contract->status;
+         $this->security_saving_amount = $contract->security_saving_amount;
+         $this->security_saving_monthly_amount = $contract->security_saving_monthly_amount;
         $this->editMode = true;
 
         $this->dispatch('open-modal', id: $this->modalId);
@@ -302,7 +325,9 @@ class EmployeePermanentContractList extends Component
                 'credit_card' => $this->credit_card,
                 'start_date'   => $this->start_date,
                 'end_date'     => $this->end_date,
-                 'status'     => $this->status,
+                'status'     => $this->status,
+                'security_saving_amount'     => $this->security_saving_amount,
+                'security_saving_monthly_amount'     => $this->security_saving_monthly_amount,
             ]);
 
             // // ---start system log-----------

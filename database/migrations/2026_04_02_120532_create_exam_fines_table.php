@@ -21,6 +21,8 @@ return new class extends Migration
             $table->text('reason')->nullable(); 
             $table->date('exam_date')->nullable();
             $table->date('payment_date')->nullable();
+
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             
             $table->timestamps();
         });

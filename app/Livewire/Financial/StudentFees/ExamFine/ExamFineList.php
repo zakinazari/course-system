@@ -170,6 +170,7 @@ class ExamFineList extends Component
             // -----------------------------
             $account_id = Account::where('branch_id', $this->student->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {
@@ -225,6 +226,7 @@ class ExamFineList extends Component
             $exam_fine->update([
                 'status' => 'waived',
                 'reason' => $this->reason,
+                'user_id' => Auth::user()->id,
             ]);
 
             $this->reason = null;
@@ -277,11 +279,13 @@ class ExamFineList extends Component
             $exam_fine->update([
                 'status' => 'paid',
                 'payment_date' => now(),
+                 'user_id' => Auth::user()->id,
             ]);
 
             // ----------------start transaction-----------------------
             $account_id = Account::where('branch_id', $this->student->branch_id)
                     ->where('category', 'treasury')
+                    ->where('type','branch')
                     ->value('id');
 
                 if (!$account_id) {

@@ -83,16 +83,58 @@
                                 <i class="bx bx-id-card me-2 text-danger"></i> {{ __('label.salary_advance') }}
                             </a>
                         </li>
-                        <!-- <li class="nav-item mb-1">
-                            <a class="nav-link {{ $activeTab == 'registration_fee' ? 'active' : '' }}" wire:click="changeTab('registration_fee')">
-                                <i class="bx bx-detail me-2 text-warning"></i> {{ __('label.registration_fee') }}
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'staff_attendance' ? 'active' : '' }}" wire:click="changeTab('staff_attendance')">
+                                <i class="bx bx-user-check me-2 text-primary"></i>
+                                {{ __('label.staff_attendance') }}
+                            </a>
+                        </li>
+
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'teacher_attendance' ? 'active' : '' }}" wire:click="changeTab('teacher_attendance')">
+                                <i class="bx bx-user-pin me-2 text-success"></i>
+                                {{ __('label.teacher_attendance') }}
+                            </a>
+                        </li>
+
+                       
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'employee_leave' ? 'active' : '' }}" wire:click="changeTab('employee_leave')">
+                                <i class="bx bx-calendar-event me-2 text-danger"></i> {{ __('label.employee_leave') }}
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'permanent_payroll' ? 'active' : '' }}" wire:click="changeTab('permanent_payroll')">
+                                <i class="bx bx-credit-card me-2 text-info"></i>
+                                {{ __('label.permanent_payroll') }}
+                            </a>
+                        </li>
+
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'temporary_payroll' ? 'active' : '' }}" wire:click="changeTab('temporary_payroll')">
+                                <i class="bx bx-credit-card me-2 text-secondary"></i>
+                                {{ __('label.temporary_payroll') }}
+                            </a>
+                        </li>
+
+                         <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'salary_saving' ? 'active' : '' }}" wire:click="changeTab('salary_saving')">
+                                <i class="bx bx-lock-alt me-2 text-success"></i> {{ __('label.salary_saving') }}
+                            </a>
+                        </li>
+
+
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ $activeTab == 'assigned_assets' ? 'active' : '' }}" wire:click="changeTab('assigned_assets')">
+                                <i class="bx bx-detail me-2 text-warning"></i> {{ __('label.assigned_assets') }}
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link {{ $activeTab == 'card_fee' ? 'active' : '' }}" wire:click="changeTab('card_fee')">
-                                <i class="bx bx-id-card me-2 text-info"></i> {{ __('label.card_fee') }}
+                            <a class="nav-link {{ $activeTab == 'assigned_books' ? 'active' : '' }}" wire:click="changeTab('assigned_books')">
+                                <i class="bx bx-book me-2 text-success"></i> {{ __('label.book_assignment') }}
                             </a>
-                        </li> -->
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -117,6 +159,7 @@
 
                         <!-- Course Fee Tab -->
                         <div style="{{ $activeTab == 'temporary_contract' ? '' : 'display:none' }}">
+                        
                             @livewire(
                                 'hr.employees.contracts.employee-temporary-contract-list', 
                                 [
@@ -125,38 +168,140 @@
                                 ],
                                 key('temporary_contract_'.$employee->id)
                             )
+                      
                         </div>
 
                         <div style="{{ $activeTab == 'permanent_contract' ? '' : 'display:none' }}">
-                            @livewire(
-                                'hr.employees.contracts.employee-permanent-contract-list', 
-                                [
-                                    'active_menu_id' => $active_menu_id,
-                                    'employee_id' => $employee->id
-                                ],
-                                key('permanent_contract_'.$employee->id)
-                            )
+                     
+                                @livewire(
+                                    'hr.employees.contracts.employee-permanent-contract-list', 
+                                    [
+                                        'active_menu_id' => $active_menu_id,
+                                        'employee_id' => $employee->id
+                                    ],
+                                    key('permanent_contract_'.$employee->id)
+                                )
+                          
                         </div>
 
                         <!-- Book Fee Tab -->
                         <div style="{{ $activeTab == 'salary_advance' ? '' : 'display:none' }}">
+                            @if($activeTab == 'salary_advance')
+                                @livewire(
+                                    'hr.employees.contracts.employee-salary-advance-list', 
+                                    [
+                                        'active_menu_id' => $active_menu_id,
+                                        'employee_id' => $employee->id
+                                    ],
+                                    key('salary_advance_'.$employee->id)
+                                )
+                            @endif
+                        </div>
+
+                        <div style="{{ $activeTab == 'staff_attendance' ? '' : 'display:none' }}">
+
+                        @if($activeTab == 'staff_attendance')
                            @livewire(
-                                'hr.employees.contracts.employee-salary-advance-list', 
+                                'hr.employees.personal-attendance.staff-attendance-list', 
                                 [
                                     'active_menu_id' => $active_menu_id,
                                     'employee_id' => $employee->id
                                 ],
-                                key('salary_advance_'.$employee->id)
+                                key('staff_attendance_'.$employee->id)
                             )
+                        @endif
                         </div>
 
-                        <div style="{{ $activeTab == 'exam_fine' ? '' : 'display:none' }}">
-                          
+                        <div style="{{ $activeTab == 'teacher_attendance' ? '' : 'display:none' }}">
+                            @if($activeTab == 'teacher_attendance')
+                                @livewire(
+                                        'hr.employees.personal-attendance.teacher-attendance-list', 
+                                        [
+                                            'active_menu_id' => $active_menu_id,
+                                            'employee_id' => $employee->id
+                                        ],
+                                        key('teacher_attendance_'.$employee->id)
+                                    )
+                            @endif
+                        </div>
+
+                        <div style="{{ $activeTab == 'employee_leave' ? '' : 'display:none' }}">
+                            @if($activeTab == 'employee_leave')
+                                @livewire(
+                                        'hr.employees.employee-leaves.employee-leave-list', 
+                                        [
+                                            'active_menu_id' => $active_menu_id,
+                                            'employee_id' => $employee->id
+                                        ],
+                                        key('employee_leave_'.$employee->id)
+                                    )
+                            @endif
+                        </div>
+
+                        <div style="{{ $activeTab == 'permanent_payroll' ? '' : 'display:none' }}">
+                            @if($activeTab == 'permanent_payroll')
+                                @livewire(
+                                        'hr.employees.personal-payrolls.employee-permanent-payroll-list', 
+                                        [
+                                            'active_menu_id' => $active_menu_id,
+                                            'employee_id' => $employee->id
+                                        ],
+                                        key('permanent_payroll_'.$employee->id)
+                                    )
+                            @endif
+                        </div>
+
+                        <div style="{{ $activeTab == 'temporary_payroll' ? '' : 'display:none' }}">
+                            @if($activeTab == 'temporary_payroll')
+                                @livewire(
+                                        'hr.employees.personal-payrolls.employee-temporary-payroll-list', 
+                                        [
+                                            'active_menu_id' => $active_menu_id,
+                                            'employee_id' => $employee->id
+                                        ],
+                                        key('temporary_payroll_'.$employee->id)
+                                    )
+                            @endif
+                        </div>
+
+                        <div style="{{ $activeTab == 'salary_saving' ? '' : 'display:none' }}">
+                            @if($activeTab == 'salary_saving')
+                                @livewire(
+                                        'hr.employees.salary-security-saving.salary-security-saving-list', 
+                                        [
+                                            'active_menu_id' => $active_menu_id,
+                                            'employee_id' => $employee->id
+                                        ],
+                                        key('salary_saving_'.$employee->id)
+                                    )
+                            @endif
+                        </div>
+
+                        <div style="{{ $activeTab == 'assigned_assets' ? '' : 'display:none' }}">
+                        @if($activeTab == 'assigned_assets')
+                          @livewire(
+                                'hr.employees.assigned-assets.assigned-asset-list', 
+                                [
+                                    'active_menu_id' => $active_menu_id,
+                                    'employee_id' => $employee->id
+                                ],
+                                key('assigned_assets_'.$employee->id)
+                            )
+                        @endif
                         </div>
 
                         <!-- Registration Fee Tab -->
-                        <div style="{{ $activeTab == 'registration_fee' ? '' : 'display:none' }}">
-                            
+                        <div style="{{ $activeTab == 'assigned_books' ? '' : 'display:none' }}">
+                            @if($activeTab == 'assigned_books')
+                                @livewire(
+                                    'hr.employees.assigned-books.assigned-book-list', 
+                                    [
+                                        'active_menu_id' => $active_menu_id,
+                                        'employee_id' => $employee->id
+                                    ],
+                                    key('assigned_book_'.$employee->id)
+                                )
+                            @endif
                         </div>
 
                         <!-- Card Fee Tab -->

@@ -6,7 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-
+use Illuminate\Notifications\Messages\BroadcastMessage;
 class BookExemptionRequestNotification extends Notification
 {
     use Queueable;
@@ -29,22 +29,43 @@ class BookExemptionRequestNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toDatabase($notifiable)
     {
-        return [
-            'student_id' => $this->student->id,
-            'book_id'    => $this->book['id'],
-            'title'      => 'Book Exemption Request',
-            'message'    => 'Student ' . $this->student->name.'('.$this->student->student_code.')'. ' has requested an exemption for the book "' . ($this->book['name'] ?? '') . '".',
-            'url'        => route('student-financial-profile', [
+         return [
+            'type'         => 'book_exemption_request',
+            'reference_id' => $this->student->id,
+
+            'student_id'   => $this->student->id,
+            'book_id'      => $this->book['id'],
+
+            'title'        => 'Book Exemption Request',
+
+            'message'      => sprintf(
+                'Student %s (%s) has requested a book exemption for "%s".',
+                $this->student->name,
+                $this->student->student_code,
+                $this->book['name'] ?? ''
+            ),
+
+            'url' => route('student-financial-profile', [
                 'menu_id'    => $this->menu_id,
                 'student_id' => encrypt($this->student->id),
-            ]),
+            ]) . '?action=exemption',
         ];
     }
+
+
+    public function toBroadcast($notifiable)
+    {
+       
+        return new BroadcastMessage(
+            $this->toDatabase($notifiable)
+        );
+    }
+
 
     /**
      * Get the mail representation of the notification.

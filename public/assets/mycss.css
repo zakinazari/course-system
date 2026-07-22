@@ -1,11 +1,36 @@
 
-@font-face {
+ @font-face {
   font-family: 'Vazirmatn';
   src: url('../assets/fonts/Vazirmatn-Bold.woff2') format('woff'),
   url('../assets/fonts/Vazirmatn-Bold.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
+
+@font-face {
+    font-family: 'Ray';
+    src: url('../assets/fonts/Ray-Medium.woff') format('woff2'),
+         url('../assets/fonts/Ray-Medium.woff') format('woff');
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: 'Ray';
+    src: url('../assets/fonts/Ray-Medium.woff') format('woff2'),
+         url('../assets/fonts/Ray-Medium.woff') format('woff');
+    font-weight: bold;
+}
+
+
+/* @font-face {
+    font-family: 'Cambriab';
+    src: url('../assets/fonts/cambriab.woff') format('woff2'),
+         url('../assets/fonts/cambriab.woff') format('woff');
+    font-weight: normal;
+} */
+
+
+/*
 body {
      font-family: "Vazirmatn" !important;
 }
@@ -33,7 +58,7 @@ span{
 }
 g{
 	font-family: "Vazirmatn" !important;
-}
+} */
 
 
 .a4-page {

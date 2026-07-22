@@ -18,9 +18,12 @@ return new class extends Migration
             $table->foreignId('section_id')->constrained('sections');
             $table->decimal('total_amount', 10, 2); 
             $table->decimal('remaining_amount', 10, 2)->default(0);
-
+            $table->date('advance_date')->nullable();
+            $table->boolean('auto_deduct')->default(true);
             $table->enum('status', ['active', 'completed', 'cancelled'])->default('active');
             $table->text('note')->nullable();
+
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
         });

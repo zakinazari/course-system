@@ -110,8 +110,8 @@
                                 $color = match($status) {
                                     'passed'  => '#198754',   // سبز
                                     'failed'  => '#dc3545',   // قرمز
-                                    'late'    => '#ffc107',   // زرد
-                                    'excused' => '#0dcaf0',   // آبی
+                                    'makeup'    => '#ffc107',   // زرد
+                                    'in_progress' => '#0dcaf0',   // آبی
                                     default   => '#6c757d',   // خاکستری
                                 };
                             @endphp
@@ -135,4 +135,43 @@
             </tr>
         @endforeach
     </tbody>
+</table>
+<br><br>
+
+<table width="100%" style="margin-top:20px;">
+    <tr>
+        <!-- چپ -->
+        <td width="50%" style="text-align:center; vertical-align:bottom;">
+            
+            <div style="height:40px;"></div>
+
+            <div style="border-top:1px solid #000; width:60%; margin:0 auto 8px;"></div>
+
+            <div style="margin-top:5px;">
+                <strong>{{ __('label.exam_unit') }}</strong>
+            </div>
+
+            <div style="margin-top:2px;">
+                {{ __('label.signature') }}
+            </div>
+
+        </td>
+
+        <!-- راست -->
+        <td width="50%" style="text-align:center; vertical-align:bottom;">
+
+            <div style="height:40px;"></div>
+
+            <div style="border-top:1px solid #000; width:60%; margin:0 auto 8px;"></div>
+
+            <div style="margin-top:5px;">
+                <strong>{{ __('label.campus_incharge') }}</strong>
+            </div>
+
+            <div style="margin-top:2px;">
+                {{ __('label.signature') }}
+            </div>
+
+        </td>
+    </tr>
 </table>

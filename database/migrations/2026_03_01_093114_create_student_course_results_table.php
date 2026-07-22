@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained();
 
             $table->decimal('total', 5, 1)->nullable(); 
-            $table->enum('status', ['passed', 'makeup', 'failed'])->nullable();
+            $table->enum('status', ['passed', 'makeup', 'failed','in_progress'])->nullable();
             $table->integer('pass_mark_snapshot')->nullable();
             $table->integer('makeup_mark_snapshot')->nullable();
             $table->boolean('is_finalized')->default(false); 

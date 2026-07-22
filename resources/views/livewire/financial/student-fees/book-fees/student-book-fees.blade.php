@@ -78,6 +78,8 @@
                             <th>{{ __('label.status') }}</th>
                             <th>{{ __('label.payment_date') }}</th>
                             <th>{{ __('label.type') }}</th>
+                            <th>{{ __('label.exemption_reason') }}</th>
+                            <th>{{ __('label.note') }}</th>
                             <th>{{ __('label.actions') }}</th>
                         </tr>
                     </thead>
@@ -93,41 +95,84 @@
                                 <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($fee->status) }}</span>
                                 @elseif($fee->status==='requested_exemption')
                                 <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ ucfirst($fee->status) }}</span>
-                                <button
-                                    class="btn btn-danger btn-sm rounded-pill"
-                                    wire:click="openRejectExemption({{ $fee->id }})">
-                                    {{ __('label.reject') }}
-                                </button>
-                                <button
-                                    class="btn btn-success btn-sm rounded-pill"
-                                    wire:click="openConfirmExemption({{ $fee->id }})">
-                                    {{ __('label.confirm') }}
-                                </button>
+                                    
                                 @elseif($fee->status==='accepted_exemption')
                                 <span class="badge bg-label-info me-1" style="font-size:10px;">{{ ucfirst($fee->status) }}</span>
                                 @elseif($fee->status==='rejected_exemption')
                                 <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($fee->status) }}</span>
-                                <button
-                                    class="btn btn-success btn-sm rounded-pill"
-                                    wire:click="openPayModal({{ $fee->id }})">
-                                    {{ __('label.pay') }}
-                                </button>
+                                    
                                 @endif
                             </td>
                             <td>{{ $fee->payment_date?->format('Y/m/d') }}</td>
                             <td>{{ ucfirst($fee->type) }}</td>
+                            <td>{{ $fee->reason }}</td>
+                            <td>{{ $fee->notes }}</td>
                             <td>
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu">
-                                        @if(delete(Auth::user()->fee_ids,$active_menu_id))
-                                          @if(Auth::user()->isAdmin() || Auth::user()->isDeveloper())
-                                            <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $fee->id }},'{{$table_name}}')"
-                                            ><i class="bx bx-trash me-1 text-danger"></i>{{ __('label.delete') }}</a>
-                                           @endif
+                                        @if(Auth::user()->id == $fee->user_id && $fee->status === 'rejected_exemption')
+
+                                            <a
+                                                class="dropdown-item"
+                                                href="javascript:void(0);"
+                                                wire:click="openPayModal({{ $fee->id }})">
+
+                                                <i class="bx bx-wallet me-1 text-success"></i>
+                                                {{ __('label.pay') }}
+
+                                            </a>
+
                                         @endif
+
+                                       @if(confirm(Auth::user()->role_ids,$active_menu_id))
+
+                                        @if($fee->status === 'requested_exemption')
+
+                                            <a
+                                                class="dropdown-item"
+                                                href="javascript:void(0);"
+                                                wire:click="openRejectExemption({{ $fee->id }})">
+
+                                                <i class="bx bx-x-circle me-1 text-danger"></i>
+                                                {{ __('label.reject') }}
+
+                                            </a>
+
+                                            <a
+                                                class="dropdown-item"
+                                                href="javascript:void(0);"
+                                                wire:click="openConfirmExemption({{ $fee->id }})">
+
+                                                <i class="bx bx-check-circle me-1 text-success"></i>
+                                                {{ __('label.confirm') }}
+
+                                            </a>
+
+                                        @endif
+
+                                    @endif
+
+
+                                    @if(delete(Auth::user()->role_ids,$active_menu_id))
+
+                                        @if(Auth::user()->isAdmin() || Auth::user()->isDeveloper())
+
+                                            <a
+                                                class="dropdown-item"
+                                                href="javascript:void(0);"
+                                                onclick="confirmDelete({{ $fee->id }},'{{$table_name}}')">
+
+                                                <i class="bx bx-trash me-1 text-danger"></i>
+                                                {{ __('label.delete') }}
+
+                                            </a>
+
+                                        @endif
+
+                                    @endif
                                     </div>
                                 </div>
                             </td>
@@ -153,13 +198,17 @@
                      
                         <div class="row">
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.physical_book') }} <span style="color:red;">*</span></label>
-                                <select  class="form-select @error('physical_book_id') is-invalid @enderror" wire:model.lazy ="physical_book_id">
-                                    <option value="">{{ __('label.select') }}</option>
-                                    @foreach($physical_books as $book)
-                                    <option value="{{ $book->id }}">{{ $book->name }} ({{ __('label.price') }}: {{ $book->price }})</option>
-                                    @endforeach
-                                </select>
+                                <div wire.ignore>
+                                    <label for="nameBasic" class="form-label">{{ __('label.physical_book') }} <span style="color:red;">*</span></label>
+                                    <div wire:ignore>
+                                    <select  class="form-select select2 @error('physical_book_id') is-invalid @enderror" wire:model.lazy ="physical_book_id" id ="select_physical_book_id">
+                                        <option value="">{{ __('label.select') }}</option>
+                                        @foreach($physical_books as $book)
+                                        <option value="{{ $book->id }}">{{ $book->name }} ({{ __('label.price') }}: {{ $book->price }})</option>
+                                        @endforeach
+                                    </select>
+                                    </div>
+                                </div>
                                 @error('physical_book_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
@@ -270,5 +319,56 @@
         </div>
     </div>
 </div>
+
+@script
+
+<script>
+document.addEventListener("livewire:initialized", function () {
+    function initSelect2() {
+        $('.select2').each(function () {
+            const $select = $(this);
+            const $modal  = $select.closest('.modal');
+
+           
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            $select.select2({
+                width: '100%',
+                dropdownParent: $modal.length ? $modal : $(document.body)
+            });
+        });
+
+
+        $('#select_physical_book_id').off('change').on('change', function () {
+            @this.set('physical_book_id', $(this).val());
+        });
+    }
+
+    
+    initSelect2();
+
+    
+    Livewire.hook('morphed', () => {
+        initSelect2();
+    });
+
+   
+    Livewire.hook('message.processed', function (message, component) {
+        const $modal = $('#{{$modalId}}');
+        if ($modal.is(':visible')) {
+            initSelect2();
+        }
+    });
+
+
+    $(document).on('shown.bs.modal', function () {
+        initSelect2();
+    });
+});
+</script>
+  
+@endscript
 
 

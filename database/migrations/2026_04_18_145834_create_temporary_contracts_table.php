@@ -26,6 +26,9 @@ return new class extends Migration
             
             $table->date('end_date')->nullable();
 
+            $table->decimal('security_saving_amount', 10, 2)->default(0);
+            $table->decimal('security_saving_monthly_amount', 10, 2)->default(0);
+
             $table->enum('status', ['active', 'inactive', 'ended'])->default('active');
             $table->timestamps();
         });

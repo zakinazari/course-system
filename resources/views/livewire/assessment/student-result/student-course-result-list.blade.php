@@ -159,6 +159,14 @@
                               <option value="weak"> {{ __('label.weak_student') }}</option>
                         </select>
                     </div>
+                    <div class="col md-2">
+                        <label for="course_type_id" class="form-label">{{ __('label.exam_period') }}</label>
+                        <select class="form-select @error('type') is-invalid @enderror" wire:model.lazy="exam_period" id ="exam_period">
+                            <option value="all">{{ __('label.all') }}</option>
+                            <option value="midterm"  wire:key="type-key-medterm">{{ __('label.midterm') }}</option>
+                            <option value="final"  wire:key="type-key-final">{{ __('label.final') }}</option>
+                        </select>
+                    </div>
                     <div class="col-md-1">
                         <button type="submit" class="btn btn-primary">
                             {{ __('label.search') }}
@@ -169,8 +177,8 @@
             </div>
             <br>
             @if(!empty($students))
-            <div class="table-responsive text-nowrap">
-                <table class="table" >
+            <div class="table-responsive text-nowrap mb-5">
+                <table class="table table-bordered">
                     <thead class="table-dark">
                         <tr>
                             <th style="width:15px;">
@@ -237,6 +245,10 @@
                                     </span>
                                 @elseif($cs->result?->status === 'failed')
                                     <span class="badge bg-label-danger me-1" style="font-size:10px;">
+                                        {{ ucfirst($cs->result?->status) }}
+                                    </span>
+                                @elseif($cs->result?->status === 'in_progress')
+                                    <span class="badge bg-label-info me-1" style="font-size:10px;">
                                         {{ ucfirst($cs->result?->status) }}
                                     </span>
                                 @else

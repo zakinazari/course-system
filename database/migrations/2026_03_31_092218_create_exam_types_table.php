@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('exam_types', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->enum('exam_period',['midterm','final'])->default('final'); 
+            $table->unsignedSmallInteger('order')->default(1);
             $table->timestamps();
         });
     }

@@ -3,7 +3,7 @@
 namespace App\Models\Financial;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\User;
 class StudentCourseFeePayment extends Model
 {
      protected $fillable = [
@@ -28,5 +28,9 @@ class StudentCourseFeePayment extends Model
     public function installment()
     {
         return $this->belongsTo(StudentCourseFeeInstallment::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('course_id')->constrained('courses');
-            $table->foreignId('discount_provider_id')->constrained('discount_providers');
+            $table->foreignId('discount_provider_id')->nullable()->constrained('discount_providers');
 
             $table->enum('payment_type', ['full', 'installment']);
 
@@ -25,8 +25,9 @@ return new class extends Migration
             $table->decimal('discount_value', 10, 2)->default(0);
             $table->text('discount_reason')->nullable();
             $table->decimal('discount_amount',10,2)->default(0);
-            $table->decimal('g_discount_value', 10, 2)->default(0);
             $table->decimal('g_discount_amount', 10, 2)->default(0);
+            $table->decimal('special_discount_amount', 10, 2)->default(0);
+            $table->string('special_discount_status', 32)->nullable();
             $table->decimal('total_amount', 10, 2);
             $table->decimal('paid_amount',10,2)->default(0);
             $table->decimal('remaining_amount',10,2)->default(0);

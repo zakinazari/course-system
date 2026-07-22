@@ -75,8 +75,17 @@ class BookInventoryList extends Component
         $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
         // -------------start for activing menu in sidebar ----------------------
 
-         $this->warehouses =  Warehouse::all();
+        $this->warehouses =  Warehouse::all();
         $this->books =  PhysicalBook::all();
+
+        $this->search['book_id'] = request('book_id');
+        $this->search['warehouse_id'] = request('warehouse_id');
+
+        // اگر از نوتیفیکیشن آمده بود
+        if (request()->has('book_id') || request()->has('warehouse_id')) {
+
+            $this->dispatch('clear-url');
+        }
     }
 
      public $warehouse_id,$name,$branch_id,$category_id;

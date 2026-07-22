@@ -197,7 +197,7 @@ if (!function_exists('getImage')) {
 
     if (!function_exists('getLogo')) {
         function getLogo() {
-            $path = public_path('logo.png');
+            $path = $_SERVER['DOCUMENT_ROOT'] . '/logo.png';
 
             if(file_exists($path)){
                 $type = pathinfo($path, PATHINFO_EXTENSION);

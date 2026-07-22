@@ -18,10 +18,11 @@ return new class extends Migration
 
                 $table->enum('status', [
                     'active',
-                    'completed',
-                    'dropped',
+                    'pending',
+                    'passed',
                     'failed',
-                    'pending'
+                    'makeup',
+                    'dropped',
                 ])->default('active');
 
             $table->date('enrolled_at')->nullable();

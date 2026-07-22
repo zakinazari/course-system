@@ -5,6 +5,7 @@ use Livewire\Volt\Volt;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\GazetteFileController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\DiplomaController;
 use App\Livewire\Settings\AccessRoles\AccessRoleList;
 use App\Livewire\Notes;
 use App\Http\Middleware\PreventDirectAuthRoutes;
@@ -14,6 +15,11 @@ use Illuminate\Support\Facades\DB;
 Route::get('/', function () {
     return redirect('login');
 });
+
+Route::get(
+    '/verify-diploma/{verification_code}',
+    [DiplomaController::class, 'verify']
+)->name('diploma.verify');
 
 // ------------start admin panel route----------------------------
 Route::middleware(['auth'])->group(function () {
@@ -44,9 +50,40 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard/{menu_id?}', function ($menu_id = null) {
 
-        return view('livewire.dashboard-page',['menu_id' => $menu_id]);
+        return view('livewire.dashboards.academic-dashboards.active-students-dashboard-page',['menu_id' => $menu_id]);
+        // return view('livewire.dashboard-page',['menu_id' => $menu_id]);
 
     })->name('dashboard');
+
+    Route::get('/academic-attendance-dashboard/{menu_id?}', function ($menu_id = null) {
+
+        return view('livewire.dashboards.academic-dashboards.academic-attendance-dashboard-page',['menu_id' => $menu_id]);
+
+    })->name('academic-attendance-dashboard');
+
+    Route::get('/academic-results-dashboard/{menu_id?}', function ($menu_id = null) {
+
+        return view('livewire.dashboards.academic-dashboards.academic-results-dashboard-page',['menu_id' => $menu_id]);
+
+    })->name('academic-results-dashboard');
+
+    Route::get('/financial-dashboard/{menu_id?}', function ($menu_id = null) {
+
+        return view('livewire.dashboards.financial-dashboards.financial-dashboard-page',['menu_id' => $menu_id]);
+
+    })->name('financial-dashboard');
+
+    Route::get('/expense-budget-dashboard/{menu_id?}', function ($menu_id = null) {
+
+        return view('livewire.dashboards.financial-dashboards.expense-budget-dashboard-page',['menu_id' => $menu_id]);
+
+    })->name('expense-budget-dashboard');
+
+    Route::get('/book-inventory-dashboard/{menu_id?}', function ($menu_id = null) {
+
+        return view('livewire.dashboards.financial-dashboards.book-inventory-dashboard-page',['menu_id' => $menu_id]);
+
+    })->name('book-inventory-dashboard');
 
     // -----------start access roles -----------------------
     Route::get('/access-roles/{menu_id?}', function ($menu_id = null) {
@@ -86,6 +123,13 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.settings.permissions.permissions-page', ['menu_id' => $menu_id]);
     })->name('permissions');
+
+    Route::get('/notification-settings/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.settings.notification-category-role.notification-category-role-list-page', ['menu_id' => $menu_id]);
+    })->name('notification-settings');
 
     
     Route::get('/branches/{menu_id?}', function ($menu_id = null) {
@@ -179,6 +223,13 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.center-settings.shifts.shift-list-page',['menu_id' => $menu_id]);
     })->name('shift-list');
 
+    Route::get('/activity-category/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.academic.student-activities.activity-category-list-page',['menu_id' => $menu_id]);
+    })->name('activity-category');
+
     Route::get('/units/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
@@ -193,12 +244,35 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.center-settings.positions.position-list-page',['menu_id' => $menu_id]);
     })->name('positions');
 
+    Route::get('/leave_types/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.leave-type.leave-type-list-page',['menu_id' => $menu_id]);
+    })->name('leave_types');
+
     Route::get('/warehouse-list/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
         }
         return view('livewire.warehouse.warehouse-list-page',['menu_id' => $menu_id]);
     })->name('warehouse-list');
+    
+
+    Route::get('/system-logs/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.logs.system-logs.system-log-list-page',['menu_id' => $menu_id]);
+    })->name('system-logs');
+
+    Route::get('/makeup-settings/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.center-settings.makeup-settings.makeup-settings-list-page',['menu_id' => $menu_id]);
+    })->name('makeup-settings');
+
 
     // -----start academic---------------------------
     Route::get('/visitors/{menu_id?}', function ($menu_id = null) {
@@ -216,10 +290,15 @@ Route::middleware(['auth'])->group(function () {
     })->name('meetings');
 
     Route::get('/students/{menu_id?}', function ($menu_id = null) {
+
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
         }
-        return view('livewire.academic.students.student-list-page',['menu_id' => $menu_id]);
+
+        return view('livewire.academic.students.student-list-page', [
+            'menu_id' => $menu_id,
+            'student_id' => request()->get('student_id') 
+        ]);
     })->name('students');
 
     Route::get('student-profile/{menu_id?}/{student_id?}', function ($menu_id = null,$student_id = null) {
@@ -280,23 +359,37 @@ Route::middleware(['auth'])->group(function () {
         if (!read(Auth::user()->role_ids,34)) {
             abort(403, __('label.permission_message'));
         }
+        
         $q = $request->q;  
 
         return DB::table('students')
-            ->select('id','name','last_name','father_name','phone_no')
-             ->where(function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('phone_no', 'like', "%{$q}%")
-                    ->orWhere('student_code', 'like', "%{$q}%");
-            })
-            ->limit(20)
-            ->get()
-            ->map(fn ($item) => [
-                'id'   => $item->id,
-                'text' => trim("{$item->name} {$item->last_name}") .
+        ->select(
+            'id',
+            'student_code',
+            'name',
+            'last_name',
+            'father_name',
+            'phone_no'
+        )
+        ->when(Auth::user()->branch_id, function ($query) {
+            $query->where('branch_id', Auth::user()->branch_id);
+        })
+        ->where(function ($query) use ($q) {
+            $query->where('name', 'like', "%{$q}%")
+                ->orWhere('phone_no', 'like', "%{$q}%")
+                ->orWhere('father_name', 'like', "%{$q}%")
+                ->orWhere('student_code', 'like', "%{$q}%");
+        })
+        ->limit(20)
+        ->get()
+        ->map(fn ($item) => [
+            'id'   => $item->id,
+            'text' =>
+                ($item->student_code ? "{$item->student_code} - " : '') .
+                trim("{$item->name} {$item->last_name}") .
                 ($item->father_name ? " - Son/Daughter of {$item->father_name}" : '') .
                 ($item->phone_no ? " - 📞 {$item->phone_no}" : ''),
-            ]);
+        ]);
     });
 
     
@@ -306,6 +399,13 @@ Route::middleware(['auth'])->group(function () {
         }
         return view('livewire.academic.course-waiting.waiting-students-page', ['menu_id' => $menu_id]);
     })->whereNumber('menu_id')->name('waiting-list');
+
+    Route::get('waiting-list-report/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.academic.course-waiting.waiting-student-comment-report-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('waiting-list-report');
 
     Route::get('placement-test/{menu_id?}', function ($menu_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
@@ -364,6 +464,13 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.assessment.exam-attendance.exam-attendance-list-page', ['menu_id' => $menu_id]);
     })->whereNumber('menu_id')->name('exam-attendance');
 
+    Route::get('student-attendance-comments/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.assessment.attendance.student-attendance-comments-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('student-attendance-comments');
+
     // -----------end assessment-------------------
 
     // ----------start Financial-----------------------------
@@ -387,6 +494,13 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.financial.student-fees.reports.course-fees-report-page', ['menu_id' => $menu_id,'student_id'=>$student_id]);
     })->whereNumber('menu_id')->name('course-fees-report');
 
+    Route::get('student-fees-report/{menu_id?}', function ($menu_id = null,$student_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.student-fees.reports.student-fees-report-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('student-fees-report');
+
     Route::get('other-fees-report/{menu_id?}/{student_id?}', function ($menu_id = null,$student_id = null) {
         if (!read(Auth::user()->role_ids, $menu_id)) {
             abort(403, __('label.permission_message'));
@@ -401,6 +515,19 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.financial.student-fees.reports.course-fees-discount-report-page', ['menu_id' => $menu_id,'student_id'=>$student_id]);
     })->whereNumber('menu_id')->name('course-fees-discount-report');
 
+    Route::get('daily-income-report/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.financial-reports.daily-income-report-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('daily-income-report');
+
+    Route::get('daily-expense-report/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.financial-reports.daily-expense-report-page', ['menu_id' => $menu_id]);
+    })->whereNumber('menu_id')->name('daily-expense-report');
 
     // expense-----------
     Route::get('expense-category/{menu_id?}', function ($menu_id = null) {
@@ -418,6 +545,14 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.financial.expenses.expense-list-page', ['menu_id' => $menu_id]);
 
     })->whereNumber('menu_id')->name('expenses');
+
+     Route::get('expense-budgets/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.expenses.expense-budget-list-page', ['menu_id' => $menu_id]);
+
+    })->whereNumber('menu_id')->name('expense-budgets');
 
     // -----assets---------
     Route::get('asset-category/{menu_id?}', function ($menu_id = null) {
@@ -451,6 +586,14 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.financial.accounts.external-money-in-page', ['menu_id' => $menu_id]);
 
     })->whereNumber('menu_id')->name('external-money-in');
+
+    Route::get('account-transfer/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.financial.accounts.account-transfer-page', ['menu_id' => $menu_id]);
+
+    })->whereNumber('menu_id')->name('account-transfer');
 
 
     // ----------end Financial-----------------------------
@@ -531,6 +674,36 @@ Route::middleware(['auth'])->group(function () {
     })->name('book-transfer-list');
     
     // -------end Hr------------------------
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Documents routes
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/diplomas/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.documents.diplomas.diploma-list-page',['menu_id' => $menu_id]);
+    })->name('diplomas');
+
+    Route::get('/diploma-print/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.documents.diplomas.diploma-print-page',['menu_id' => $menu_id]);
+    })->name('diploma-print');
+
+    Route::get('/result-cards/{menu_id?}', function ($menu_id = null) {
+        if (!read(Auth::user()->role_ids, $menu_id)) {
+            abort(403, __('label.permission_message'));
+        }
+        return view('livewire.documents.result-cards.result-card-list-page',['menu_id' => $menu_id]);
+    })->name('result-cards');
+
 });
 // -----------------------end admin panel routes-------------------------------
 require __DIR__.'/auth.php';

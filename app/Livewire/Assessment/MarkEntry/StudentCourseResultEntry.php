@@ -24,6 +24,7 @@ use App\Models\Assessment\ExamAttendance;
 use App\Jobs\SaveStudentResultsJob;
 use App\Models\User;
 use App\Models\Financial\ExamFine;
+use App\Models\Financial\MakeupFee;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -144,6 +145,8 @@ class StudentCourseResultEntry extends Component
     public $exam_types=[];
     public $exam_percentages = [];
     public $exam_absents = [];
+    public $makeup_fee_required = [];
+    public $exam_period='midterm';
     public function render()
     {
         if (empty($this->course_id)) {
@@ -154,7 +157,7 @@ class StudentCourseResultEntry extends Component
         ]);
     }
 
-   protected function loadCourseStudent()
+    protected function loadCourseStudent()
     {
         $course_id = $this->course_id;
         $this->results = [];
@@ -169,7 +172,12 @@ class StudentCourseResultEntry extends Component
         if (!$course || !$course->book) return;
 
         // exam types مرتب شده بر اساس id
-        $this->exam_types = $course->book->examTypes->sortByDesc('id')->values();
+        $this->exam_types = $course->book->examTypes
+        ->when($this->exam_period !== 'all', function ($q) {
+            return $q->where('exam_period', $this->exam_period);
+        })
+        ->sortBy('order')
+        ->values();
 
         // درصد هر exam type
         foreach ($this->exam_types as $type) {
@@ -178,6 +186,7 @@ class StudentCourseResultEntry extends Component
 
         // گرفتن دانش‌آموزان کورس
         $students = CourseStudent::with('student')
+            ->where('status','!=','dropped')
             ->where('course_id', $course_id)
             ->get();
 
@@ -211,13 +220,20 @@ class StudentCourseResultEntry extends Component
         ->map(function ($records) {
             return $records->keyBy('exam_type_id');
         });
+        // فیس makeup
+        $makeupFees = MakeupFee::where('course_id', $course_id)
+        ->whereIn('student_id', $students->pluck('student_id'))
+        ->get()
+        ->keyBy('student_id');
 
         $filteredStudents = collect();
-        
+       
         foreach ($students as $cs) {
+
             $this->results[$cs->student_id] = [];
             $cs->result = (object) [];
-
+            
+            
             foreach ($this->exam_types as $type) {
 
                 $score = $examScores[$cs->student_id][$type->id]->score ?? 0;
@@ -245,44 +261,29 @@ class StudentCourseResultEntry extends Component
                 $cs->pass_mark_snapshot = $course->book->pass_mark;
             }
 
+            //   makeup
+            $student_result = $studentTotals[$cs->student_id] ?? null;
+
+            $is_makeup_student = $student_result
+                && $student_result->status === 'makeup';
+
+            $this->makeup_fee_required[$cs->student_id] =
+                $is_makeup_student &&
+                !isset($makeupFees[$cs->student_id]);
+            // end makeup
+              // مرتب‌سازی بر اساس مجموع
+          
             $filteredStudents->push($cs);
+            
         }
 
-        $this->students = $filteredStudents;
+        $this->students = $filteredStudents
+        ->sortByDesc(fn ($cs) => (float) $cs->total)
+        ->values();
+
     }
 
-    public function updatedResults($value, $key)
-    {
-        [$student_id, $type_id] = explode('.', str_replace('results.', '', $key));
-
-        // تبدیل مقدار ورودی به عدد
-        $value = floatval($value);
-
-        $max = $this->exam_percentages[$type_id] ?? 100;
-
-        // محدود کردن تک نمره بین 0 و max
-        $value = max(0, min($value, $max));
-
-        // اطمینان از وجود آرایه
-        if (!isset($this->results[$student_id])) {
-            $this->results[$student_id] = [];
-        }
-
-        // تبدیل مقادیر موجود به float قبل از جمع
-        $currentTotal = array_sum(array_map('floatval', $this->results[$student_id])) 
-                        - floatval($this->results[$student_id][$type_id] ?? 0);
-
-        $newTotal = $currentTotal + $value;
-
-        if ($newTotal > 100) {
-            // پیام خطا یا هشدار
-            session()->flash('error', "مجموع نمرات دانش‌آموز نمی‌تواند بیش از 100 شود!");
-            return;
-        }
-
-        // ذخیره مقدار جدید
-        $this->results[$student_id][$type_id] = $value;
-    }
+   
     
     protected function rules()
     {
@@ -353,9 +354,18 @@ class StudentCourseResultEntry extends Component
             $this->results = [];
         }
     }
+    public function updatedExamPeriod($value)
+    {
+        if ($value) {
+            $this->loadCourseStudent();
+        } else {
+            $this->students = collect();
+            $this->results = [];
+        }
+    }
 
     public function saveMarks()
-    {
+    { 
         
         if (!add(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
@@ -366,7 +376,7 @@ class StudentCourseResultEntry extends Component
 
         $course = Course::find($course_id);
         if (!$course) return;
-        
+
         $book = $course->book;
         if (!$book) {
             return $this->dispatch('alert', type: 'error', message: 'Book is not assigned to this course.');
@@ -387,9 +397,9 @@ class StudentCourseResultEntry extends Component
             ->toArray();
              // Dispatch Job برای ذخیره در پس‌زمینه
             $user_id = Auth::user()->id;
-            SaveStudentResultsJob::dispatch($course_id, $this->results,$user_id, $exam_percentages);
+            SaveStudentResultsJob::dispatch($course_id, $this->results,$user_id, $exam_percentages,$this->exam_period);
             $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
-
+            // $this->students = collect();
         } catch (\Exception $e) {
             $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
         }

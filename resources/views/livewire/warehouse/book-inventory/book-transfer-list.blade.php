@@ -331,7 +331,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
-                        <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
+                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
                     </div>
                 </form>
             </div>

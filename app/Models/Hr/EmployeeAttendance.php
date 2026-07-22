@@ -15,6 +15,8 @@ class EmployeeAttendance extends Model
         'branch_id',
         'attendance_date',
         'status',
+        'leave_type_id',
+        'note',
         'user_id',
     ];
 
@@ -30,6 +32,11 @@ class EmployeeAttendance extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function leaveType()
+    {
+        return $this->belongsTo(LeaveType::class);
     }
 
     protected static function booted()

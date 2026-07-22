@@ -141,7 +141,7 @@ class EmployeeList extends Component
             'father_name' => 'required',
             'phone_no' => 'nullable|string|max:16|unique:visitors,phone_no,' . $this->employee_id,
             'email' => 'nullable|email|unique:employees,email,' . $this->employee_id,
-            'tazkira_no' => 'nullable|email|unique:employees,tazkira_no,' . $this->employee_id,
+            'tazkira_no' => 'nullable|unique:employees,tazkira_no,' . $this->employee_id,
             'role_ids' => 'required|array',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048'
         ];
@@ -295,6 +295,8 @@ class EmployeeList extends Component
         $this->last_name = $employee->last_name;
         $this->father_name = $employee->father_name;
         $this->phone_no = $employee->phone_no;
+        $this->email = $employee->email;
+        $this->tazkira_no = $employee->tazkira_no;
         $this->email = $employee->email;
         $this->address = $employee->address;
         $this->branch_id = $employee->branch_id;

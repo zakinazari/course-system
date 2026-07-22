@@ -18,6 +18,7 @@ use DB;
 use App\Enums\TransactionCategory;
 use App\Services\TransactionService;
 use App\Enums\Action;
+use App\Models\Financial\Account;
 class EmployeeSalaryAdvanceList extends Component
 {
     // -------start generals--------------------
@@ -72,12 +73,16 @@ class EmployeeSalaryAdvanceList extends Component
         // -------------start for activing menu in sidebar ----------------------
 
         $this->employee_id = $employee_id;
+        $this->employee  = Employee::find($employee_id);
         $this->branches =  Branch::all();
         $this->sections =  Section::all();
+
+        $this->advance_date = now()->format('Y-m-d');
 
     }
 
     public $employee_id;
+    public $employee;
     public $branch_id;
     public $section_id;
 
@@ -85,6 +90,8 @@ class EmployeeSalaryAdvanceList extends Component
     public $total_amount;
     public $remaining_amount;
     public $status;
+    public $advance_date;
+    public $auto_deduct = true;
     public $note;
 
     public function resetInputFields(){
@@ -95,6 +102,7 @@ class EmployeeSalaryAdvanceList extends Component
             'modalId',
             'search',
             'employees',
+            'employee',
             'sections',
             'employee_id',
             'branches',
@@ -165,11 +173,29 @@ class EmployeeSalaryAdvanceList extends Component
                 'branch_id'  => Auth::user()->branch_id ?: $this->branch_id,
                 'total_amount' => $this->total_amount,
                 'remaining_amount' => $this->total_amount,
+                'advance_date' => $this->advance_date,
+                'auto_deduct' => $this->auto_deduct,
                 'note' => $this->note,
+                'user_id' => Auth::user()->id,
             ]);
 
             // -----------start transaction-----------------------------
+            $account_id = Account::where('branch_id', $advance->branch_id)
+                    ->where('category', 'treasury')
+                    ->where('type','branch')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+            // -----------start transaction-----------------------------
             TransactionService::expense(
+                $account_id,
                 $advance->branch_id,
                 $advance->total_amount,
                 TransactionCategory::SALARY_ADVANCE,
@@ -210,6 +236,7 @@ class EmployeeSalaryAdvanceList extends Component
         $this->section_id = $advance->section_id;
         $this->branch_id = $advance->branch_id;
         $this->total_amount = $advance->total_amount;
+        $this->auto_deduct = $advance->auto_deduct;
         $this->note = $advance->note;
 
         $this->editMode = true;
@@ -230,8 +257,23 @@ class EmployeeSalaryAdvanceList extends Component
         try {
 
             $advance = EmployeeSalaryAdvance::findOrFail($this->advance_id);
+             // -----------start transaction-----------------------------
+            $account_id = Account::where('branch_id', $advance->branch_id)
+                    ->where('category', 'treasury')
+                    ->where('type','branch')
+                    ->value('id');
+
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
             // -----------start transaction-----------------------------
             TransactionService::adjust(
+                $account_id,
                 'expense', 
                 $advance->branch_id,
                 $advance->total_amount,
@@ -250,6 +292,8 @@ class EmployeeSalaryAdvanceList extends Component
                 'total_amount' => $this->total_amount,
                 'remaining_amount' => $this->total_amount,
                 'note' => $this->note,
+                'auto_deduct' => $this->auto_deduct,
+              
             ]);
 
            
@@ -293,18 +337,24 @@ class EmployeeSalaryAdvanceList extends Component
         try {
             
             $advance = EmployeeSalaryAdvance::findOrFail($id);
-            // ---start system log-----------
-            SystemLog::create([
-                's_id' => $advance->employee_id,
-                'user_id' => Auth::user()->id,
-                'section' => __('label.salary_advance').' ID:'.$advance->id.')',
-                'type_id' => 4,
-            ]);
-            // ---end system log-------------
-            $advance->delete();
+             // -----------start transaction-----------------------------
+            $account_id = Account::where('branch_id', $advance->branch_id)
+                    ->where('category', 'treasury')
+                    ->where('type','branch')
+                    ->value('id');
 
-            // -----------start transaction-----------------------------
+                if (!$account_id) {
+
+                    return $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        message: __('label.treasury_account_not_found')
+                    );
+                }
+
+             // -----------start transaction-----------------------------
             TransactionService::income(
+                $account_id,
                 $advance->branch_id,
                 $advance->total_amount,
                 TransactionCategory::SALARY_ADVANCE,
@@ -314,6 +364,17 @@ class EmployeeSalaryAdvanceList extends Component
                 Action::DELETE,
             );
             // -----------start transaction-----------------------------
+
+            // ---start system log-----------
+            SystemLog::create([
+                's_id' => $advance->employee_id,
+                'user_id' => Auth::user()->id,
+                'section' => __('label.salary_advance').' ID:'.$advance->id.')',
+                'type_id' => 4,
+            ]);
+            // ---end system log-------------
+            
+            $advance->delete();
 
             DB::commit();
             $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
@@ -331,5 +392,13 @@ class EmployeeSalaryAdvanceList extends Component
 
         $this->dispatch('open-modal', id: 'advance_payments_modal');
 
+    }
+
+    public $billModalId = 'salary_advance_payment_biil';
+    public $advance_bill;
+    public function bill($advance_id)
+    {
+        $this->advance_bill = EmployeeSalaryAdvance::find($advance_id);
+        $this->dispatch('open-modal', id: $this->billModalId);
     }
 }

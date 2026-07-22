@@ -21,16 +21,22 @@ class CourseWaitingList extends Model
         'program_id',
         'book_id',
         'shift_id',
+        'phone_no',
+        'father_no',
+        'comment',
         'status',
+        'comment',
         'user_id',
     ];
 
     public function getStatusBadgeClassAttribute()
     {
         return match ($this->status) {
-            'waiting'     => 'bg-warning',
-            'enrolled' => 'bg-success',
-            'cancelled'   => 'bg-primary',
+            'placement'     => 'bg-info',
+            'passed' => 'bg-success',
+            'failed'   => 'bg-danger',
+            'makeup'   => 'bg-warning',
+            'dropped'   => 'bg-secondary',
         };
     }
 
@@ -54,6 +60,10 @@ class CourseWaitingList extends Model
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class, 'shift_id');
+    }
+    public function comments()
+    {
+        return $this->hasMany(CourseWaitingListComment::class, 'course_waiting_list_id','id');
     }
     // شرط شعبه، سکوپ
     protected static function booted()

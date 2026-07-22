@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('quantity_change'); 
             $table->integer('balance_after'); 
             $table->decimal('unit_price', 10, 2)->nullable();
-            $table->enum('type', ['purchase', 'sale', 'transfer_in','transfer_out', 'return']);
+            $table->enum('type', ['purchase', 'sale', 'transfer_in','transfer_out', 'return','employee_issue','employee_return']);
             $table->uuid('transfer_group_id')->nullable()->index();
             $table->text('note')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete(); 

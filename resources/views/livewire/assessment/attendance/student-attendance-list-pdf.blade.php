@@ -31,9 +31,12 @@
         'name' => __('label.name'),
         'last_name' => __('label.last_name'),
         'father_name' => __('label.father_name'),
+        'phone_no' => __('label.phone_no'),
+        'father_whats_app' => __('label.father_no'),
         'status' => __('label.status'),
         'absent_days' => __('label.absent_days'),
         'payment_status' => __('label.payment_status'),
+        'note' => __('label.comment'),
     ];
 @endphp
 
@@ -108,14 +111,14 @@
                                     {{ __('label.due') }}: {{ number_format($sc->remaining_amount) }}
                                 </span>
                             @endif
-                            
+                        @elseif($field==='note')
+                           {{ $sc->note }}
                         @else
                             {{ $sc->student?->$field }}
                         @endif
 
                     </td>
                     
-
                 @endforeach
             </tr>
         @endforeach

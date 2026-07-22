@@ -28,6 +28,7 @@ return new class extends Migration
             $table->decimal('tax', 10, 2)->default(0);
             $table->decimal('food_deduction', 10, 2)->default(0);
             $table->decimal('advance_deduction', 10, 2)->default(0);
+            $table->decimal('security_saving_deduction',10,2)->default(0);
             $table->decimal('total_deductions', 12, 2)->default(0);
             
             $table->decimal('net_salary', 12, 2)->default(0);

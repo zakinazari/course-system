@@ -16,7 +16,7 @@
     <!-- end header -->
 
     <div class="app-academy">
-        <div class="card p-0 mb-4 ">
+        <div class="card p-0 mb-4">
           <div class="mb-3 px-3 mt-3">
                 <form wire:submit.prevent="applySearch" class="row g-3 align-items-end">
                     <div class="col-md-3">
@@ -85,7 +85,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">{{ __('label.shift') }}</label>
-                        <select class="form-select" wire:model="search.shift_id">
+                        <select class="form-select" wire:model.lazy="search.shift_id">
                            <option value="">{{ __('label.all') }}</option>
                            @foreach($shifts as $shift)
                                  <option value="{{ $shift->id }}"  wire:key="shift-search-{{ $shift->id }}">
@@ -96,13 +96,10 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">{{ __('label.status') }}</label>
-                        <select class="form-select" wire:model.defer="search.status" id ="">
+                        <select class="form-select" wire:model.lazy="search.status" id ="">
                            <option value="">{{ __('label.all') }}</option>
                             <option value="draft">{{ __('label.draft') }}</option>
-                            <option value="scheduled">{{ __('label.scheduled') }}</option>
                             <option value="ongoing">{{ __('label.ongoing') }}</option>
-                            <option value="completed">{{ __('label.completed') }}</option>
-                            <option value="cancelled">{{ __('label.cancelled') }}</option>
                         </select>
                     </div>
                   
@@ -111,6 +108,7 @@
                             {{ __('label.search') }}
                         </button>
                     </div>
+
 
                 </form>
             </div>
@@ -136,7 +134,86 @@
         </div>
 
             <div class="card-body">
+                
                 <div class="row gy-4 mb-4">
+                    @if($action)
+                    <div class="mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body py-3 px-4">
+                                <div class="d-flex align-items-center justify-content-between">
+
+                                    <div class="d-flex align-items-center">
+
+                                        <div class="avatar avatar-sm me-3">
+                                            <span class="avatar-initial rounded bg-label-primary">
+                                                <i class="bx bx-filter-alt"></i>
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            @if($action === 'upcoming')
+                                                <h6 class="mb-1">
+                                                    {{ __('label.upcoming_courses') }}
+                                                </h6>
+
+                                                <small class="text-muted">
+                                                       {{ __('label.showing_courses_starting_tomorrow') }}
+                                                </small>
+
+                                            @elseif($action === 'exam_tomorrow')
+                                                <h6 class="mb-1">
+                                                     {{ __('label.upcoming_exams') }}
+                                                </h6>
+
+                                                <small class="text-muted">
+                                                   {{ __('label.showing_courses_with_exam_tomorrow') }}
+                                                </small>
+                                            @elseif($action === 'missing-attendance')
+
+                                                <h6 class="mb-1">
+                                                    {{ __('label.missing_attendance') }}
+                                                </h6>
+
+                                                <small class="text-muted">
+                                                    {{ __('label.showing_courses_without_attendance') }}
+                                                </small>
+
+
+                                            @elseif($action === 'missing_exam_attendance')
+
+                                                <h6 class="mb-1">
+                                                    {{ __('label.missing_exam_attendance') }}
+                                                </h6>
+
+                                                <small class="text-muted">
+                                                    {{ __('label.showing_courses_without_exam_attendance') }}
+                                                </small>
+                                            @elseif($action === 'course_unit_fallback')
+
+                                                <h6 class="mb-1">
+                                                    {{ __('label.course_unit_fallback') }}
+                                                </h6>
+
+                                                <small class="text-muted">
+                                                    {{ __('label.showing_courses_with_unit_fallback') }}
+                                                </small>
+
+                                            @endif
+                                        </div>
+
+                                    </div>
+
+
+                                    <button type="button" wire:click="clearFilter"class="btn btn-sm btn-label-secondary d-flex align-items-center">
+                                        <i class="bx bx-x me-1"></i>
+                                    {{ __('label.clear_filter') }}
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                     @foreach($courses as $i => $course)
                     <div class="col-sm-6 col-lg-3">
                         <div class="card p-2 h-100">
@@ -277,3 +354,4 @@ document.addEventListener("livewire:initialized", function () {
 });
 </script>
 @endscript
+

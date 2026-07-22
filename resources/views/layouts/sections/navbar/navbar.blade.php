@@ -37,15 +37,42 @@ $containerNav = $containerNav ?? 'container-fluid';
     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
 
       @if(!isset($menuHorizontal))
+
+      <style>
+        .navbar-search-box {
+            width: clamp(170px, 40vw, 400px);
+        }
+      </style>
       <!-- Search -->
-      <!-- <div class="navbar-nav align-items-center">
-        <div class="nav-item navbar-search-wrapper mb-0">
-          <a class="nav-item nav-link search-toggler px-0" href="javascript:void(0);">
-            <i class="bx bx-search-alt bx-sm"></i>
-            <span class="d-none d-md-inline-block text-muted">{{ __('label.search') }} (Ctrl+/)</span>
-          </a>
-        </div>
-      </div> -->
+          <div class="navbar-search position-relative d-flex align-items-center">
+
+              <div class="input-group navbar-search-box">
+                  <span class="input-group-text">
+                      <i class="bx bx-search"></i>
+                  </span>
+
+                  <input type="text"
+                        id="navbar_student_search_input"
+                        class="form-control"
+                        placeholder="Search student...">
+              </div>
+
+              <div id="navbar_student_results"
+                  class="list-group position-absolute w-100"
+                  style="
+                      z-index: 99999;
+                      top: 100%;
+                      left: 0;
+                      display: none;
+                      max-height: 300px;
+                      overflow-y: auto;
+                      background: #fff;
+                      border: 1px solid #ddd;
+                      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+                  ">
+              </div>
+
+          </div>
       <!-- /Search -->
       @endif
 
@@ -145,11 +172,21 @@ $containerNav = $containerNav ?? 'container-fluid';
                   <div class="flex-grow-1">
                     <span class="fw-semibold d-block">
                       @if (Auth::check())
-                      {{ Auth::user()->name }}
+                          <span class="fs-6 fw-bold">
+                              {{ Auth::user()->name }}
+                          </span>
+
+                          <span class="d-block text-muted" style="font-size: 12px;">
+                              {{ Auth::user()?->role?->role_name }}
+                          </span>
                       @else
-                      John Doe
+                          <span class="fs-6 fw-bold">John Doe</span>
+
+                          <span class="d-block text-muted" style="font-size: 12px;">
+                              Administrator
+                          </span>
                       @endif
-                    </span>
+                  </span>
                     <small class="text-muted"></small>
                   </div>
                 </div>
@@ -158,12 +195,12 @@ $containerNav = $containerNav ?? 'container-fluid';
             <li>
               <div class="dropdown-divider"></div>
             </li>
-            <!-- <li>
+            <li>
               <a class="dropdown-item"  href="{{ route('my-account') }}">
                 <i class="bx bx-user me-2"></i>
                 <span class="align-middle">{{__('label.my_account')}}</span>
               </a>
-            </li> -->
+            </li>
             
             @if (Auth::check())
             <li>
@@ -197,3 +234,100 @@ $containerNav = $containerNav ?? 'container-fluid';
   </div>
 </nav>
 <!-- / Navbar -->
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const input = document.getElementById('navbar_student_search_input');
+    const box = document.getElementById('navbar_student_results');
+
+    let timeout = null;
+
+    if (!input || !box) return;
+
+    // hide dropdown
+    function hideBox() {
+        box.style.display = 'none';
+        box.innerHTML = '';
+    }
+
+    // render results
+    function render(data) {
+
+        box.innerHTML = '';
+
+        if (!data.length) {
+            hideBox();
+            return;
+        }
+
+        data.forEach(item => {
+
+            let el = document.createElement('a');
+            el.href = "#";
+            el.className = "list-group-item list-group-item-action";
+            el.textContent = item.text;
+
+            el.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            let menuId = 34;
+            let studentId = item.id;
+
+            window.location.href =
+                `/students/${menuId}?student_id=${studentId}`;
+        });
+
+            box.appendChild(el);
+        });
+
+        box.style.display = 'block';
+    }
+
+    // search input
+    input.addEventListener('keyup', function () {
+
+        clearTimeout(timeout);
+
+        let q = this.value.trim();
+
+        if (q.length < 2) {
+            hideBox();
+            return;
+        }
+
+        timeout = setTimeout(() => {
+
+            fetch(`/search-students?q=${encodeURIComponent(q)}`)
+                .then(res => res.json())
+                .then(data => render(data))
+                .catch(err => {
+                    console.error(err);
+                    hideBox();
+                });
+
+        }, 300);
+    });
+
+    // click outside close
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.navbar-search')) {
+            hideBox();
+        }
+    });
+
+});
+
+window.addEventListener('replace-url', function (event) {
+
+    let menuId = event.detail.menuId;
+
+    window.history.replaceState(
+        {},
+        '',
+        `/students/${menuId}`
+    );
+
+});
+</script>

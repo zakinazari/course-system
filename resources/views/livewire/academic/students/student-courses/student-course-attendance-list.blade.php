@@ -54,12 +54,14 @@
                    
                         <div class="col col-md-6  d-flex flex-column">
                             <label class="form-label">{{ __('label.student_course') }}</label>
-                            <select class="form-select select2 @error('status') is-invalid @enderror" id="search_course_id">
+
+                            <select class="form-select select2 @error('status') is-invalid @enderror" wire:model.lazy="search.course_id" id="search_course_id">
                                 <option value="">{{ __('label.select') }}</option>
                                 @foreach($student_courses as $course)
-                                <option value="{{ $course->id }}"  wire:model.lazy="search.course_id" wire:key="student-course-option-{{ $course->id }}">{{ $course?->name }}</option>
+                                <option value="{{ $course->id }}"   wire:key="student-course-option-{{ $course->id }}">{{ $course?->name }}</option>
                                 @endforeach
                             </select>
+
                             @error('target_course_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
                     
@@ -99,6 +101,8 @@
                             <th>{{ __('label.time') }}</th>
                             <th>{{ __('label.status') }}</th>
                             <th>{{ __('label.date') }}</th>
+                            <th style="">{{ __('label.note') }}</th>
+                            <th>{{ __('label.actions') }}</th>
                         </tr>
 
                     </thead>
@@ -128,6 +132,20 @@
                                 @endif
                             </td>
                             <td>{{ $attendance->attendance_date?->format('Y/m/d') }}</td>
+                            <td style="">{{ $attendance->note }}</td>
+                            <td>
+                                <div class="dropdown position-static">
+                                    <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        @if(edit(Auth::user()->role_ids,$active_menu_id))
+                                            <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $attendance->id }})"
+                                            ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -138,6 +156,48 @@
             </div>
     </div>
     
+    <div class="modal fade" id="{{$modalId}}" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@if($editMode) {{ __('label.editing') }}  @else {{ __('label.adding') }} @endif @if(App::getLocale() =='en') {{ $active_menu?->name_en }} @elseif(App::getLocale()=='fa') {{ $active_menu?->name }} @endif</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+                <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
+                    <div class="modal-body">
+                     
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label class="form-label">{{ __('label.status') }} <span style="color:red;">*</span></label>
+                            <select class="form-select @error('status') is-invalid @enderror" wire:model.lazy="status" id ="" >
+                            <option value="">{{ __('label.select') }}</option>
+                                <option value="present">{{ __('label.present') }}</option>
+                                <option value="absent">{{ __('label.absent') }}</option>
+                                <option value="excused">{{ __('label.excused') }}</option>
+                                <option value="late">{{ __('label.late') }}</option>
+                            </select>
+                            @error('status') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label for="nameBasic" class="form-label" >{{ __('label.reason') }} <span style="color:red;">*</span></label>
+                            <textarea type="text" id="nameBasic" class="form-control @error('note') is-invalid @enderror" wire:model.lazy="note"></textarea>
+                            @error('note') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
+                        <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @script

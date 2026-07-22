@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('expense_category_id')->constrained();
             $table->string('name');
             $table->decimal('unit_price', 15, 2); 
-            $table->decimal('quantity', 15, 3)->default(1);        
+            $table->decimal('quantity', 15, 2)->default(1);        
             $table->decimal('total_amount', 15, 2);  
             $table->foreignId('unit_id')->constrained();
 

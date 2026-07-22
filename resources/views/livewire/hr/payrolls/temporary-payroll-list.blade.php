@@ -72,12 +72,12 @@
         <hr>
         <div class=" text-nowrap">
  
-            <div class="mb-3 px-3">
+            <div class="mb-3 px-3 mb-5">
                 <form wire:submit.prevent="applySearch" class="row g-3 align-items-end">
                 
                     <div class="col-md-2 d-flex flex-column">
                         <label class="form-label">{{ __('label.year') }}</label>
-                        <select  class="form-select" wire:model ="year">
+                        <select  class="form-select" wire:model.lazy ="year">
                             <option value="">{{ __('label.select') }}</option>
                            @foreach($years as $year)
                                  <option value="{{ $year->year }}"  wire:key="year-search-{{ $year->year }}">
@@ -89,7 +89,7 @@
                     </div>
                     <div class="col-md-2 d-flex flex-column">
                         <label class="form-label">{{ __('label.month') }}</label>
-                        <select  class="form-select" wire:model ="month">
+                        <select  class="form-select" wire:model.lazy ="month">
                             <option value="">{{ __('label.select') }}</option>
                            @foreach($months as $month)
                                  <option value="{{ $month->id }}"  wire:key="month-search-{{ $month->id }}">
@@ -98,6 +98,19 @@
                            @endforeach
                         </select>
                     </div>
+
+                    <div class="col-md-2 d-flex flex-column">
+                        <label class="form-label">{{ __('label.section') }}</label>
+                        <select  class="form-select "  wire:model.lazy="section_id">
+                           <option value="">{{ __('label.select') }}</option>
+                           @foreach($sections as $section)
+                                 <option value="{{ $section->id }}"  wire:key="section-search-{{ $section->id }}">
+                                    {{ $section->name }}
+                                 </option>
+                           @endforeach
+                        </select>
+                    </div>
+
                     @if(!auth()->user()->branch_id)
                     <div class="col-md-2">
                         <label class="form-label">{{ __('label.branch') }}</label>
@@ -111,7 +124,9 @@
                         </select>
                      </div>
                      @endif
-                    <div class="col-md-2 d-flex flex-column">
+                     
+                     {{-- 
+                     <div class="col-md-2 d-flex flex-column">
                         <label class="form-label">{{ __('label.position') }}</label>
                         <select  class="form-select select2" id ="search_position_id" wire:model.lazy="position_id">
                            <option value="">{{ __('label.all') }}</option>
@@ -122,6 +137,8 @@
                            @endforeach
                         </select>
                     </div>
+                    --}}
+
                     <div class="col-md-3 d-flex flex-column" >
                         <label class="form-label">{{ __('label.employee') }}</label>
                         <select  class="form-select select2" id ="search_employee_id">
@@ -257,10 +274,18 @@
                         @if($has_any_payroll && $has_unpaid_payroll)
 
                             <button type="button"
-                                    class="btn btn-success"
-                                    wire:click="payPayroll"
-                                    wire:confirm="Are you sure you want to pay all payrolls? This action cannot be undone.">
-                                <i class="bi bi-cash-coin me-1"></i> {{ __('label.pay_all') }}
+                                class="btn btn-success"
+                                wire:click="payPayroll"
+                                wire:confirm="{{ count($selected_employees) == 1 
+                                    ? __('label.confirm_pay_payroll') 
+                                    : __('label.confirm_pay_all_payrolls') }}">
+
+                                <i class="bi bi-cash-coin me-1"></i>
+
+                                {{ count($selected_employees) == 1 
+                                    ? __('label.pay') 
+                                    : __('label.pay_all') }}
+
                             </button>
 
                         @endif
@@ -311,6 +336,10 @@ document.addEventListener("livewire:initialized", function () {
 
         $('#search_position_id').off('change').on('change', function () {
             $wire.set('position_id', $(this).val());
+        });
+
+        $('#search_section_id').off('change').on('change', function () {
+            $wire.set('section_id', $(this).val());
         });
 
     }

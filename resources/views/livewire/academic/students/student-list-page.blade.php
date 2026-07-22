@@ -2,6 +2,6 @@
 
 @section('content')
 
-@livewire('academic.students.student-list', ['active_menu_id' => $menu_id])
+@livewire('academic.students.student-list', ['active_menu_id' => $menu_id,'student_id' =>$student_id])
 
 @endsection

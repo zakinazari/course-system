@@ -366,7 +366,7 @@
                             </div>
                             <div class="col mb-3">
                                 <div wire:ignore>
-                                    <label class="form-label">{{ __('label.purchased_by') }} <span style="color:red;">*</span></label>
+                                    <label class="form-label">{{ __('label.purchased_by') }}</label>
                                     <select class="form-select select2 @error('employee_id') is-invalid @enderror" wire:model.lazy="employee_id" id ="employee_id">
                                         <option value="">{{ __('label.select') }}</option>
                                         @foreach($employees as $employee)
@@ -384,7 +384,7 @@
                             <div class="col mb-3">
                                 <div wire:ignore>
                                     <label class="form-label">{{ __('label.section') }} <span style="color:red;">*</span></label>
-                                    <select class="form-select select2" wire:model="section_id" id ="section_id">
+                                    <select class="form-select" wire:model.lazy ="section_id">
                                         <option value="">{{ __('label.select') }}</option>
                                         @foreach($sections as $section)
                                             <option value="{{ $section->id }}"  wire:key="section-add-edit-{{ $section->id }}">

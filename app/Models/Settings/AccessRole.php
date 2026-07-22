@@ -19,6 +19,16 @@ class AccessRole extends Model
     //     )->withTimestamps();
     // }
 
+    public function notificationCategories()
+    {
+        return $this->belongsToMany(
+            NotificationCategory::class,
+            'notification_category_role',
+            'role_id',
+            'notification_category_id'
+        );
+    }
+
     protected static function booted()
     {
         parent::booted();

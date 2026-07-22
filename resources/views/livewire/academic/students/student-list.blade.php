@@ -59,6 +59,14 @@
                         </ul>
                     </div>
 
+                    <!-- Print  Button -->
+                     <a class="btn btn-secondary d-flex align-items-center gap-2"
+                    href="#"
+                        wire:click.prevent="print">
+                        <i class="fa fa-print"></i>
+                        {{ __('label.print') }}
+                    </a>
+
                     <!-- Add New Record Button -->
                     @if(add(Auth::user()->role_ids,$active_menu_id))
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
@@ -102,6 +110,17 @@
                            @endforeach
                         </select>
                      </div>
+                     <div class="col-md-2">
+                        <label class="form-label">{{ __('label.occupation') }}</label>
+                        <select class="form-select" wire:model.defer="search.occupation_id" id ="">
+                           <option value="">{{ __('label.all') }}</option>
+                           @foreach($occupations as $occupation)
+                                 <option value="{{ $occupation->id }}"  wire:key="occupation-search-{{ $occupation->id }}">
+                                    {{ $occupation->name }}
+                                 </option>
+                           @endforeach
+                        </select>
+                     </div>
                     <div class="col-md-2">
                         <label class="form-label">{{ __('label.status') }}</label>
                         <select class="form-select" wire:model.defer="search.status" id ="">
@@ -113,7 +132,7 @@
                             <option value="graduated">{{ __('label.graduated') }}</option>
                         </select>
                      </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <button type="submit" class="btn btn-primary">
                             {{ __('label.search') }}
                         </button>
@@ -128,6 +147,8 @@
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="">{{ __('label.all') }}</option>
                     </select>
                     <span>{{ __('label.entries') }}</span>
                 </div>
@@ -192,6 +213,10 @@
                                 {{ __('label.gender') }}
                             </th>
                             <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="occupation_id">
+                                {{ __('label.occupation') }}
+                            </th>
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="registration_date">
                                 {{ __('label.date') }}
                             </th>
@@ -225,6 +250,7 @@
                             <td>{{ $student->last_name }}</td>
                             <td>{{ $student->father_name }}</td>
                             <td>
+                                @if($student->status=='new')
                                 <a class="btn btn-info"
                                     href="{{ route('special-course-list', [
                                             'menu_id'   => $this->active_menu_id,
@@ -232,6 +258,7 @@
                                         ]) }}">
                                     {{ __('label.add_to_course') }}
                                 </a>
+                                @endif
                             </td>
                             <td>
                                 <a class="btn btn-success btn-icon rounded-pill"
@@ -257,6 +284,7 @@
                                 @endif
                             </td>
                             <td>{{ $student->gender?->name }}</td>
+                            <td>{{ $student->occupation?->name }}</td>
                             <td>{{ $student->registration_date->format('Y/m/d - h:i A') }}</td>
                          
                             
@@ -303,6 +331,7 @@
                 </div>
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
+                        {{-- 
                         <div class="row" wire:ignore>
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">Select information from visitor list </label>
@@ -311,32 +340,109 @@
                                 </select>
                             </div>
                         </div>
-
+                        --}}
                         <div class="row">
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label" >{{ __('label.student_code') }} <span style="color:red;">*</span></label>
+                                <label for="nameBasic" class="form-label" >{{ __('label.student_code') }} </label>
                                 <input type="text" id="nameBasic" class="form-control @error('student_code') is-invalid @enderror" wire:model.lazy="student_code" >
                                 @error('student_code') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
-                        </div>
-
-                        <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label" >{{ __('label.name') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('name') is-invalid @enderror" wire:model.lazy="name" >
                                 @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.last_name') }}</label>
                                 <input type="text" id="nameBasic" class="form-control @error('last_name') is-invalid @enderror" wire:model.lazy="last_name" >
                                 @error('last_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
-                        </div>
-                        <div class="row">
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.father_name') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('father_name') is-invalid @enderror" wire:model.lazy="father_name" >
                                 @error('father_name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                         
+                        </div>
+
+
+                        {{-- 
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label" >{{ __('label.name_fa') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('name_fa') is-invalid @enderror" wire:model.lazy="name_fa" >
+                                @error('name_fa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.last_name_fa') }}</label>
+                                <input type="text" id="nameBasic" class="form-control @error('last_name_fa') is-invalid @enderror" wire:model.lazy="last_name_fa" >
+                                @error('last_name_fa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label" >{{ __('label.name_pa') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('name_fa') is-invalid @enderror" wire:model.lazy="name_pa" >
+                                @error('name_pa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.last_name_pa') }}</label>
+                                <input type="text" id="nameBasic" class="form-control @error('last_name_pa') is-invalid @enderror" wire:model.lazy="last_name_pa" >
+                                @error('last_name_pa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label" >{{ __('label.father_name_fa') }} </label>
+                                <input type="text" id="nameBasic" class="form-control @error('father_name_fa') is-invalid @enderror" wire:model.lazy="father_name_fa" >
+                                @error('father_name_fa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.father_name_pa') }}</label>
+                                <input type="text" id="nameBasic" class="form-control @error('father_name_pa') is-invalid @enderror" wire:model.lazy="father_name_pa" >
+                                @error('father_name_pa') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                       
+                        --}}
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.date_of_birth') }} </label>
+                                <input type="date" id="nameBasic" class="form-control @error('date_of_birth') is-invalid @enderror" wire:model.lazy="date_of_birth">
+                                @error('date_of_birth') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.gender') }} <span style="color:red;">*</span></label>
+                                <select class="form-select @error('gender_id') is-invalid @enderror" wire:model.lazy="gender_id" id ="gender_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                    @foreach($genders as $gender)
+                                        <option value="{{ $gender->id }}"  wire:key="gender-{{ $gender->id }}">
+                                            {{ $gender->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('gender_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.occupation') }} <span style="color:red;">*</span></label>
+                                <select class="form-select @error('occupation_id') is-invalid @enderror" wire:model.lazy="occupation_id" >
+                                    <option value="">{{ __('label.select') }}</option>
+                                    @foreach($occupations as $occupation)
+                                        <option value="{{ $occupation->id }}"  wire:key="occupation-{{ $occupation->id }}">
+                                            {{ $occupation->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('occupation_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col mb-3">
                                 <label for="nameBasic" class="form-label">{{ __('label.phone_no') }} <span style="color:red;">*</span></label>
@@ -370,36 +476,24 @@
                                 <input type="text" id="nameBasic" class="form-control @error('tazkira_no') is-invalid @enderror" wire:model.lazy="tazkira_no">
                                 @error('tazkira_no') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
-                            @if(!auth()->user()->branch_id)
-                           <div class="col mb-3">
-                              <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
-                              <select class="form-select @error('branch_id') is-invalid @enderror" wire:model.lazy="branch_id" id ="branch_id">
-                                 <option value="">{{ __('label.select') }}</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}"  wire:key="branch-{{ $branch->id }}">
-                                            {{ $branch->name }}
-                                        </option>
-                                    @endforeach
-                              </select>
-                                @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                           </div>
-                           @endif
+                            @if(!auth()->user()->branch_id || Auth::user()->isBranchManager())
+                            <div class="col mb-3">
+                                <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
+                                <select class="form-select @error('branch_id') is-invalid @enderror" wire:model.lazy="branch_id" id ="branch_id">
+                                    <option value="">{{ __('label.select') }}</option>
+                                        @foreach($branches as $branch)
+                                            <option value="{{ $branch->id }}"  wire:key="branch-{{ $branch->id }}">
+                                                {{ $branch->name }}
+                                            </option>
+                                        @endforeach
+                                </select>
+                                    @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            @endif
                         </div>
 
                         <div class="row">
-                            <div class="col mb-3">
-                              <label class="form-label">{{ __('label.gender') }} <span style="color:red;">*</span></label>
-                              <select class="form-select @error('gender_id') is-invalid @enderror" wire:model.lazy="gender_id" id ="gender_id">
-                                 <option value="">{{ __('label.select') }}</option>
-                                    @foreach($genders as $gender)
-                                        <option value="{{ $gender->id }}"  wire:key="gender-{{ $gender->id }}">
-                                            {{ $gender->name }}
-                                        </option>
-                                    @endforeach
-                              </select>
-                                @error('gender_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                           </div>
-
+                           
                             <div class="col mb-3">
                                 <label for="formFile" class="form-label">{{ __('label.photo') }}</label>
                                 <input class="form-control @error('photo') is-invalid @enderror" 
@@ -417,7 +511,21 @@
             </div>
         </div>
     </div>
-   
+
+   <!-- print area  -->
+    <div id="printArea" style="display:none;">
+
+     
+            @if(!empty($students))
+                @include('livewire.academic.students.student-list-print', [
+                    'students' => $students,
+                    'fields' => $this->selectedFields,
+                ])
+            @endif
+        
+       
+    </div>
+
 </div>
 
 @script
@@ -500,3 +608,9 @@ document.addEventListener("livewire:initialized", function () {
 </script>
 @endscript
 
+
+<script>
+    window.addEventListener('show-print-preview', () => {
+        printDiv('printArea');
+    });
+</script>

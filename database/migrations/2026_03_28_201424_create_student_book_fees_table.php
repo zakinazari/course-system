@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('physical_book_id')->nullable()->constrained()->nullOnDelete();
             $table->decimal('price',10,2);
             $table->date('payment_date')->nullable();
+            $table->text('reason')->nullable();
             $table->text('notes')->nullable();
             $table->enum('type', ['automatic', 'manual'])->default('automatic');
             $table->enum('status', ['paid', 'requested_exemption','rejected_exemption','accepted_exemption'])->default('paid');

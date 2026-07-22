@@ -7,16 +7,22 @@ use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Str;
 use App\Models\Settings\Menu;
+use App\Models\Settings\NotificationCategory;
 use App\Models\Settings\SystemLog;
 use App\Models\Academic\Course;
+use App\Models\Academic\Student;
 use App\Models\Academic\CourseStudent;
 use App\Models\Academic\CourseType;
+use App\Models\Academic\CourseWaitingList;
 use App\Models\CenterSettings\Branch;
 use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
 use App\Models\Hr\Employee;
+use App\Models\Hr\EmployeeLeave;
+use App\Models\Hr\TemporaryContract;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Models\Assessment\StudentAttendance;
 use App\Models\Assessment\CourseUnit;
 use App\Models\Assessment\CourseUnitDay;
@@ -32,6 +38,8 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use App\Notifications\CourseUnitFallbackReminderNotification;
+use Illuminate\Support\Facades\Notification;
 class StudentAttendanceList extends Component
 {
     
@@ -108,12 +116,14 @@ class StudentAttendanceList extends Component
         $course_id,
         $course,
         $attendance_date,
+        $note,
         $status;
     
 
 
         public $teacher_status = 'present'; // پیشفرض
         public $teacher_note = null;
+        public $teacher_leave = null;
         
         // UNIT SYSTEM
         public $total_days = 0;
@@ -166,6 +176,7 @@ class StudentAttendanceList extends Component
     {
         $this->students = collect();
         $this->course = null;
+        $this->teacher_leave = null;
         $course_id = $this->course_id;
         $date = $this->attendance_date ?? now()->toDateString();
 
@@ -177,7 +188,7 @@ class StudentAttendanceList extends Component
         // =========================
         // 1. Load Course with Teacher
         // =========================
-        $course = Course::with('teacher')
+        $course = Course::with('teacher','program')
             ->where('id', $course_id)
             ->first();
 
@@ -186,6 +197,33 @@ class StudentAttendanceList extends Component
         // =========================
         // 1. تعداد روزها (Day)
         // =========================
+
+        // =========================
+        // Load Teacher Contract
+        // =========================
+
+        $teacher_contract = TemporaryContract::where('employee_id', $course->teacher_id)
+            ->where('branch_id', $course->branch_id)
+            ->where('section_id', $course->program?->section_id)
+            ->first();
+
+
+        if ($teacher_contract) {
+
+            $contract_type = array_search(
+                get_class($teacher_contract),
+                Relation::morphMap()
+            );
+
+            $this->teacher_leave = $this->getEmployeeLeave(
+                $course->teacher_id,
+                $teacher_contract->id,
+                $contract_type,
+                $date
+            );
+
+        }
+
         $this->total_days = TeacherAttendance::where('course_id', $course_id)
             ->distinct('attendance_date')
             ->count('attendance_date');
@@ -212,7 +250,10 @@ class StudentAttendanceList extends Component
             $this->unit_status = $today->lesson_status ?? 'finished';
             $this->unit_note = $today->unit_note ?? null;
             $this->teacher_note = $today->note ?? null;
-            $this->teacher_status = $today->status ?? 'present';
+
+            $this->teacher_status = $today
+            ? $today->status
+            : ($this->teacher_leave ? 'leave' : 'present');
 
         } else {
 
@@ -232,7 +273,9 @@ class StudentAttendanceList extends Component
             // پیشفرض‌ها برای روز جدید
             $this->unit_status = 'finished';
             $this->unit_note = null;
-            $this->teacher_status = 'present';
+            $this->teacher_status = $this->teacher_leave
+            ? 'leave'
+            : 'present';
             $this->teacher_note = null;
         }
 
@@ -251,6 +294,15 @@ class StudentAttendanceList extends Component
             ->get()
             ->keyBy('student_id');
 
+        // کسیکه ثبت نام نکرده باشد از لیست حذف شود
+        $students = CourseStudent::with('student')
+            ->where('course_id', $course_id)
+            ->get()
+            ->filter(function ($cs) use ($fees) {
+                return isset($fees[$cs->student_id]); 
+            })
+            ->values();
+         $this->attendances = [];
         foreach ($students as $i => $cs) {
 
             $record = StudentAttendance::where([
@@ -259,7 +311,10 @@ class StudentAttendanceList extends Component
                 'attendance_date' => $date,
             ])->first();
 
-            $this->attendances[$cs->student_id] = $record->status ?? 'present';
+            $this->attendances[$cs->student_id] = [
+                'status' => $record->status ?? 'present',
+                'note' => $record->note ?? null,
+            ];
             $students[$i]->attendance_date = $record->attendance_date ?? null;
 
             // absent days
@@ -389,7 +444,29 @@ class StudentAttendanceList extends Component
             ->selectRaw('student_id, COUNT(*) as total')
             ->groupBy('student_id')
             ->pluck('total', 'student_id');
-            foreach ($this->attendances as $student_id => $status) {
+
+            // check valid students----------------------
+            $validStudentIds = CourseStudent::where('course_id', $course_id)
+            ->pluck('student_id')
+            ->toArray();
+
+
+            foreach ($this->attendances as $student_id => $data) {
+
+                // check valid students----------------------
+
+                if (!in_array($student_id, $validStudentIds)) {
+                    continue;
+                }
+
+                $status = $data['status'] ?? 'present';
+                $note   = $data['note'] ?? null;
+
+                $oldAttendance = StudentAttendance::where([
+                    'student_id' => $student_id,
+                    'course_id' => $course_id,
+                    'attendance_date' => $date,
+                ])->first();
 
                 StudentAttendance::updateOrCreate(
                     [
@@ -399,12 +476,13 @@ class StudentAttendanceList extends Component
                     ],
                     [
                         'status' => $status,
+                        'note' => $note, 
                         'recorded_by' => Auth::id(),
                     ]
                 );
 
-
                 $absent_days = $absent_counts[$student_id] ?? 0;
+
                 // اگر امروز absent ثبت شده → باید حساب شود
                 if ($status === 'absent') {
                     $absent_days++;
@@ -417,13 +495,62 @@ class StudentAttendanceList extends Component
                         ->where('student_id', $student_id)
                         ->where('course_id', $course_id)
                         ->update(['status' => 'dropped']);
+
+                    // =========================
+                    // Add To Waiting List
+                    // =========================
+
+                    CourseWaitingList::updateOrCreate(
+                        [
+                            'student_id' => $student_id,
+                            'program_id' => $course->program_id,
+                            'book_id' => $course->book_id,
+                        ],
+                        [
+                            'branch_id' => $course->branch_id,
+                            'shift_id' => $course->shift_id,
+                            'status' => 'dropped',
+                            'user_id' => Auth::id(),
+                        ]
+                    );
+
+                    // =========================
+                    // End To Waiting List
+                    // =========================
                 }
 
+
+                // ===logs-----------------------
+                if (
+                    !$oldAttendance ||
+                    $oldAttendance->status !== $status ||
+                    $oldAttendance->note !== $note
+                ) {
+
+                    $student = Student::find($student_id);
+
+                    SystemLog::create([
+                        'user_id' => Auth::id(),
+                        'st_id' => $student_id,
+                        'section' =>
+                            __('label.student_attendance') .
+                            ' | Student: ' . $student?->name .
+                            ' (' . $student?->student_code . ')' .
+                            ' | Course: ' . $course->name .
+                            ' | Date: ' . $date .
+                            ' | Status: ' . ($oldAttendance->status ?? 'NULL') .
+                            ' → ' . $status,
+                        'type_id' => 3,
+                    ]);
+                }
+
+                // end logs-----------------
             }
 
             // =========================
             // 2. UNIT NUMBER LOGIC (NEW)
             // =========================
+
             $previous = TeacherAttendance::where('course_id', $course_id)
                 ->where('attendance_date', '<', $date) 
                 ->orderByDesc('attendance_date')
@@ -445,6 +572,48 @@ class StudentAttendanceList extends Component
             // =========================
             // 3. TEACHER ATTENDANCE (UPDATED)
             // =========================
+
+            
+            $oldTeacherAttendance = TeacherAttendance::where([
+                'course_id' => $course_id,
+                'teacher_id' => $course->teacher_id,
+                'attendance_date' => $date,
+            ])->first();
+
+
+        // =========================
+        // Load Teacher Contract
+        // =========================
+
+            $teacher_contract = TemporaryContract::where('employee_id', $course->teacher_id)
+                ->where('branch_id', $course->branch_id)
+                ->where('section_id', $course->program?->section_id)
+                ->first();
+
+            $teacher_leave = null;
+
+            if ($teacher_contract) {
+
+                $contract_type = array_search(
+                    get_class($teacher_contract),
+                    Relation::morphMap()
+                );
+
+                $teacher_leave = $this->getEmployeeLeave(
+                    $course->teacher_id,
+                    $teacher_contract->id,
+                    $contract_type,
+                    $date
+                );
+
+            }
+
+            $status = $teacher_leave
+            ? 'leave'
+            : ($this->teacher_status ?? 'present');
+
+            $leave_type_id = $teacher_leave?->leave_type_id;
+            
             TeacherAttendance::updateOrCreate(
                 [
                     'course_id' => $course_id,
@@ -452,7 +621,10 @@ class StudentAttendanceList extends Component
                     'attendance_date' => $date,
                 ],
                 [
-                    'status' => $this->teacher_status ?? 'present',
+                    'status' => $status,
+
+                    'leave_type_id' => $leave_type_id,
+
                     'lesson_status' => $this->unit_status ?? 'finished',
                     'unit_number' => $unit_number,
                     'unit_note' => $this->unit_note,
@@ -460,6 +632,154 @@ class StudentAttendanceList extends Component
                     'recorded_by' => Auth::id(),
                 ]
             );
+
+            // =========================
+            // Update Exam Dates When Lesson Is Ongoing
+            // =========================
+
+            if (($this->unit_status ?? 'finished') === 'ongoing') {
+
+                $course = Course::find($course_id);
+
+                $updates = [];
+
+
+                // Mid Exam
+                if (
+                    $course->mid_exam_date &&
+                    Carbon::parse($course->mid_exam_date)->gte(Carbon::parse($date))
+                ) {
+
+                    $updates['mid_exam_date'] = Carbon::parse($course->mid_exam_date)
+                        ->addDay()
+                        ->toDateString();
+
+                }
+
+
+                // Final Exam
+                if (
+                    $course->final_exam_date &&
+                    Carbon::parse($course->final_exam_date)->gte(Carbon::parse($date))
+                ) {
+
+                    $updates['final_exam_date'] = Carbon::parse($course->final_exam_date)
+                        ->addDay()
+                        ->toDateString();
+
+                }
+                
+                // End Date
+                if (
+                    $course->end_date &&
+                    Carbon::parse($course->end_date)->gte(Carbon::parse($date))
+                ) {
+
+                    $updates['end_date'] = Carbon::parse($course->end_date)
+                        ->addDay()
+                        ->toDateString();
+
+                }
+
+
+                if (!empty($updates)) {
+
+                    Course::where('id', $course_id)
+                        ->update($updates);
+
+                    // notification ----------------------------
+                    $course->refresh();
+
+
+                    $menu_id = Menu::where('slug', 'courses')
+                        ->value('id');
+                         
+
+                    if ($menu_id) {
+
+                       $category = NotificationCategory::where('slug', 'course_unit_fallback')->first();
+
+                        if (! $category) {
+                            return;
+                        }
+
+                       $users = User::whereHas('role.notificationCategories', function ($q) use ($category) {
+
+                            $q->where('notification_categories.id', $category->id);
+
+                        })
+                        ->where(function ($q) use ($course) {
+
+                            $q->whereNull('branch_id')
+                            ->orWhere('branch_id', $course->branch_id);
+
+                        })
+                        ->get();
+
+                    
+                        if ($users->isNotEmpty()) {
+
+                            $already_sent = DB::table('notifications')
+                                ->where('type', 'App\Notifications\CourseUnitFallbackReminderNotification')
+                                ->whereDate('created_at', today())
+                                ->where('data', 'like', '%"id":'.$course->id.'%')
+                                ->exists();
+
+
+                            if (! $already_sent) {
+
+                                Notification::send(
+                                    $users,
+                                    new CourseUnitFallbackReminderNotification(
+                                        collect([$course]),
+                                        $menu_id
+                                    )
+                                );
+
+                            }
+
+                        }
+
+                    }
+                    // notification ----------------------------
+
+                }
+
+            }
+
+            // teacher logs------------------
+            if (
+                !$oldTeacherAttendance ||
+                $oldTeacherAttendance->status !== $this->teacher_status ||
+                $oldTeacherAttendance->lesson_status !== $this->unit_status
+            ) {
+
+                SystemLog::create([
+                    'user_id' => Auth::id(),
+                    'section' =>
+                        __('label.teacher_attendance') .
+                        ' | Course: ' . $course->name .
+                        ' | Date: ' . $date .
+                        ' | Teacher Status: ' .
+                        ($oldTeacherAttendance->status ?? 'NULL') .
+                        ' → ' .
+                        $this->teacher_status,
+                    'type_id' => 3,
+                ]);
+            }
+
+            //end  teacher logs------------------
+
+
+            // ---start system log-----------
+            SystemLog::create([
+                'user_id' => Auth::id(),
+                'section' => __('label.student_attendance') .
+                    ' | Course: ' . $course->name .
+                    ' | Date: ' . $date,
+                'type_id' => 2,
+            ]);
+            // ---end system log-----------
 
             DB::commit();
 
@@ -471,6 +791,25 @@ class StudentAttendanceList extends Component
             DB::rollBack();
             $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
         }
+    }
+
+    protected function getEmployeeLeave($employee_id, $contract_id, $contract_type, $date)
+    {
+        return EmployeeLeave::with('leaveType')
+
+            ->where('employee_id', $employee_id)
+
+            ->where('contract_id', $contract_id)
+
+            ->where('contract_type', $contract_type)
+
+            ->where('status', 'approved')
+
+            ->whereDate('start_date', '<=', $date)
+
+            ->whereDate('end_date', '>=', $date)
+
+            ->first();
     }
 
     public function exportPdf()
@@ -667,12 +1006,13 @@ class StudentAttendanceList extends Component
             'status',
             'absent_days',
             'payment_status',
+            'note',
         ];
 
         $fields = !empty($this->selectedFields)
             ? $this->selectedFields
             : $defaultFields;
-
+    
         // if (auth()->user()->isDeveloper() || auth()->user()->isAdmin()) {
         //     if (!in_array('branch_id', $fields)) {
         //         $fields[] = 'branch_id';
@@ -693,7 +1033,15 @@ class StudentAttendanceList extends Component
             $fees = StudentCourseFee::where('course_id', $course_id)
             ->get()
             ->keyBy('student_id');
-
+            // کسیکه ثبت نام نکرده باشد از لیست حذف شود
+            $students = CourseStudent::with('student')
+                ->where('course_id', $course_id)
+                ->get()
+                ->filter(function ($cs) use ($fees) {
+                    return isset($fees[$cs->student_id]); 
+                })
+                ->values();
+            
             foreach ($students as $i=> $cs) {
                 $record = StudentAttendance::where([
                     'student_id' => $cs->student_id,
@@ -701,7 +1049,9 @@ class StudentAttendanceList extends Component
                     'attendance_date' => $date,
                 ])->first();
 
-                $students[$i]->att_status = $record->status ?? 'Not Taken';
+                $students[$i]->note = $record?->note;
+
+                $students[$i]->att_status = $record?->status ?? 'Not Taken';
                 
                 // محاسبه تعداد روزهای غیبت از شروع کورس تا تاریخ انتخابی، بجز جمعه
                 $absent_days = StudentAttendance::where('student_id', $cs->student_id)

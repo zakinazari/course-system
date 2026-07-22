@@ -15,6 +15,8 @@
     </h4>
     <!-- end header -->
 
+    
+
     <div class="card">
        
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -156,6 +158,18 @@
                                 {{ __('label.course') }}
                             </th>
                             <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="student_code">
+                                {{ __('label.student_code') }}
+                            </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="name">
+                                {{ __('label.name') }}
+                            </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_name">
+                                {{ __('label.father_name') }}
+                            </th>
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="amount">
                                 {{ __('label.amount') }}
                             </th>
@@ -175,6 +189,9 @@
                             @endif
                             <td>{{ $fee->studentCourseFee->course?->program?->name }}</td>
                             <td>{{ $fee->studentCourseFee->course?->name }}</td>
+                            <td>{{ $fee->studentCourseFee->student?->student_code }}</td>
+                            <td>{{ $fee->studentCourseFee->student?->name }} {{ $fee->studentCourseFee->student?->last_name }}</td>
+                            <td>{{ $fee->studentCourseFee->student?->father_name }}</td>
                             <td>{{ $fee->amount }}</td>
                             <td>{{ $fee->payment_date->format('Y/m/d') }}</td>
                         

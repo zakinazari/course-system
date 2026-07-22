@@ -17,6 +17,7 @@ use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\Classroom;
 use App\Models\CenterSettings\Shift;
+use App\Models\Financial\StudentCourseFee;
 use App\Models\Hr\Employee;
 use App\Models\Assessment\ExamAttendance;
 use App\Models\Financial\ExamFine;
@@ -174,8 +175,22 @@ class ExamAttendanceList extends Component
         } else {
            
             $students = CourseStudent::with('student')
+                ->where('status','!=','dropped')
                 ->where('course_id', $course_id)
                 ->get();
+
+            $fees = StudentCourseFee::where('course_id', $course_id)
+            ->get()
+            ->keyBy('student_id');
+
+            // کسیکه ثبت نام نکرده باشد از لیست حذف شود
+            $students = CourseStudent::with('student')
+                ->where('course_id', $course_id)
+                ->get()
+                ->filter(function ($cs) use ($fees) {
+                    return isset($fees[$cs->student_id]); 
+                })
+                ->values();
 
             foreach ($students as $i=>$cs) {
                 $record = ExamAttendance::where([
@@ -528,6 +543,7 @@ class ExamAttendanceList extends Component
         } else {
            
             $students = CourseStudent::with('student')
+                ->where('status','!=','dropped')
                 ->where('course_id', $course_id)
                 ->orderBy('id', 'asc') 
                 ->get();

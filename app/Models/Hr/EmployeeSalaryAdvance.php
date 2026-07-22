@@ -9,7 +9,7 @@ use App\Models\CenterSettings\Section;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\User;
 class EmployeeSalaryAdvance extends Model
 {
      protected $fillable = [
@@ -18,12 +18,16 @@ class EmployeeSalaryAdvance extends Model
         'section_id',
         'total_amount',
         'remaining_amount',
+        'advance_date',
+        'auto_deduct',
         'status',
         'note',
+        'user_id',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
+        'advance_date' => 'date',
     ];
 
     public function branch()
@@ -40,7 +44,12 @@ class EmployeeSalaryAdvance extends Model
         return $this->belongsTo(Employee::class);
     }
 
-     protected static function booted()
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    protected static function booted()
     {
         //  Global Scope شعبه
         static::addGlobalScope('branch', function (Builder $builder) {

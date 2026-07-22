@@ -154,6 +154,10 @@
                                 {{ __('label.unit_price') }}
                             </th>
                             <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="total_amount">
+                                {{ __('label.total_amount') }}
+                            </th>
+                            <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="created_at">
                                 {{ __('label.date') }}
                             </th>
@@ -169,6 +173,7 @@
                             <td>{{ $purchase->quantity_change }}</td>
                             <td>{{ $purchase->balance_after }}</td>
                             <td>{{ $purchase->unit_price }}</td>
+                            <td>{{ $purchase->unit_price * $purchase->quantity_change }}</td>
                             <td>{{ $purchase->created_at->format('Y/m/d H:i:A') }}</td>
                             <td>
                                 

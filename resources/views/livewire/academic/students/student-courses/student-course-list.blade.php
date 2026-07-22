@@ -130,6 +130,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>{{ __('label.NO') }}</th>
+                            <th>{{ __('label.name') }}</th>
                             <th>{{ __('label.program') }}</th>
                             <th>{{ __('label.book') }}</th>
                             <th>{{ __('label.status') }}</th>
@@ -144,6 +145,7 @@
                         @foreach($student_courses as $i => $course)
                         <tr>
                             <td>{{ ($student_courses->currentPage() - 1) * $student_courses->perPage() + $i + 1 }}</td>
+                            <td>{{ $course->name }}</td>
                             <td>{{ $course->program?->name }}</td>
                             <td>{{ $course->book?->name }}</td>
     

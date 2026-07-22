@@ -32,10 +32,12 @@
         'last_name' => __('label.last_name'),
         'father_name' => __('label.father_name'),
         'phone_no' => __('label.phone_no'),
+        'father_no' => __('label.father_no'),
         'program_id' => __('label.program'),
         'book_id' => __('label.book'),
         'shift_id' => __('label.shift'),
         'status' => __('label.status'),
+        'comment' => __('label.comment'),
         'branch_id' => __('label.branch'),
     ];
 @endphp
@@ -94,6 +96,8 @@
                             {{ $waiting->student?->father_name }}
                         @elseif($field==='phone_no')
                             {{ $waiting->student?->phone_no }}
+                        @elseif($field==='father_no')
+                            {{ $waiting->student?->father_whats_app }}
                         @else
                             {{ $waiting->$field }}
                         @endif

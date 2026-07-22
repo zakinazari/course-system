@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 class BookInventory extends Model
 {
-     protected $fillable = [
+    protected $fillable = [
         'warehouse_id',
         'book_id',
         'quantity',
@@ -32,8 +32,38 @@ class BookInventory extends Model
         return $this->hasMany(BookInventoryMovement::class, 'book_inventory_id');
     }
 
+    public function increment($column, $amount = 1, array $extra = [])
+    {
+        $this->setAttribute(
+            $column,
+            $this->getAttribute($column) + $amount
+        );
+
+        $this->fill($extra);
+
+        $this->save();
+
+        return true;
+    }
+
+
+    public function decrement($column, $amount = 1, array $extra = [])
+    {
+        $this->setAttribute(
+            $column,
+            $this->getAttribute($column) - $amount
+        );
+
+        $this->fill($extra);
+
+        $this->save();
+
+        return true;
+    }
+
     protected static function booted()
     {
+
         static::addGlobalScope('branch', function (Builder $builder) {
 
             if (!Auth::check()) {

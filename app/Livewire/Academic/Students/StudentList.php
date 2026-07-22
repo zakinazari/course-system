@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Gender;
+use App\Models\CenterSettings\Occupation;
 use App\Models\Academic\Student;
 use App\Models\Academic\StudentFile;
 use App\Models\Academic\Visitor;
@@ -33,9 +34,24 @@ class StudentList extends Component
     public $active_menu;
     public $branches=[];
     public $genders=[];
+    public $occupations=[];
     public $modalId = 'student-list-addEditModal';
     public $table_name='students';
-    public $selectedFields = [];
+    public $selectedFields = [
+         'no',
+            'name',
+            'student_code',
+            'last_name',
+            'father_name',
+            'phone_no',
+            'tazkira_no',
+            'address',
+            'registration_date',
+            'status',
+            'gender_id',
+            'occupation_id',
+            'branch_id',
+    ];
     public $pdfOrientation = 'landscape';
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
     public function closeModal(){
@@ -67,16 +83,49 @@ class StudentList extends Component
     }
     
     // ---------------------------------end generals-------------
-
-    public function mount($active_menu_id = null)
+ 
+    public function mount($active_menu_id = null,$student_id = null)
     {
-        // -------------start for activing menu in sidebar ----------------------
-        $this->dispatch('setActiveMenuFromPage', $active_menu_id);
-        $this->active_menu_id = $active_menu_id;
-        $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])->find($active_menu_id);
-        // -------------start for activing menu in sidebar ----------------------
+        // if (request()->query('slug')) {
+
+        //     $menu = Menu::with(['parent', 'grandParent', 'subMenu'])
+        //         ->where('slug', request()->query('slug'))
+        //         ->first();
+
+        //     if ($menu) {
+        //         $this->active_menu = $menu;
+        //         $this->active_menu_id = $menu->id;
+
+        //         $this->dispatch('setActiveMenuFromPage', $menu->id);
+        //     }
+        // } else {
+
+            $this->dispatch('setActiveMenuFromPage', $active_menu_id);
+
+            $this->active_menu_id = $active_menu_id;
+
+            $this->active_menu = Menu::with(['parent', 'grandParent', 'subMenu'])
+                ->find($active_menu_id);
+        // }
+
         $this->branches =  Branch::all();
         $this->genders =  Gender::all();
+        $this->occupations =  Occupation::all();
+
+        if(auth()->user()->branch_id){
+                $index = array_search('branch', $this->selectedFields);
+                if($index !== false){
+                unset($this->selectedFields[$index]);
+                $this->selectedFields = array_values($this->selectedFields);
+            }
+        }
+
+        if ($student_id) {
+            $this->search['identity'] = Student::find($student_id)->student_code;
+
+            $this->dispatch('replace-url', menuId: $this->active_menu_id);
+        }
+
     }
 
     public $name,$last_name,$father_name,
@@ -87,10 +136,21 @@ class StudentList extends Component
         $st_id, 
         $branch_id,
         $gender_id,
+        $occupation_id,
         $photo,
         $status = 'new';
+        
     public $student_code;
     public $visitor_id;
+
+    public $name_fa;
+    public $name_pa;
+    public $last_name_fa;
+    public $last_name_pa;
+    public $father_name_fa;
+    public $father_name_pa;
+    public $date_of_birth;
+
     public function resetInputFields(){
         $this->resetExcept([
             'active_menu_id',
@@ -100,17 +160,20 @@ class StudentList extends Component
             'search',
             'branches',
             'genders',
+            'occupations',
         ]);
     }
     public $search = [
             'identity' => null,
             'branch_id' => null,
             'status' => null,
+            'gender_id' => null,
+            'occupation_id' => null,
         ];
 
     public function render()
     {
-        $students = Student::with('branch','photo','gender')
+        $students = Student::with('branch','photo','gender','occupation')
         ->when(!empty($this->search['identity']), function ($q) {
                 $search = $this->search['identity'];
 
@@ -126,8 +189,12 @@ class StudentList extends Component
         ->when(!empty($this->search['branch_id']), function ($query) {
             $query->where('branch_id',$this->search['branch_id']);
         })
+ 
         ->when(!empty($this->search['gender_id']), function ($query) {
             $query->where('gender_id',$this->search['gender_id']);
+        })
+        ->when(!empty($this->search['occupation_id']), function ($query) {
+            $query->where('occupation_id',$this->search['occupation_id']);
         })
         ->orderBy('id','desc')
         ->paginate($this->perPage);
@@ -138,7 +205,7 @@ class StudentList extends Component
     protected function rules()
     {
         $rules = [
-            'student_code' => 'required|string|unique:students,student_code,' . $this->st_id . ',id',
+            // 'student_code' => 'required|string|unique:students,student_code,' . $this->st_id . ',id',
             'name' => 'required',
             'father_name' => 'required',
             'gender_id' => 'required',
@@ -189,9 +256,19 @@ class StudentList extends Component
                 'phone_no'          => $this->phone_no,
                 'tazkira_no'        => $this->tazkira_no,
                 'address'           => $this->address,
+
+                'name_fa' => $this->name_fa,
+                'name_pa' => $this->name_pa,
+                'last_name_fa' => $this->last_name_fa,
+                'last_name_pa' => $this->last_name_pa,
+                'father_name_fa' => $this->father_name_fa,
+                'father_name_pa' => $this->father_name_pa,
+                'date_of_birth' => $this->date_of_birth,
+
                 'registration_date' => now(),
                 'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
                 'gender_id'           =>$this->gender_id,
+                'occupation_id'           =>$this->occupation_id,
                 'user_id'           => Auth::id(),
             ]);
 
@@ -271,7 +348,7 @@ class StudentList extends Component
 
         } catch (\Exception $e) {
 
-            DB::rollBack();
+           DB::commit();
 
             $this->dispatch('alert',
                 type: 'error',
@@ -296,6 +373,18 @@ class StudentList extends Component
         $this->address = $student->address;
         $this->branch_id = $student->branch_id;
         $this->gender_id = $student->gender_id;
+        $this->occupation_id = $student->occupation_id;
+
+        $this->name_fa = $student->name_fa;
+        $this->name_pa = $student->name_pa;
+        $this->last_name_fa = $student->last_name_fa;
+        $this->last_name_pa = $student->last_name_pa;
+
+        $this->father_name_fa = $student->father_name_fa;
+        $this->father_name_pa = $student->father_name_pa;
+
+        $this->date_of_birth = $student->date_of_birth?->format('Y-m-d');
+        
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -325,50 +414,78 @@ class StudentList extends Component
                 'tazkira_no' => $this->tazkira_no,
                 'address' => $this->address,
                 'gender_id' => $this->gender_id,
-                'branch_id' =>  Auth::user()->branch_id ?: $this->branch_id,
+                'occupation_id' => $this->occupation_id,
+                
+                'name_fa' => $this->name_fa,
+                'name_pa' => $this->name_pa,
+                'last_name_fa' => $this->last_name_fa,
+                'last_name_pa' => $this->last_name_pa,
+                'father_name_fa' => $this->father_name_fa,
+                'father_name_pa' => $this->father_name_pa,
+                'date_of_birth' => $this->date_of_birth,
+
+                'branch_id' =>   $this->branch_id ?:Auth::user()->branch_id,
             ]);
 
            
-            if ($this->photo) {
+           if ($this->photo) {
 
-                $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver());
 
-                $folder = "students/{$student->id}";
-                $filename = uniqid() . '.jpg';
+            $folder = "students/{$student->id}";
+            $filename = uniqid() . '.jpg';
 
-                $oldPhoto = $student->photo?->first();
-                if ($oldPhoto) {
-                    Storage::disk('public')->delete([$oldPhoto->file_path, $oldPhoto->thumbnail_path]);
-                    $oldPhoto->delete();
-                }
+            $student->load('photo');
 
-                //  تصویر اصلی
-                $image = $manager->read($this->photo->getRealPath())
-                    ->orient()
-                    ->toJpeg(85);
+            $oldPhoto = $student->photo;
 
-                Storage::disk('public')->put("$folder/$filename", (string) $image);
+            if ($oldPhoto) {
 
-                //  Thumbnail
-                $thumbnailName = 'thumb_' . $filename;
-                $thumbnail = $manager->read($this->photo->getRealPath())
-                    ->orient()
-                    ->cover(300, 300)
-                    ->toJpeg(80);
-
-                Storage::disk('public')->put("$folder/$thumbnailName", (string) $thumbnail);
-
-                // ذخیره در student_files
-                $student->files()->create([
-                    'file_type' => StudentFile::TYPE_PHOTO,
-                    'file_name' => $filename,
-                    'file_path' => "$folder/$filename",
-                    'thumbnail_path' => "$folder/$thumbnailName",
-                    'mime_type' => $this->photo->getMimeType(),
-                    'file_size' => $this->photo->getSize(),
-                    'disk' => 'public',
+                Storage::disk('public')->delete([
+                    $oldPhoto->file_path,
+                    $oldPhoto->thumbnail_path
                 ]);
+
+                $oldPhoto->delete();
             }
+
+            // تصویر اصلی
+            $image = $manager->read($this->photo->getRealPath())
+                ->orient()
+                ->toJpeg(85);
+
+            Storage::disk('public')->put(
+                "$folder/$filename",
+                (string) $image
+            );
+
+            // Thumbnail
+            $thumbnailName = 'thumb_' . $filename;
+
+            $thumbnail = $manager->read($this->photo->getRealPath())
+                ->orient()
+                ->resize(300, 300, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                })
+                ->toJpeg(80);
+
+            Storage::disk('public')->put(
+                "$folder/$thumbnailName",
+                (string) $thumbnail
+            );
+
+            // ذخیره در student_files
+            $student->files()->create([
+                'file_type'      => StudentFile::TYPE_PHOTO,
+                'file_name'      => $filename,
+                'file_path'      => "$folder/$filename",
+                'thumbnail_path' => "$folder/$thumbnailName",
+                'mime_type'      => $this->photo->getMimeType(),
+                'file_size'      => $this->photo->getSize(),
+                'disk'           => 'public',
+            ]);
+        }
 
              // ---start system log-----------
             SystemLog::create([
@@ -413,8 +530,9 @@ class StudentList extends Component
                 Storage::disk($file->disk)->delete([$file->file_path, $file->thumbnail_path]);
             }
             SystemLog::create([
+                'st_id' => $student->id,
                 'user_id' => Auth::user()->id,
-                'section' => 'Student ('.$student->name.' ID:'.$student->id.')',
+                'section' => 'Student ('.$student->name.' ID:'.$student->student_code.')',
                 'type_id' => 4,
             ]);
             $student->delete();
@@ -435,23 +553,10 @@ class StudentList extends Component
 
    public function exportPdf()
     {
-        $defaultFields = [
-            'no',
-            'name',
-            'student_code',
-            'last_name',
-            'father_name',
-            'phone_no',
-            'tazkira_no',
-            'address',
-            'registration_date',
-            'status',
-            'gender_id',
-        ];
+      
 
-         $fields = !empty($this->selectedFields)
-            ? $this->selectedFields
-            : $defaultFields;
+         $fields = $this->selectedFields;
+
 
         if (auth()->user()->isDeveloper() || auth()->user()->isAdmin()) {
             if (!in_array('branch_id', $fields)) {
@@ -463,7 +568,7 @@ class StudentList extends Component
             ->values()
             ->toArray();
 
-        $query = Student::query()
+        $query = Student::with('branch','gender','occupation')
             ->when(!empty($this->search['identity']), function ($q) {
                 $search = $this->search['identity'];
 
@@ -480,6 +585,9 @@ class StudentList extends Component
             )
             ->when(!empty($this->search['gender_id']), fn($q) =>
                 $q->where('gender_id',$this->search['gender_id'])
+            )
+            ->when(!empty($this->search['occupation_id']), fn($q) =>
+                $q->where('occupation_id',$this->search['occupation_id'])
             );
 
         if (in_array('branch_id', $fields)) {
@@ -507,5 +615,11 @@ class StudentList extends Component
             fn () => print($pdf->output()),
             'student-list-' . Carbon::now()->format('Y-m-d -H-i-A') . '.pdf'
         );
+    }
+
+    public function print()
+    {
+        
+        $this->dispatch('show-print-preview');
     }
 }

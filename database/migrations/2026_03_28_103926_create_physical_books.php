@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->foreignId('book_id')->nullable()->constrained('books')->nullOnDelete();
             $table->integer('price')->nullable();
+            $table->integer('minimum_stock')->default(10);
             $table->timestamps();
         });
     }

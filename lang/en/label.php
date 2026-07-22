@@ -3,7 +3,7 @@
 return [
     // -----------start general-------------------
     'app_name' => 'Change MIS',
-    'center_name' => 'Change Academy',
+    'center_name' => 'Change English Language & Computer Center',
     'light' => 'Light',
     'dark' => 'Dark',
     'fa' => 'Persian',
@@ -48,6 +48,7 @@ return [
     'deleting' => 'Delete',
     'NO' => 'NO',
     'actions' => 'Actions',
+    'action' => 'Action',
     'choose_file' => 'Choose Files',
     'upload' => 'Upload',
     'print' => 'Print',
@@ -78,6 +79,14 @@ return [
     'prev' => 'Previous',
     'next' => 'Next',
     'details' => 'Details',
+    'description' => 'Description',
+
+    'present'=>'Present',
+    'absent'=>'Absent',
+    'excused'=>'Excused',
+    'late'=>'Late',
+    'not_recorded'=>'Not Recorded',
+    'attendance_not_recorded'=>'Attendance Not Recorded',
     // -----------end  general-------------------
     
     // -----start settings--------------------
@@ -172,12 +181,14 @@ return [
     'last_news'=>'Last News',
     'all_posts'=>'All Posts',
     'gender'=>'Gender',
+    'occupation'=>'Occupation',
     'gender.required'=>'Gender is required',
 
 
     // start dashboard labels-----------------------
     
     'students' => 'Students',
+    'student_list' => 'Student List',
     'students_overview' => 'Overall Students Status',
 
     'new_students'       => 'New Students',
@@ -198,6 +209,53 @@ return [
     'reviewers_count'   => 'Number of Reviewers',
     'authors_count'     => 'Number of Authors',
     'users_count'       => 'Total Users',
+    'shift_breakdown'       => 'Shift Breakdown',
+    'section_breakdown'       => 'Section Breakdown',
+    'financial_breakdown'       => 'Finance Breakdown',
+    'financial_category_breakdown'       => 'Finance Category Breakdown',
+    'financial_records'       => 'Financial Records',
+    'course_breakdown'       => 'Course Breakdown',
+    'program_breakdown'       => 'Program Breakdown',
+    'book_breakdown'       => 'Book Breakdown',
+    'student_attendance_details'       => 'Student Attendance Details',
+    'student_attendance_history'       => 'Student Attendance History',
+    'back'       => 'Back',
+    'all_branches'       => 'All Branches',
+    'comment'       => 'Comment',
+    'comments'       => 'Comments',
+    'new_comment'       => 'New Comment',
+    'waiting_student_report'       => 'Waiting Student Report',
+    'branch_attendance'       => 'Branch Attendance',
+    'refresh'       => 'Refresh',
+    'student_attendance_overview'       => 'Student Attendance Overview',
+    'student_results_overview'       => 'Student Results Overview',
+
+    'financial_dashboard'       => 'Financial Dashboard',
+    'book_inventory_dashboard'       => 'Book Inventory Dashboard',
+    'income'       => 'Income',
+    'total_income'       => 'Total Income',
+    'branches'       => 'Branches',
+    'expense'       => 'Expense',
+    'asset'       => 'Asset',
+    'profit'       => 'Profit / Loss',
+    'current_cash'       => 'Current Cash',
+    'transfer_in'       => 'Transfer in',
+    'transfer_out'       => 'Transfer out',
+    'sold'       => 'Sold',
+    'available_quantity'       => 'Available Qauntity',
+    'central_warehouses'       => 'Central Warehouses',
+
+
+    'book_sale'       => 'Book Sale',
+    'other_fee'       => 'Other Fee',
+    'other_fee'       => 'Other Fee',
+    'temporary_payroll'       => 'Temporary Payroll',
+    'permanent_payroll'       => 'Permanent Payroll',
+    'book_purchase'       => 'Book Purchase',
+    'asset_purchase'       => 'Asset Purchase',
+    'summary'       => 'Summary',
+    'no_data_found'       => 'No data found',
+    'general_book_purchase'       => 'General Book Purchase',
 
     // end dashboard labels-------------------------
 
@@ -304,6 +362,7 @@ return [
     'phone_no' => 'Phone',
     'whats_app' => 'WhatsApp No',
     'father_whats_app' => 'Father WhatsApp No',
+    'father_no' => 'Father No',
     'visit_date' => 'Visit Date',
     'visit_purpose' => 'Visit Purpose',
     'referral_source' => 'Referral Source',
@@ -356,11 +415,22 @@ return [
     'archive_course'=>'Archive Course',
     'dropped'=>'Dropped',
     'failed'=>'Failed',
+    'passed'=>'Passed',
+    'makeup'=>'Makeup',
+    'placement'=>'Placement',
     'waiting'=>'Waiting',
     'enrolled'=>'Enrolled',
     'student_courses'=>'Student Courses',
     'result_sheet'=>'Result Sheet',
     'exam_scores'=>'Exam Scores',
+    'result_card'=>'Result Card',
+
+    'student_results'=>'Student Results',
+    'student_result_details'=>'Student Result Details',
+    'score'=>'Score',
+    'not_scored'=>'Not Scored',
+    'branch_results'=>'Branch Results',
+    'branch_attendance'=>'Branch Attendance',
     //----------------end students--------------------
 
     //----------------start course------------------
@@ -443,6 +513,8 @@ return [
 
     // -----------start Assessment------------------------
     'student_attendance'=>'Student Attendance',
+    'general_attendance'=>'General Attendance',
+
     'exam_attendance'=>'Exam Attendance',
     'save_attendance'=>'Save Attendance',
     'attendance_date'=>'Attendance Date',
@@ -471,6 +543,35 @@ return [
     'exam_type.required'=>'Exam Type is required',
     'percentage.required'=>'Percentage is required',
     'total_percentage_message'=>'The total percentage must be 100',
+
+
+    'exam_valid_days'=>'Exam Valid Days',
+    'fee_valid_days'=>'Fee Valid Days',
+    'exam_valid_days.required'=>'Exam Valid Days is required',
+    'fee_valid_days.required'=>'Fee Valid Days is required',
+    'makeup_setting'=>'Makeup Setting',
+    'makeup_fee'=>'Makeup Fee',
+    'makeup_student_course'=>'Makeup Student Course',
+
+    'makeup_end_date_missing' => 'Course end date is not defined.',
+    'makeup_expired' => 'Makeup registration period has expired. You are only allowed to register within :days days after the course end date.',
+
+    'exam_period'=>'Exam Period',
+    'exam_period.required'=>'Exam Period is required',
+    'midterm'=>'Midterm',
+    'final'=>'Final',
+
+    'exam_unit'=>'Exam Unit',
+    'campus_incharge'=>'Campus Incharge',
+    'signature'=>'Signature',
+    'midterm_exam'=>'Midterm Exam',
+    'final_exam'=>'Final Exam',
+    'days_left'=>'Days Left',
+    'finished'=>'Finished',
+    'today'=>'Today',
+    'attendance_taken'=>'Attendance Taken',
+    'attendance_not_taken'=>'Attendance Not Taken',
+
     // -----------end Assessment------------------------
     
     // ----------start Financial------------------------
@@ -494,13 +595,14 @@ return [
     'fee_amount'=>'Fee Amount',
     'total_amount'=>'Total Amount',
     'total'=>'Total',
+    'overall_total'=>'Overall Total',
     'paid_amount'=>'Paid Amount',
     'remaining_amount'=>'Remaining Amount',
 
     'payment_type'=>'Payment Type',
     'full'=>'Full',
-    'installments'=>'Installments',
-    'installment'=>'Installment',
+    'installments'=>'Due',
+    'installment'=>'Due',
     'installment_no'=>'Installment No',
     'amount'=>'Amount',
     'due_date'=>'Due Date',
@@ -548,9 +650,11 @@ return [
     'code'=>'Code',
     'code.required'=>'Code is required',
     'student_course_fee_report'=>'Student Course Fee Report',
+    'student_fee_report'=>'Student Fee Report',
     'student_course_fee_discount_report'=>'Student Course Fee Discount Report',
     'g_discount_value'=>'General Discount',
     'g_discount_amount'=>'General Discount',
+    'special_discount_amount'=>'Special Discount',
     'due'=>'Due',
     'payment_status'=>'Payment Status',
     'absent_days'=>'Absent Days',
@@ -568,6 +672,7 @@ return [
     'reject_exemption'=>'Reject Exemption',
     'request_exemption'=>'Request Exemption',
     'cancel_exemption'=>'Cancel Exemption',
+    'exemption_reason'=>'Exemption Reason',
 
 
     'expense_category'=>'Expense Category',
@@ -587,6 +692,7 @@ return [
     'purchase_date.required'=>'Purchase date is required',
     'account_type'=>'Account Type',
     'balance'=>'Balance',
+    'inventory'=>'Inventory',
     'treasury_account_not_found'=>'Treasury Account Not Found',
     'central_warehouse'=>'Central Warehouse',
     'branch_warehouse'=>'Branch Warehouse',
@@ -594,8 +700,34 @@ return [
     'branch_warehouse.required'=>'Branch Warehouse is required',
     'inventory_not_found'=>'This book does not exist in the selected warehouse',
     'insufficient_stock' => 'Not enough book quantity available in the selected warehouse',
+
+    'asset_assignment'=> 'Asset assignment',
+    'assign'=> 'Assign',
+    'assigned'=> 'Assigned',
+    'assigned_assets'=> 'Assigned Assets',
+    'assigned_date'=> 'Assigned Date',
+    'assign_date'=> 'Assign date',
+    'asset_already_assigned'=> 'Asset already assigned',
+    'asset_already_returned'=> 'Asset already returned',
+    'asset_return'=> 'Asset Return',
+    'return_date'=> 'Return Date',
+    'return'=> 'Return',
+    'assignments'=> 'Assignments',
+    'book_assignment'=> 'Book Assignment',
+    'positive'=> 'Positive',
+    'negative'=> 'Negative',
+    'neutral'=> 'Neutral',
+    'student_activity_logs'=> 'Student Activity Logs',
+    'module_type'=> 'Mudule Type',
+    'transfer_type'=> 'Transfer Type',
+    'account_transfer_report'=> 'Account Transfer Report',
+    'book_module'=> 'Book',
+    'finance_module'=> 'Finance',
+
+    'active_students_by_branch'=> 'Active Students by Branch',
+    'active_students_by_section'=> 'Active Students by Section',
     
-    // ----------end Financial------------------------
+    // ----------end Financial---------------
 
     // -----------start hr -----------------
     'employee' => 'Employee',
@@ -639,9 +771,114 @@ return [
     'attendance_status'=>'Attendance Status',
     'employee_attendance'=>'Employee Attendance',
     'total_present_days'=>'Total Present Days',
-    // -----------end hr -------------------
 
-    //  -----------------------start Warehouse ------------------------
+    'staff_attendance'=>'Staff Attendance',
+    'teacher_attendance'=>'Teacher Attendance',
+    'cannot_delete_paid_record'=>'You can not delete paid record',
+    'subtotal_salary'=>'Subtotal Salary',
+    'total_allowances'=>'Total Alowances',
+    'present_days'=>'Present Days',
+    'daily_rate'=>'Daily Rate',
+    'book_salary_details'=>'Book Salary Details',
+    'staff_payroll_receipt'=>'Staff Payroll Receipt',
+    'teacher_payroll_receipt'=>'Teacher Payroll Receipt',
+    'leave_type'=>'Leave Type',
+    'leave_type.required'=>'Leave type is required',
+    'contract.required'=>'Contract is required',
+    'contract.required'=>'Contract is required',
+    'contract_type.required'=>'Contract type is required',
+    'is_paid'=>'Is Paid',
+    'yearly_limit'=>'Yearly Limit',
+    'employee_leave'=>'Employee Leave',
+    'contract_type'=>'Contract Type',
+    'contract'=>'Contract',
+    'contract_required'=>'Contract is required',
+    'days'=>'Days',
+    'leave_limit_exceeded' => 'The requested leave exceeds the available balance. Remaining days: :days.',
+    'employee_already_has_leave' => 'Employee already has leave',
+    'leave' => 'Leave',
+    'unpaid_leave_days' => 'Unpaid Leave Days',
+    'payable_days' => 'Payable Days',
+    'advance_salary_receipt' => 'Adavnce Salary Receipt',
+    'security_saving_amount' => 'Security Saving Amount',
+    'salary_saving' => 'Salary Saving',
+    'security_saving_deduction' => 'Security Saving Deduction',
+    'security_saving_monthly_amount' => 'Security Saving Monthly Amount',
+    'deposit' => 'Deposit',
+    'refund' => 'Refund',
+    'deduction' => 'Deduction',
+    'transaction_type' => 'Transaction Type',
+    'salary_security_saving' => 'Salary Security Saving',
+    'amount_cannot_be_greater_than_balance' => 'Amount cannot be greater than balance',
+
+    'effective_from' => 'Valid From',
+    'effective_to' => 'Valid To',
+    'expense_budget_already_exists' => 'Expense budget already exists',
+
+    'expense_budge_dashboard' => 'Expense Budget Dashboard',
+    'expense_budget' => 'Expense Budget',
+    'branch_expense_budget' => 'Branch Expense Budget',
+    'budget' => 'Budget',
+    'remaining' => 'Remaining',
+    'expense_budget_breakdown' => 'Expense Breakdown',
+    'used' => 'Used',
+    'auto_deduct' => 'Payroll Auto Deducttion',
+    'enable' => 'Enable',
+    'disable' => 'Disable',
+    'auto_deduct' => 'Auto Deduct',
+    'minimum_stock' => 'Minimum Stock',
+    'minimum_stock.required' => 'Minimum Stock is required',
+    
+
+
+    'upcoming_courses' => 'Upcoming Courses',
+    'showing_courses_starting_tomorrow' => 'Showing courses that will start tomorrow',
+
+    'upcoming_exams' => 'Upcoming Exams',
+    'showing_courses_with_exam_tomorrow' => 'Showing courses with exams tomorrow',
+
+    'clear_filter' => 'Clear Filter',
+
+    'upcoming_courses' => 'Upcoming Courses',
+    'upcoming_exams' => 'Upcoming Exams',
+
+    'midterm_exams_tomorrow' => 'Midterm Exams Tomorrow',
+    'final_exams_tomorrow' => 'Final Exams Tomorrow',
+
+    'course_unit_fallback' => 'Course Unit Fallback',
+    'showing_courses_with_unit_fallback' => 'Showing courses with unit fallback changes.',
+
+    'courses_have_midterm_exams_tomorrow' => ':count course(s) have midterm exams tomorrow.',
+    'courses_have_final_exams_tomorrow' => ':count course(s) have final exams tomorrow.',
+    'courses_have_scheduled_exams_tomorrow' => ':count course(s) have scheduled exams tomorrow.',
+
+    'missing_attendance' => 'Missing Attendance',
+
+    'showing_courses_without_attendance' => 'Showing courses without recorded attendance.',
+
+    'missing_exam_attendance' => 'Missing Exam Attendance',
+
+    'showing_courses_without_exam_attendance' => 'Showing courses without recorded exam attendance.',
+
+    'notification_category' => 'Notification Category',
+    'access' => 'Access',
+    'role.required' => 'Role is required',
+    'notification_category_required' => 'Notification category is required',
+
+    'pay' => 'Pay',
+
+    'pay_all' => 'Pay All',
+
+    'confirm_pay_payroll' => 
+        'Are you sure you want to pay this payroll? This action cannot be undone.',
+
+    'confirm_pay_all_payrolls' => 
+        'Are you sure you want to pay all selected payrolls? This action cannot be undone.',
+
+        
+    // -----------end hr --------------------------------------------
+
+    //  -----------------------start Warehouse ----------------------
     'unit'=>'Unit',
     'warehouse_category'=>'Warehouse Category',
     'warehouse'=>'Warehouse',
@@ -672,5 +909,47 @@ return [
     'fund_type.required'=>'Fund Type is required',
     'account'=>'Account',
     'transaction_date'=>'Transaction Date',
+
+    'account_transfer'=>'Account Transfer',
+    'from_account'=>'From Account',
+    'to_account'=>'To Account',
+    'from_account.required'=>'From Account is required',
+    'to_account.required'=>'To Account is required',
+    'approve'=>'Approve',
+
+    'insufficient_balance'=>'This account does not have enough balance to complete this transaction',
     // -----------------------end Warehouse --------------------------
+
+
+    // ---------------start documents-------------
+    'diploma'=>'Diploma',
+    'diploma_duplicate_message'=>'This student already has an active diploma.',
+    'graduation_date' => 'Graduation Date',
+    'qrcode' => 'QR Code',
+    'serial_number' => 'Serial Number',
+    'view_diploma' => 'View Diploma',
+    'print_diploma' => 'Print Diploma',
+    'revoked' => 'Revoked',
+    'verified' => 'Verified',
+    'revoke' => 'Revoke',
+    'verify' => 'Verify',
+    'serial_number' => 'Serial Number',
+    'name_fa' => 'Persian Name',
+    'name_pa' => 'Pashto Name',
+    'last_name_fa' => 'Persian Last name',
+    'last_name_pa' => 'Pashto Last name',
+
+    'father_name_fa' => 'Persian Father Name',
+    'father_name_pa' => 'Pashto Father Name',
+
+    'date_of_birth' => 'Date of Birth',
+    'average' => 'Average',
+
+    // ---------------end documents-------------
+
+    'system_log_list' => 'System Logs',
+
+
+    'daily_income_report' => 'Daily Income Report',
+    'daily_expense_report' => 'Daily Expense Report',
 ];

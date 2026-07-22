@@ -59,7 +59,7 @@ class ExpenseCategoryList extends Component
         // -------------start for activing menu in sidebar ----------------------
     }
 
-    public $name, $category_id;
+    public $name, $category_id,$type;
 
     public function resetInputFields(){
         $this->resetExcept([
@@ -136,6 +136,7 @@ class ExpenseCategoryList extends Component
         $this->category_id = $id;    
         $category = ExpenseCategory::find($id);
         $this->name = $category->name;
+        $this->type = $category->type;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -151,6 +152,7 @@ class ExpenseCategoryList extends Component
             $category = ExpenseCategory::findOrFail($this->category_id);
             $category->update([
                 'name' => $this->name,
+                'type' => $this->type,
             ]);
              // ---start system log-----------
             SystemLog::create([

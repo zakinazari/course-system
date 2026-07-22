@@ -12,6 +12,8 @@ use App\Models\CenterSettings\Branch;
 use App\Models\Hr\Employee;
 use App\Models\Hr\PermanentContract;
 use App\Models\Hr\EmployeeAttendance;
+use App\Models\Hr\EmployeeLeave;
+use App\Models\Hr\LeaveType;
 use App\Models\Hr\Position;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -129,6 +131,7 @@ class EmployeeAttendanceList extends Component
     public $selected_employees = [];
     public $attendances = [];
     public $existing_attendances = [];
+    public $employee_leaves = [];
     public function render()
     {
         return view('livewire.hr.employees.attendance.employee-attendance-list');
@@ -148,6 +151,7 @@ class EmployeeAttendanceList extends Component
         $this->selected_employees = collect();
         $this->attendances = [];
         $this->existing_attendances = [];
+        $this->employee_leaves = [];
         $date = $this->attendance_date ?? now()->toDateString();
         if (!$this->attendance_date) {
             $this->selected_employees = collect();
@@ -174,12 +178,42 @@ class EmployeeAttendanceList extends Component
             ->when($branch_id, fn($q) => $q->where('branch_id', $branch_id))
             ->get()
             ->keyBy('employee_id');
+
+        $leaves = EmployeeLeave::with('leaveType')
+        ->where('status', 'approved')
+        ->whereDate('start_date', '<=', $date)
+        ->whereDate('end_date', '>=', $date)
+        ->get()
+        ->keyBy('employee_id');
         
         foreach ($this->selected_employees as $i=> $emp) {
-            $this->attendances[$emp->employee?->id] = $existing[$emp->employee?->id]->status ?? 'present';
 
-                $this->existing_attendances[$emp->employee?->id] =
-                isset($existing[$emp->employee?->id]);
+            $employee_id = $emp->employee?->id;
+
+            if (isset($leaves[$employee_id])) {
+
+                $this->employee_leaves[$employee_id] = $leaves[$employee_id];
+
+            } else {
+
+                $this->employee_leaves[$employee_id] = null;
+
+            }
+
+
+            if (isset($existing[$employee_id])) {
+
+                $this->attendances[$employee_id] = $existing[$employee_id]->status;
+
+            } elseif (isset($leaves[$employee_id])) {
+
+                $this->attendances[$employee_id] = 'leave';
+
+            } else {
+
+                $this->attendances[$employee_id] = 'present';
+
+            }
         }
     }
 
@@ -187,6 +221,8 @@ class EmployeeAttendanceList extends Component
     {
         $this->loadAttendances();
     }
+
+    
 
     public function updatedBranchId()
     {
@@ -235,19 +271,55 @@ class EmployeeAttendanceList extends Component
 
         try {
 
-            foreach ($this->attendances as $employee_id => $status) {
-                EmployeeAttendance::updateOrCreate(
-                    [
-                        'employee_id' => $employee_id,
-                        'branch_id' => auth()->user()->branch_id ?: $this->branch_id,
-                        'attendance_date' => $this->attendance_date,
-                    ],
-                    [
-                        'status' => $status,
-                        'user_id' => auth()->id(),
-                    ]
-                );
-            }
+            $branch_id = auth()->user()->branch_id ?: $this->branch_id;
+
+
+                foreach ($this->attendances as $employee_id => $status) {
+
+
+                    // ==========================
+                    // Check Employee Leave
+                    // ==========================
+
+                    $leave = EmployeeLeave::where('employee_id', $employee_id)
+                        ->where('status', 'approved')
+                        ->whereDate('start_date', '<=', $this->attendance_date)
+                        ->whereDate('end_date', '>=', $this->attendance_date)
+                        ->first();
+
+
+                    $leave_type_id = null;
+
+
+                    if ($leave) {
+
+                        $status = 'leave';
+
+                        $leave_type_id = $leave->leave_type_id;
+
+                    }
+
+                    EmployeeAttendance::updateOrCreate(
+
+                        [
+                            'employee_id' => $employee_id,
+
+                            'branch_id' => $branch_id,
+
+                            'attendance_date' => $this->attendance_date,
+                        ],
+
+                        [
+                            'status' => $status,
+
+                            'leave_type_id' => $leave_type_id,
+
+                            'user_id' => auth()->id(),
+                        ]
+
+                    );
+
+                }
 
             DB::commit();
 

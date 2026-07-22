@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Academic\Course;
 use App\Models\Academic\Student;
 use App\Models\CenterSettings\ExamType;
+use App\Models\User;
 class ExamFine extends Model
 {
     protected $fillable = [
@@ -19,6 +20,7 @@ class ExamFine extends Model
         'reason',
         'exam_date',
         'payment_date',
+        'user_id',
     ];
     protected $casts = [
         'amount' => 'decimal:2',
@@ -39,5 +41,10 @@ class ExamFine extends Model
     public function examType()
     {
         return $this->belongsTo(ExamType::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

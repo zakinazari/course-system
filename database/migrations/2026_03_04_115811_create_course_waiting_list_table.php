@@ -11,13 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-               Schema::create('course_waiting_lists', function (Blueprint $table) {
+            Schema::create('course_waiting_lists', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
             $table->foreignId('program_id')->nullable()->constrained('programs')->nullOnDelete();
             $table->foreignId('book_id')->nullable()->constrained('books')->nullOnDelete();
             $table->foreignId('shift_id')->nullable()->constrained('shifts')->nullOnDelete();
-            $table->enum('status', ['waiting','enrolled','cancelled'])->default('waiting');
+
+            $table->enum('status', [
+                'placement',
+                'passed',
+                'dropped',
+                'makeup',
+                'failed',
+                
+                ])->default('placement');
+
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

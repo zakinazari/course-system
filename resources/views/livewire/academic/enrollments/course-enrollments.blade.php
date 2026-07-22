@@ -169,9 +169,9 @@
                             <i class="bi bi-plus-lg"></i> {{ __('label.promote') }}
                         </button>
 
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
+                        <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{$modalId}}" wire:click="openModal">
                             <i class="bi bi-plus-lg"></i> {{ __('label.add_student_to_course') }}
-                        </button>
+                        </button> -->
                     @endif
                 </div>
             </div>
@@ -191,7 +191,7 @@
                         <select class="form-select" wire:model.defer="search.status" id ="">
                            <option value="">{{ __('label.all') }}</option>
                             <option value="active">{{ __('label.active') }}</option>
-                            <option value="completed">{{ __('label.completed') }}</option>
+                            <option value="pending">{{ __('label.pending') }}</option>
                             <option value="dropped">{{ __('label.dropped') }}</option>
                             <option value="failed">{{ __('label.failed') }}</option>
                             <option value="pending">{{ __('label.pending') }}</option>
@@ -273,14 +273,18 @@
                             <td>
                                 @if($student->pivot->status==='active')
                                 <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
-                                @elseif($student->pivot->status==='completed')
+                                @elseif($student->pivot->status==='passed')
                                 <span class="badge bg-label-success me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
                                 @elseif($student->pivot->status==='dropped')
-                                <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                <span class="badge bg-label-secondary me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                @elseif($student->pivot->status==='makeup')
+                                <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
                                 @elseif($student->pivot->status==='failed')
                                 <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
                                 @elseif($student->pivot->status==='pending')
-                                    <span class="badge bg-label-warning me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                    <span class="badge bg-label-info me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
+                                @elseif($student->pivot->status==='in_progress')
+                                    <span class="badge bg-label-info me-1" style="font-size:10px;">{{ ucfirst($student->pivot->status) }}</span>
                                 @endif
                             </td>
 
@@ -292,8 +296,9 @@
                                     </button>
                                     <div class="dropdown-menu">
                                         @if(edit(Auth::user()->role_ids,$active_menu_id))
-                                            <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $student->pivot->id }})"
-                                            ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
+                                                                                
+                                        <a class="dropdown-item" href="javascript:void(0);" wire:click="edit({{ $student->pivot->id }})"
+                                        ><i class="bx bx-edit-alt me-1 text-success"></i>{{ __('label.edit') }}</a>
                                         @endif
                                         @if(delete(Auth::user()->role_ids,$active_menu_id))
                                             <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $student->pivot->id }},'{{$table_name}}')"
@@ -345,10 +350,11 @@
                                 <select class="form-select @error('status') is-invalid @enderror" wire:model.lazy="status" id ="" >
                                 <option value="">{{ __('label.select') }}</option>
                                     <option value="active">{{ __('label.active') }}</option>
-                                    <option value="completed">{{ __('label.completed') }}</option>
-                                    <option value="dropped">{{ __('label.dropped') }}</option>
-                                    <option value="failed">{{ __('label.failed') }}</option>
                                     <option value="pending">{{ __('label.pending') }}</option>
+                                    <option value="passed">{{ __('label.passed') }}</option>
+                                    <option value="failed">{{ __('label.failed') }}</option>
+                                    <option value="makeup">{{ __('label.makeup') }}</option>
+                                    <option value="dropped">{{ __('label.dropped') }}</option>
                                 </select>
                                 @error('status') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>

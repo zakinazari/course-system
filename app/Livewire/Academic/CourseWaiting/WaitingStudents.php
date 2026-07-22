@@ -8,6 +8,8 @@ use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use App\Models\Academic\CourseType;
 use App\Models\Academic\CourseWaitingList;
+use App\Models\Academic\CourseWaitingListComment;
+
 use App\Models\CenterSettings\Branch;
 use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
@@ -80,8 +82,9 @@ class WaitingStudents extends Component
     }
 
     public $waiting_id,$program_id,$book_id,$shift_id,$branch_id,
-    $status = 'waiting';
+    $status = 'placement';
     public $student_id;
+    public $comment;
     public function resetInputFields(){
         $this->resetExcept([
             'active_menu_id',
@@ -186,7 +189,7 @@ class WaitingStudents extends Component
                     'shift_id' => $this->shift_id,
                 ],
                 [
-                    'status' => 'waiting',
+                    'status' => 'placement',
                     'user_id' => Auth::Id(),
                 ]
             );
@@ -214,6 +217,7 @@ class WaitingStudents extends Component
         $waiting = CourseWaitingList::find($id);
         $this->waiting_id = $id;  
         $this->student_id = $waiting->student_id;
+        $this->comment = $waiting->comment;
         $this->branch_id = $waiting->branch_id;
         $this->program_id = $waiting->program_id;
         $this->loadProgramBook($this->program_id);
@@ -253,7 +257,8 @@ class WaitingStudents extends Component
                 'program_id' => $this->program_id,
                 'book_id' => $this->book_id,
                 'shift_id' => $this->shift_id,
-                'status' => 'waiting',
+                'comment' => $this->comment,
+                'status' => 'placement',
                 'user_id' => Auth::id(),
             ]);
 
@@ -278,11 +283,17 @@ class WaitingStudents extends Component
     public function handleGlobalDelete($payload)
     {
 
-        if (!isset($payload['table']) || $payload['table'] !== $this->table_name) {
-            return;
-        }
+        if($payload['table']=='course_waiting_list_comments'){
 
-        $this->delete($payload['id']);
+            $this->deleteComment($payload['id']);
+
+        }else{
+           if (!isset($payload['table']) || $payload['table'] !== $this->table_name) {
+                return;
+            }
+
+            $this->delete($payload['id']);
+        }
     }
 
     public function delete($id)
@@ -383,6 +394,77 @@ class WaitingStudents extends Component
     {
         $this->books = Book::where('status', 'active')
             ->where('program_id', $program_id)->get();
+    }
+
+    public $show_comments=[];
+    public $selected_waiting_id;
+    public function showComments($waiting_id)
+    {
+        $this->selected_waiting_id = $waiting_id;
+       
+        $this->show_comments = CourseWaitingListComment::where('course_waiting_list_id',$waiting_id)->get();
+
+        $this->dispatch('open-modal', id: 'show_comments_modal');
+    }
+
+    public $new_comment;
+    public function openNewCommentModal($id)
+    {
+       
+        $this->selected_waiting_id = $id;
+
+        $this->reset('new_comment');
+
+        $this->dispatch('open-modal', id: "add_comments_modal");
+    }
+
+    public function storeNewComment()
+    {
+       
+
+        DB::beginTransaction();
+
+        try {
+
+            $comment = CourseWaitingListComment::create([
+                'course_waiting_list_id' => $this->selected_waiting_id,
+                'comment' => $this->new_comment,
+                'user_id' => Auth::user()->id,
+            ]);
+
+            DB::commit();
+
+            $this->showComments($this->selected_waiting_id);
+            $this->reset('new_comment');
+
+            $this->dispatch('close-modal', id: 'add_comments_modal');
+            $this->dispatch('alert', type: 'success', message: __('label.successfully_done'));
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->dispatch('alert', type: 'error', message: __('label.store_error') . ': ' . $e->getMessage());
+        }
+    }
+
+    public function deleteComment($id)
+    {
+        if(!delete(Auth::user()->role_ids, $this->active_menu_id)) {
+            return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
+        }
+
+        try {
+
+            $waiting_comments = CourseWaitingListComment::findOrFail($id);
+   
+            $waiting_comments->delete();
+
+            $this->showComments($this->selected_waiting_id);
+            $this->dispatch('alert', type: 'success', message: __('label.successfully_deleted'));
+        } catch (\Exception $e) {
+            $this->dispatch('alert', type: 'error', message: __('label.delete_error').' : ' . $e->getMessage());
+        }
     }
     
 }

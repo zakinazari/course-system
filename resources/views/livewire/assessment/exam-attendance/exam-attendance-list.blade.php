@@ -229,7 +229,7 @@
                             <td>{{ $cs->student?->last_name }}</td>
                             <td>{{ $cs->student?->father_name }}</td>
                          
-                            @if(Auth::user()->isDeveloper() || Auth::user()->isAdmin())
+                            @if(add(Auth::user()->role_ids,$active_menu_id))
                             <td>
                                 
                                 <div class="d-flex gap-2">
@@ -251,20 +251,19 @@
                     </tbody>
                 </table>
             </div>
-             @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
-                  @if(Auth::user()->isDeveloper() || Auth::user()->isAdmin())
-                    <div class="d-flex justify-content-end mt-4 mb-3 px-3">
-                        <button type="button" class="btn btn-primary" wire:click="saveAttendance">
-                            <i class="bi bi-save me-1"></i> {{ __('label.save_attendance') }}
-                        </button>
-                    </div>
-                    @endif
-                @endif
+            @if(add(Auth::user()->role_ids,$active_menu_id) && count($students) > 0)
+
+                <div class="d-flex justify-content-end mt-4 mb-3 px-3">
+                    <button type="button" class="btn btn-primary" wire:click="saveAttendance">
+                        <i class="bi bi-save me-1"></i> {{ __('label.save_attendance') }}
+                    </button>
+                </div>
+            @endif
+
             @endif
         </div>
     </div>
     
-
 </div>
 
 @script

@@ -4,9 +4,12 @@ namespace App\Models\Hr;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CenterSettings\Branch;
+use App\Models\CenterSettings\Month;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Hr\Employee;
+use App\Models\User;
 class PermanentPayroll extends Model
 {
     protected $fillable = [
@@ -18,13 +21,17 @@ class PermanentPayroll extends Model
 
         'gross_salary',
         'total_present_days',
+        'absent_days',
+        'unpaid_leave_days',
         'over_time_hours',
         'over_time_amount',
         'taxi_fare',
         'credit_card',
+        'total_allowances',
 
         'tax',
         'advance_deduction',
+        'security_saving_deduction',
         'total_deductions',
         'net_salary',
         'payment_date',
@@ -49,6 +56,7 @@ class PermanentPayroll extends Model
         'advance_deduction' => 'decimal:2',
 
         'total_deductions' => 'decimal:2',
+        'security_saving_deduction' => 'decimal:2',
         'net_salary' => 'decimal:2',
         'payment_date' => 'date',
     ];
@@ -56,18 +64,42 @@ class PermanentPayroll extends Model
     // ======================
     // Relationships
     // ======================
+    public function securitySavings()
+    {
+        return $this->morphMany(
+            EmployeeSecuritySaving::class,
+            'payroll'
+        );
+    }
+
 
     public function employee()
     {
         return $this->belongsTo(Employee::class);
     }
 
-    public function PermanentContract()
+    public function permanentContract()
     {
         return $this->belongsTo(PermanentContract::class);
     }
+    public function month()
+    {
+        return $this->belongsTo(Month::class);
+    }
 
-     protected static function booted()
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+  
+
+    protected static function booted()
     {
         //  Global Scope شعبه
         static::addGlobalScope('branch', function (Builder $builder) {
@@ -83,6 +115,14 @@ class PermanentPayroll extends Model
             }
  
             $builder->where('branch_id', $user->branch_id);
+        });
+
+        // security saving delete ---------------------
+
+        static::deleting(function ($payroll) {
+
+            $payroll->securitySavings()->delete();
+
         });
     }
 }

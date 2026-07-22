@@ -21,6 +21,8 @@ return new class extends Migration
 
             $table->decimal('gross_salary', 10, 2)->default(0);
             $table->decimal('total_present_days', 10, 2)->default(0);
+            $table->decimal('absent_days', 10, 2)->default(0);
+            $table->decimal('unpaid_leave_days', 10, 2)->default(0);
             $table->decimal('over_time_hours', 10, 2)->default(0);
             $table->decimal('over_time_amount', 10, 2)->default(0);
 
@@ -30,6 +32,7 @@ return new class extends Migration
 
             $table->decimal('tax', 10, 2)->default(0);
             $table->decimal('advance_deduction', 10, 2)->default(0);
+            $table->decimal('security_saving_deduction',10,2)->default(0);
             $table->decimal('total_deductions', 12, 2)->default(0);
             
             $table->decimal('net_salary', 12, 2)->default(0);

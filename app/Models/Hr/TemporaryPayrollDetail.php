@@ -15,6 +15,9 @@ class TemporaryPayrollDetail extends Model
         'total_days_snapshot',
         'daily_rate_snapshot',
 
+        'unpaid_leave_days',
+        'payable_days',
+
         'attendance_count',
         'total_salary',
     ];

@@ -28,6 +28,27 @@ class StudentCourseResult extends Model
         'user_id',
     ];
 
+    public function getGradeAttribute()
+    {
+        return match (true) {
+            $this->total >= 85 => 'A+',
+            $this->total >= 80 => 'A',
+            $this->total >= 75 => 'B+',
+            $this->total >= 70 => 'B',
+            $this->total >= 65 => 'C+',
+            $this->total >= 60 => 'C',
+            $this->total >= 55 => 'D+',
+            $this->total >= 50 => 'D',
+            $this->total >= 1  => 'F',
+            default => '',
+        };
+    }
+
+    public function getTotalAttribute($value)
+    {
+        return round($value);
+    }
+
     public function student()
     {
         return $this->belongsTo(Student::class);
@@ -47,4 +68,6 @@ class StudentCourseResult extends Model
     {
         return $this->hasMany(StudentExamScore::class, 'course_id', 'course_id');
     }
+    
+    
 }

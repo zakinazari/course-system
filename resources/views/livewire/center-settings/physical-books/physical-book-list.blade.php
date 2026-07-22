@@ -87,6 +87,7 @@
                             <th>{{ __('label.name') }}</th>
                             <th>{{ __('label.book') }}</th>
                             <th>{{ __('label.price') }}</th>
+                            <th>{{ __('label.minimum_stock') }}</th>
                             <th>{{ __('label.actions') }}</th>
                         </tr>
                     </thead>
@@ -97,6 +98,7 @@
                             <td>{{ $book->name }}</td>
                             <td>{{ $book->book?->name }}</td>
                             <td>{{ $book->price }}</td>
+                            <td>{{ $book->minimum_stock }}</td>
                             <td>
                                 <div class="dropdown position-static">
                                     <button type="button" class="btn btn-primary btn-icon rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -161,9 +163,16 @@
                         </div>
                         <div class="row">
                             <div class="col mb-3">
-                                <label for="nameBasic" class="form-label">{{ __('label.price') }} </label>
+                                <label for="nameBasic" class="form-label">{{ __('label.price') }} <span style="color:red;">*</span></label>
                                 <input type="text" id="nameBasic" class="form-control @error('price') is-invalid @enderror" wire:model.lazy="price">
                                 @error('price') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.minimum_stock') }} <span style="color:red;">*</span></label>
+                                <input type="text" id="nameBasic" class="form-control @error('price') is-invalid @enderror" wire:model.lazy="minimum_stock">
+                                @error('minimum_stock') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>

@@ -59,7 +59,7 @@ class ExamTypeList extends Component
         // -------------start for activing menu in sidebar ----------------------
     }
 
-    public $name, $exam_type_id;
+    public $name, $exam_type_id,$exam_period,$order;
 
      public function resetInputFields(){
         $this->resetExcept([
@@ -80,6 +80,8 @@ class ExamTypeList extends Component
         ->when(!empty($this->search['name']), function ($query) {
             $query->where('name', 'like', '%' . $this->search['name'] . '%');
         })
+
+        ->orderBy('order','asc')
         ->paginate($this->perPage);
         return view('livewire.center-settings.exam-types.exam-type-list',compact('exam_types'));
     }
@@ -88,6 +90,8 @@ class ExamTypeList extends Component
     {
         return [
             'name' => 'required|string|max:255|unique:exam_types,name,' . $this->exam_type_id,
+            'exam_period' => 'required',
+            'order' => 'required',
         ];
     }
     // Localized messages
@@ -98,6 +102,8 @@ class ExamTypeList extends Component
             'name.string'   => __('label.name.string'),
             'name.max'      => __('label.name.max'),
             'name.unique'   => __('label.name.unique'),
+            'exam_period.required'   => __('label.exam_period.required'),
+            'order.required'   => __('label.order.required'),
         ];
     }
     
@@ -114,6 +120,8 @@ class ExamTypeList extends Component
 
             $exam_type = ExamType::create([
                 'name' => $this->name,
+                'exam_period' => $this->exam_period,
+                'order' => $this->order,
             ]);
 
             // ---start system log-----------
@@ -138,6 +146,8 @@ class ExamTypeList extends Component
         $this->exam_type_id = $id;    
         $exam_type = ExamType::find($id);
         $this->name = $exam_type->name;
+        $this->exam_period = $exam_type->exam_period;
+        $this->order = $exam_type->order;
         $this->editMode = true;
         $this->dispatch('open-modal', id: $this->modalId);
     }
@@ -153,6 +163,8 @@ class ExamTypeList extends Component
             $exam_type = ExamType::findOrFail($this->exam_type_id);
             $exam_type->update([
                 'name' => $this->name,
+                'exam_period' => $this->exam_period,
+                'order' => $this->order,
             ]);
             // ---start system log-----------
             SystemLog::create([

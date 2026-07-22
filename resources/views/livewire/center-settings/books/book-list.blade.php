@@ -293,6 +293,48 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- -------------------------special discounts--------------------- -->
+                        <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>Special Discounts</strong>
+                        </div>
+
+                        <div class="card-body">
+
+                            @foreach($book_special_discount_types as $type)
+
+                                <div class="border rounded p-3 mb-3">
+
+                                    <h6 class="mb-2 text-capitalize">
+                                        {{ str_replace('_', ' ', $type) }}
+                                    </h6>
+
+                                    <div class="row">
+
+                                        {{-- amount --}}
+                                        <div class="col-md-6">
+                                            <label>Amount</label>
+                                            <input type="number"
+                                                class="form-control"
+                                                wire:model.lazy="book_special_discounts.{{ $type }}.amount">
+                                        </div>
+
+                                        {{-- duration --}}
+                                        <div class="col-md-6">
+                                            <label>Duration (days)</label>
+                                            <input type="number"
+                                                class="form-control"
+                                                wire:model.lazy="book_special_discounts.{{ $type }}.duration_days">
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            @endforeach
+
+                        </div>
+                    </div>
                         <div class="row">
                             <div class="col mb-3">
                                <label class="form-label d-block">{{ __('label.status') }}</label>

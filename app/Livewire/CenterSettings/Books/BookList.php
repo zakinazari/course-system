@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\CenterSettings\Program;
 use App\Models\CenterSettings\Book;
 use App\Models\CenterSettings\ExamType;
+use App\Models\CenterSettings\BookSpecialDiscount;
 use App\Models\Settings\Menu;
 use App\Models\Settings\SystemLog;
 use Auth;
@@ -23,6 +24,8 @@ class BookList extends Component
     public $active_menu;
     public $programs=[];
     public $exam_types=[];
+    public $book_special_discounts=[];
+    public $book_special_discount_types = [];
     public $modalId = 'book-list-addEditModal';
     public $table_name='books';
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
@@ -67,6 +70,17 @@ class BookList extends Component
         $this->programs = Program::all();
         $this->exam_types =  ExamType::orderBy('id','ASC')->get();
 
+        // special discounts ----------------
+        $this->book_special_discount_types = ['failed', 'makeup', 're_study', 'dropped'];
+
+        $this->book_special_discounts = [];
+
+        foreach ($this->book_special_discount_types as $type) {
+            $this->book_special_discounts[$type] = [
+                'amount' => null,
+                'duration_days' => null,
+            ];
+        }
     }
 
     public $name,$abbreviation,$book_id, $program_id,$status = 'active',$fee,
@@ -86,6 +100,8 @@ class BookList extends Component
             'search',
             'programs',
             'exam_types',
+            'book_special_discounts',
+            'book_special_discount_types',
         ]);
     }
     public $search = [
@@ -210,6 +226,33 @@ class BookList extends Component
             }
             $book->examTypes()->sync($syncData);
 
+            // special discouts------------------
+
+            foreach ($this->book_special_discounts as $type => $data) {
+
+                if (!empty($data['amount'])) {
+
+                    BookSpecialDiscount::updateOrCreate(
+                        [
+                            'book_id' => $book->id,
+                            'type' => $type,
+                        ],
+                        [
+                            'amount' => $data['amount'],
+                            'duration_days' => $data['duration_days'] ?? null,
+                        ]
+                    );
+
+                } else {
+
+                    BookSpecialDiscount::where('book_id', $book->id)
+                        ->where('type', $type)
+                        ->delete();
+                }
+            }
+
+            // =--------------end special discounts------------------------
+
             SystemLog::create([
                 'user_id' => Auth::user()->id,
                 'section' => __('label.book').' ('.$book->name.' ID:'.$book->id.')',
@@ -252,6 +295,19 @@ class BookList extends Component
         foreach ($book->examTypes as $type) {
             $this->exam_type_ids[] = $type->id;
             $this->percentages[$type->id] = $type->pivot->percentage;
+        }
+
+
+        $discounts = BookSpecialDiscount::where('book_id', $this->book_id)->get();
+
+        foreach ($this->book_special_discount_types as $type) {
+
+            $existing = $discounts->where('type', $type)->first();
+
+            $this->book_special_discounts[$type] = [
+                'amount' => $existing->amount ?? null,
+                'duration_days' => $existing->duration_days ?? null,
+            ];
         }
 
         $this->editMode = true;
@@ -301,6 +357,34 @@ class BookList extends Component
 
             $book->examTypes()->sync($syncData);
 
+
+                 // special discouts------------------
+
+            foreach ($this->book_special_discounts as $type => $data) {
+
+                if (!empty($data['amount'])) {
+
+                    BookSpecialDiscount::updateOrCreate(
+                        [
+                            'book_id' => $this->book_id,
+                            'type' => $type,
+                        ],
+                        [
+                            'amount' => $data['amount'],
+                            'duration_days' => $data['duration_days'] ?? null,
+                        ]
+                    );
+
+                } else {
+
+                    BookSpecialDiscount::where('book_id', $this->book_id)
+                        ->where('type', $type)
+                        ->delete();
+                }
+            }
+
+            // =--------------end special discounts------------------------
+            
             // ---start system log-----------
             SystemLog::create([
                 'user_id' => Auth::user()->id,

@@ -9,6 +9,7 @@ use App\Models\Settings\SystemLog;
 use App\Models\CenterSettings\Branch;
 use App\Models\Academic\Student;
 use App\Models\Academic\CourseStudent;
+use App\Models\Financial\StudentCourseFee;
 use App\Models\Academic\Course;
 use Auth;
 use DB;
@@ -96,7 +97,21 @@ class StudentCourseList extends Component
     {
     
         $student_courses = $this->student->courses()
-        ->with(['book','program','time','teacher:id,name,last_name','classroom'])
+        ->withoutGlobalScopes()
+        ->with([
+            'book',
+            'program',
+            'time',
+
+            'teacher' => function ($q) {
+                $q->withoutGlobalScopes()
+                ->select('id', 'name', 'last_name');
+            },
+
+            'classroom' => function ($q) {
+                $q->withoutGlobalScopes();
+            },
+        ])
         ->orderBy('pivot_enrolled_at', 'desc')
         ->paginate($this->perPage);
         return view('livewire.academic.students.student-courses.student-course-list',compact('student_courses'));
@@ -134,7 +149,7 @@ class StudentCourseList extends Component
         ->whereDoesntHave('students', function ($q) use ($student_id) {
             $q->where('course_student.student_id', $student_id);
         })
-        ->where('branch_id',$course->branch_id)->get();
+        ->where('branch_id',$this->student->branch_id)->get();
         
         $this->dispatch('open-modal', id: 'changeTimeModal');
     }
@@ -192,9 +207,24 @@ class StudentCourseList extends Component
                 'enrolled_at' => now(),
             ]);
 
+            $student_course_fee = StudentCourseFee::query()
+                    ->where('student_id', $this->student->id)
+                    ->where('course_id', $this->course_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($student_course_fee) {
+
+                    $student_course_fee->update([
+                        'course_id' => $target_course->id,
+                    ]);
+                }
+
             //  حذف از کورس قبلی
             $pivot->delete();
 
+            $target_course->status='ongoing';
+            $target_course->save();
             //  log
             SystemLog::create([
                 'st_id' => $this->student->id,

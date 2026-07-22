@@ -82,6 +82,7 @@ class BookTransferList extends Component
     public $branch_warehouses = [];
     public $books = [];
     public $branches=[];
+
     public function mount($active_menu_id = null)
     {
         // -------------start for activing menu in sidebar ----------------------
@@ -135,7 +136,7 @@ class BookTransferList extends Component
             'to' => null,
         ];
     public function loadBranchWarehouse($value){
-        $this->branch_warehouses =  Warehouse::where('type','branch')
+        $this->branch_warehouses =  Warehouse::withoutGlobalScopes()->where('type','branch')
         ->where('branch_id',$value)->get();
     }
     
@@ -149,7 +150,7 @@ class BookTransferList extends Component
             return;
         }
 
-        $this->available_quantity = BookInventory::where('book_id', $value)
+        $this->available_quantity = BookInventory::withoutGlobalScopes()->where('book_id', $value)
 
             ->whereHas('warehouse', function ($q) {
 
@@ -169,7 +170,7 @@ class BookTransferList extends Component
             return;
         }
 
-        $this->available_quantity = BookInventory::where('book_id', $this->book_id)
+        $this->available_quantity = BookInventory::withoutGlobalScopes()->where('book_id', $this->book_id)
 
             ->whereHas('warehouse', function ($q) use ($value) {
 
@@ -190,15 +191,22 @@ class BookTransferList extends Component
 
     public function loadTransfers(){
         $search = $this->search;
-        $transfers = BookInventoryMovement::with('inventory')
-        ->when(!empty(Auth::user()->branch_id), function ($query) {
+        $transfers = BookInventoryMovement::withoutGlobalScopes()
+        ->with([
+            'inventory' => function ($q) {
+                $q->withoutGlobalScopes()
+                ->with([
+                    'book' => function ($q) {
+                        $q->withoutGlobalScopes();
+                    },
+                    'warehouse' => function ($q) {
+                        $q->withoutGlobalScopes();
+                    }
+                ]);
+            }
+        ])
 
-            $query->where('type', 'transfer_in');
-
-        }, function ($query) {
-
-            $query->where('type', 'transfer_out');
-        })
+        ->where('type', 'transfer_in')
 
         ->when(!empty($this->search['book_id']), function ($query) {
             $query->whereHas('inventory', function($q) {
@@ -296,7 +304,7 @@ class BookTransferList extends Component
             | FROM inventory
             |--------------------------------------------------------------------------
             */
-            $from_inventory = BookInventory::where('warehouse_id', $this->from_warehouse_id)
+            $from_inventory = BookInventory::withoutGlobalScopes()->where('warehouse_id', $this->from_warehouse_id)
                 ->where('book_id', $this->book_id)
                 ->first();
 
@@ -313,7 +321,7 @@ class BookTransferList extends Component
             | TO inventory
             |--------------------------------------------------------------------------
             */
-            $to_inventory = BookInventory::firstOrCreate(
+            $to_inventory = BookInventory::withoutGlobalScopes()->firstOrCreate(
                 [
                     'warehouse_id' => $this->to_warehouse_id,
                     'book_id' => $this->book_id,

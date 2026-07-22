@@ -37,6 +37,7 @@ class EmployeeTemporaryContractList extends Component
     public $pdfOrientation = 'landscape';
 
     public $selectedFields = [
+        
         'no',
         'employee_id',
         'position_id',
@@ -48,6 +49,7 @@ class EmployeeTemporaryContractList extends Component
         'start_date',
         'end_date',
         'status',
+        'security_saving_amount',
     ];
 
     protected $listeners = ['modalClosed' => 'closeModal','globalDelete' => 'handleGlobalDelete'];
@@ -113,6 +115,8 @@ class EmployeeTemporaryContractList extends Component
     public $credit_card=0;
     public $food_deduction=0;
     public $status='active';
+    public $security_saving_amount;
+    public $security_saving_monthly_amount;
 
     public function resetInputFields(){
         $this->resetExcept([
@@ -178,11 +182,13 @@ class EmployeeTemporaryContractList extends Component
                 'exists:employees,id',
 
                 Rule::unique('temporary_contracts')
-                    ->ignore($this->contract_id)
-                    ->where(function ($q) use ($branch_id) {
-                        return $q->where('branch_id', $branch_id)
-                            ->where('status', 'active');
-                    }),
+                ->ignore($this->contract_id)
+                ->where(fn ($q) => $q
+                    ->where('employee_id', $this->employee_id)
+                    ->where('section_id', $this->section_id)
+                    ->where('branch_id', $branch_id)
+                    ->where('status', 'active')
+                ),
             ],
 
             'position_id' => 'required|exists:positions,id',
@@ -193,6 +199,16 @@ class EmployeeTemporaryContractList extends Component
             'selected_books' => 'required|array|min:1',
             'selected_books.*.id' => 'required|exists:books,id',
             'selected_books.*.amount' => 'required|numeric|min:1',
+
+            // security saving-------------------
+            'security_saving_amount' => 'nullable|numeric|min:0',
+
+            'security_saving_monthly_amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'lte:security_saving_amount',
+            ],
         ];
 
         if (!Auth::user()->branch_id) {
@@ -218,7 +234,7 @@ class EmployeeTemporaryContractList extends Component
             'selected_books.required' => 'At least one book is required',
             'selected_books.min'      => 'At least one book must be selected',
             'branch_id.required'   => __('label.branch.required'),
-            'employee_id.unique' => 'This employee already has an active contract in this branch.',
+            'employee_id.unique' => 'This employee already has an active contract in this branch and section.',
             'position_id.required'   => __('label.position.required'),
             'section_id.required'   => __('label.section.required'),
         ];
@@ -267,6 +283,25 @@ class EmployeeTemporaryContractList extends Component
 
         $this->validate();
 
+         /*
+        |--------------------------------------------------------------------------
+        | Security Saving Validation
+        |--------------------------------------------------------------------------
+        */
+
+        $basic_salary = collect($this->selected_books)->sum('amount');
+
+        if ($this->security_saving_amount > $basic_salary) {
+
+            $this->dispatch(
+                'alert',
+                type: 'error',
+                message: __('Security saving amount cannot be greater than total basic salary.')
+            );
+
+            return;
+        }
+
         DB::beginTransaction();
 
         try {
@@ -283,6 +318,8 @@ class EmployeeTemporaryContractList extends Component
                 'start_date'   => $this->start_date,
                 'end_date'     => $this->end_date,
                 'status'     => $this->status,
+                'security_saving_amount'     => $this->security_saving_amount,
+                'security_saving_monthly_amount'     => $this->security_saving_monthly_amount,
             ]);
 
             // ------اضافه نمودن کتاب---------------------
@@ -330,6 +367,8 @@ class EmployeeTemporaryContractList extends Component
         $this->credit_card = $contract->credit_card;
         $this->food_deduction = $contract->food_deduction;
         $this->status = $contract->status;
+        $this->security_saving_amount = $contract->security_saving_amount;
+        $this->security_saving_monthly_amount = $contract->security_saving_monthly_amount;
         $this->start_date = $contract->start_date? $contract->start_date->format('Y-m-d') : null; 
         $this->end_date = $contract->end_date ? $contract->end_date->format('Y-m-d')
         : null;
@@ -354,6 +393,23 @@ class EmployeeTemporaryContractList extends Component
         }
 
         $this->validate();
+         /*
+        |--------------------------------------------------------------------------
+        | Security Saving Validation
+        |--------------------------------------------------------------------------
+        */
+
+        $basic_salary = collect($this->selected_books)->sum('amount');
+        if ($this->security_saving_amount > $basic_salary) {
+
+            $this->dispatch(
+                'alert',
+                type: 'error',
+                message: __('Security saving amount cannot be greater than total basic salary.')
+            );
+
+            return;
+        }
 
         DB::beginTransaction();
 
@@ -372,6 +428,8 @@ class EmployeeTemporaryContractList extends Component
                 'start_date'   => $this->start_date,
                 'end_date'     => $this->end_date,
                 'status'     => $this->status,
+                'security_saving_amount'     => $this->security_saving_amount,
+                'security_saving_monthly_amount'     => $this->security_saving_monthly_amount,
             ]);
 
             // ------اضافه نمودن کتاب----------------------------
@@ -420,7 +478,9 @@ class EmployeeTemporaryContractList extends Component
         if(!delete(Auth::user()->role_ids, $this->active_menu_id)) {
             return $this->dispatch('alert', type: 'error', message: __('label.permission_message'));
         }
-         DB::beginTransaction();
+
+       
+        DB::beginTransaction();
         try {
             $contract = TemporaryContract::findOrFail($id);
             // ---start system log-----------

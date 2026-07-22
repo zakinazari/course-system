@@ -1,6 +1,33 @@
 
 <div>
+    @php
+    $printId = 'printArea';
+    @endphp
+<style>
+    @media print {
+        body, html {
+            background: #fff !important;
+            -webkit-print-color-adjust: exact;
+        }
 
+        body * {
+            visibility: hidden;
+        }
+
+        [id^="printArea"], [id^="printArea"] * {
+            visibility: visible;
+        }
+
+        [id^="printArea"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: block !important;
+            direction: ltr !important;
+        }
+    }
+</style>
     <div >
        
        <div class="card-header">
@@ -82,8 +109,10 @@
                             <th>{{ __('label.note') }}</th>
                             <th>{{ __('label.date') }}</th>
                             <th>{{ __('label.status') }}</th>
+                            <th>{{ __('label.bill') }}</th>
                             <th>{{ __('label.payment') }}</th>
                             <th>{{ __('label.section') }}</th>
+                            <th>{{ __('label.auto_deduct') }}</th>
                             @if(!auth()->user()->branch_id)
                             <th>{{ __('label.branch') }}</th>
                             @endif
@@ -107,6 +136,14 @@
                               <span class="badge bg-label-info me-1" style="font-size:10px;">{{ ucfirst($advance->status) }}</span>
                               @endif
                             </td>
+                                <td>
+                                <a class="btn btn-primary btn-icon rounded-pill"
+                                href="javascript:void(0);"
+                                wire:click="bill({{ $advance->id }})">
+                                    <i class="bx bx-money text-white"></i>
+                                </a>
+                            </td>
+
                               <td>
                                 <a class="btn btn-success btn-icon rounded-pill"
                                 href="javascript:void(0);"
@@ -115,10 +152,20 @@
                                 </a>
                             </td>
                             <td>{{ $advance->section?->name }}</td>
+
+                            <td>
+                                @if($advance->auto_deduct)
+                                    <span class="badge bg-label-success me-1" style="font-size:10px;">{{ __('label.enable') }}</span>
+                                @else
+                                    <span class="badge bg-label-danger me-1" style="font-size:10px;">{{ __('label.disable') }}</span>
+                                @endif
+                            </td>
+                              
                             @if(!auth()->user()->branch_id)
                             <td>{{ $advance->branch?->name }}</td>
                             @endif
-                          
+
+                        
                             <td>
                                 @if($advance->remaining_amount == $advance->total_amount)
                                 <div class="dropdown position-static">
@@ -164,7 +211,7 @@
                 </div>
                 <form @if($editMode) wire:submit.prevent="update" @else wire:submit.prevent="store" @endif>
                     <div class="modal-body">
-                         <div class="row">
+                        <div class="row">
                             @if(!auth()->user()->branch_id)
                             <div class="col mb-3">
                                 <label class="form-label">{{ __('label.branch') }} <span style="color:red;">*</span></label>
@@ -179,8 +226,8 @@
                                 @error('branch_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             @endif
-                            </div>
-                        <div class="col mb-3">
+
+                            <div class="col mb-3">
                                 <label>{{ __('label.section') }}<span style="color:red;">*</span></label>
                                 <div wire:ignore>
                                 <select  class="form-control select2" id="advance_form_section_id" wire:model.lazy ="section_id">
@@ -195,17 +242,51 @@
                               
                             </div>
                            @error('section_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                           
-                        <div class="mb-3">
-                              <label>{{ __('label.amount') }}<span style="color:red;">*</span></label>
-                              <input type="number" wire:model.lazy="total_amount" class="form-control" min="0">
-                              @error('total_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
+                        <div class="row">
+                            
+
+                            <div class="mb-3">
+                                <label>{{ __('label.amount') }}<span style="color:red;">*</span></label>
+                                <input type="number" wire:model.lazy="total_amount" class="form-control" min="0">
+                                @error('total_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.note') }}</label>
+                                <textarea type="text" id="nameBasic" class="form-control @error('note') is-invalid @enderror" wire:model.lazy="note"></textarea>
+                                @error('note') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                    <div class="row">
                         <div class="col mb-3">
-                            <label for="nameBasic" class="form-label">{{ __('label.note') }}</label>
-                            <textarea type="text" id="nameBasic" class="form-control @error('note') is-invalid @enderror" wire:model.lazy="note"></textarea>
-                            @error('note') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            <label class="form-label d-block">{{ __('label.auto_deduct') }}</label>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                    class="form-check-input"
+                                    value="1"
+                                    wire:model="auto_deduct">
+                                <label class="form-check-label">
+                                    {{ __('label.enable') }}
+                                </label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                    class="form-check-input"
+                                    value="0"
+                                    wire:model="auto_deduct">
+                                <label class="form-check-label">
+                                    {{ __('label.disable') }}
+                                </label>
+                            </div>
+
+                            @error('auto_deduct')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
+                    </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
@@ -261,6 +342,147 @@
         </div>
     </div>
 
+    <div class="modal fade" id="{{$billModalId}}" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{__('label.bill')}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                </div>
+            
+                <div class="modal-body">
+                    <div id="{{ $printId  }}">
+                        <div class="bill-container" style="width:700px;margin:auto;font-family:Arial;border:1px solid #ddd;padding:20px;border-radius:8px;">
+                            <!-- -------bill-------------- -->
+                            <div style="text-align:center;margin-bottom:10px;">
+                                <img src="{{ asset('logo.png') }}" alt="Logo" style="height:70px;">
+                            </div>
+
+                            <!-- Title -->
+                            <h2 style="text-align:center;font-weight:bold;margin-bottom:25px;">
+                                {{ __('label.advance_salary_receipt') }}
+                            </h2>
+
+                            <!-- Student Info -->
+                            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                                <tr>
+                                    <td><b>{{ __('label.employee') }}</b></td>
+                                    <td>{{ $employee->name ?? '' }} {{ $employee->last_name ?? '' }}</td>
+
+                                    <td><b>{{ __('label.print_date') }}</b></td>
+                                    <td>{{ now()->format('Y/m/d H:i A') }}</td>
+                                </tr>
+                                <tr>
+
+                                    <td><b>{{ __('label.bill_no') }}</b></td>
+                                    <td>#{{ $advance_bill?->id }}</td>
+
+                                    <td><b></b></td>
+                                    <td></td>
+
+                                    
+                                </tr>
+                            </table>
+                            <!-- -------bill-------------- -->
+                            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;border:1px solid #ddd;">
+                                <thead style="background:#f5f5f5;">
+                                    <tr>
+                                        <th style="padding:8px;border:1px solid #ddd;">{{ __('label.payment_date') }}</th>
+                                        <th style="padding:8px;border:1px solid #ddd;">{{ __('label.amount') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:8px;border:1px solid #ddd;">{{ $advance_bill?->advance_date?->format('Y/m/d') }}</td>
+                                        <td style="padding:8px;border:1px solid #ddd;">{{ $advance_bill?->total_amount }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- Footer -->
+                            <div style="margin-top:40px;display:flex;justify-content:space-between;">
+                                <div>
+                                    ____________________<br>
+                                    {{ __('label.cashier') }}
+                                </div>
+
+                                <div>
+                                    ____________________<br>
+                                    {{ __('label.signature') }}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- =========second ----------- -->
+                         <br>
+                         <br>
+                         <div class="bill-container" style="width:700px;margin:auto;font-family:Arial;border:1px solid #ddd;padding:20px;border-radius:8px;">
+                            <!-- -------bill-------------- -->
+                            <div style="text-align:center;margin-bottom:10px;">
+                                <img src="{{ asset('logo.png') }}" alt="Logo" style="height:70px;">
+                            </div>
+
+                            <!-- Title -->
+                            <h2 style="text-align:center;font-weight:bold;margin-bottom:25px;">
+                                {{ __('label.advance_salary_receipt') }}
+                            </h2>
+
+                            <!-- Student Info -->
+                            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                                <tr>
+                                    <td><b>{{ __('label.employee') }}</b></td>
+                                    <td>{{ $employee->name ?? '' }} {{ $employee->last_name ?? '' }}</td>
+
+                                    <td><b>{{ __('label.print_date') }}</b></td>
+                                    <td>{{ now()->format('Y/m/d H:i A') }}</td>
+                                </tr>
+                                <tr>
+
+                                    <td><b>{{ __('label.bill_no') }}</b></td>
+                                    <td>#{{ $advance_bill?->id }}</td>
+
+                                    <td><b></b></td>
+                                    <td></td>
+
+                                    
+                                </tr>
+                            </table>
+                            <!-- -------bill-------------- -->
+                            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;border:1px solid #ddd;">
+                                <thead style="background:#f5f5f5;">
+                                    <tr>
+                                        <th style="padding:8px;border:1px solid #ddd;">{{ __('label.payment_date') }}</th>
+                                        <th style="padding:8px;border:1px solid #ddd;">{{ __('label.amount') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:8px;border:1px solid #ddd;">{{ $advance_bill?->advance_date?->format('Y/m/d') }}</td>
+                                        <td style="padding:8px;border:1px solid #ddd;">{{ $advance_bill?->total_amount }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- Footer -->
+                            <div style="margin-top:40px;display:flex;justify-content:space-between;">
+                                <div>
+                                    ____________________<br>
+                                    {{ __('label.cashier') }}
+                                </div>
+
+                                <div>
+                                    ____________________<br>
+                                    {{ __('label.signature') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('label.close') }}</button>
+                    <button type="button" class="btn btn-primary" onclick="printDiv('{{ $printId  }}')">{{ __('label.print') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @script

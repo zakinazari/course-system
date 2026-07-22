@@ -60,7 +60,8 @@
                 @if(in_array('employee_id', $selectedFields)) <th>{{ __('label.employee') }}</th> @endif
                 @if(in_array('status', $selectedFields)) <th>{{ __('label.status') }}</th> @endif
                 @if(in_array('gross_salary', $selectedFields)) <th>{{ __('label.gross_salary') }}</th> @endif
-                @if(in_array('total_present_days', $selectedFields)) <th>{{ __('label.total_present_days') }}</th> @endif
+                @if(in_array('absent_days', $selectedFields)) <th>{{ __('label.absent_days') }}</th> @endif
+                @if(in_array('unpaid_leave_days', $selectedFields)) <th>{{ __('label.unpaid_leave_days') }}</th> @endif
                 @if(in_array('taxi_fare', $selectedFields)) <th>{{ __('label.taxi_fare') }}</th> @endif
                 @if(in_array('credit_card', $selectedFields)) <th>{{ __('label.credit_card') }}</th> @endif
                 @if(in_array('tax', $selectedFields)) <th>{{ __('label.tax') }}</th> @endif
@@ -78,7 +79,8 @@
                     @if(in_array('employee_id', $selectedFields)) <td>{{ $employee?->name }} {{ $employee?->last_name }}</td> @endif
                     @if(in_array('status', $selectedFields)) <td>{{ ucfirst($employee->payroll?->status) }}</td> @endif
                     @if(in_array('gross_salary', $selectedFields)) <td>{{ $employee->payroll?->gross_salary }}</td> @endif
-                    @if(in_array('total_present_days', $selectedFields)) <td>{{ $employee->payroll?->total_present_days }}</td> @endif
+                    @if(in_array('absent_days', $selectedFields)) <td>{{ $employee->payroll?->absent_days }}</td> @endif
+                    @if(in_array('unpaid_leave_days', $selectedFields)) <td>{{ $employee->payroll?->unpaid_leave_days }}</td> @endif
                     @if(in_array('taxi_fare', $selectedFields)) <td>{{ $employee->payroll?->taxi_fare }}</td> @endif
                     @if(in_array('credit_card', $selectedFields)) <td>{{ $employee->payroll?->credit_card }}</td> @endif
                     @if(in_array('tax', $selectedFields)) <td>{{ $employee->payroll?->tax }}</td> @endif

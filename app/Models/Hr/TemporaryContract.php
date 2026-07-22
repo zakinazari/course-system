@@ -21,6 +21,8 @@ class TemporaryContract extends Model
         'start_date',
         'end_date',
         'status',
+        'security_saving_amount',
+        'security_saving_monthly_amount',
     ];
 
     protected $casts = [
@@ -55,6 +57,33 @@ class TemporaryContract extends Model
     public function temporaryPayrolls()
     {
         return $this->hasMany(TemporaryPayroll::class);
+    }
+
+    public function leaves()
+    {
+        return $this->morphMany(
+            EmployeeLeave::class,
+            'contract'
+        );
+    }
+
+    public function securitySavings()
+    {
+        return $this->morphMany(
+            EmployeeSecuritySaving::class,
+            'contract'
+        );
+    }
+
+    public function getSecuritySavingBalanceAttribute()
+    {
+        return $this->securitySavings()
+            ->where('type', 'deposit')
+            ->sum('amount')
+            -
+            $this->securitySavings()
+            ->whereIn('type', ['refund', 'deduction'])
+            ->sum('amount');
     }
     
     protected static function booted()

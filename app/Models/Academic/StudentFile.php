@@ -40,11 +40,14 @@ class StudentFile extends Model
             ->url($this->thumbnail_path);
     }
 
-    public function photo()
+    public function getFileUrlAttribute(): ?string
     {
-        return $this->hasOne(StudentFile::class)
-                    ->where('file_type', StudentFile::TYPE_PHOTO)
-                    ->latest();
+        if (!$this->file_path) {
+            return null;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk($this->disk)
+            ->url($this->file_path);
     }
 
 }

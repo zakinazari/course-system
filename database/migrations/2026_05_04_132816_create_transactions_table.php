@@ -28,9 +28,30 @@ return new class extends Migration
             $table->unsignedBigInteger('source_id')->nullable();
 
             $table->date('transaction_date');
-            $table->enum('action', ['create', 'update','delete']);
+            $table->enum('action', ['create', 'update','delete','approve','reject']);
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->text('note')->nullable();
+
+
+            // for transfer---------------------
+            $table->enum('status', [
+                'pending',
+                'approved',
+                'rejected'
+            ])->default('approved');
+
+
+            $table->foreignId('from_account_id')->nullable()->index();
+
+            $table->foreignId('to_account_id')->nullable()->index();
+
+            $table->foreignId('approved_by')->nullable();
+
+            $table->timestamp('approved_at')->nullable();
+            
+            $table->uuid('transfer_group_id')->nullable();
+            $table->enum('module_type', ['finance', 'book'])->nullable();
+
             $table->timestamps();
 
             // برای performance

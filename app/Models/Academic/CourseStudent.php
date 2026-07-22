@@ -36,14 +36,12 @@ class CourseStudent extends Model
 
     public function examScores()
     {
-        return $this->hasMany(StudentExamScore::class, 'student_id', 'student_id')
-            ->whereColumn('course_student.course_id', 'student_exam_scores.course_id');
+        return $this->hasMany(StudentExamScore::class, 'student_id', 'student_id');
     }
 
     public function courseResult()
     {
-        return $this->hasOne(StudentCourseResult::class, 'student_id', 'student_id')
-            ->whereColumn('course_student.course_id', 'student_course_results.course_id');
+        return $this->hasOne(StudentCourseResult::class, 'student_id', 'student_id');
     }
 
 }

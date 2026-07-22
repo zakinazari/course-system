@@ -127,9 +127,11 @@
                         <label class="form-label">{{ __('label.status') }}</label>
                         <select class="form-select" wire:model.defer="search.status" id ="">
                            <option value="">{{ __('label.all') }}</option>
-                            <option value="waiting">{{ __('label.waiting') }}</option>
-                            <option value="enrolled">{{ __('label.enrolled') }}</option>
-                            <option value="cancelled">{{ __('label.cancelled') }}</option>
+                            <option value="placement">{{ __('label.placement') }}</option>
+                            <option value="passed">{{ __('label.passed') }}</option>
+                            <option value="failed">{{ __('label.failed') }}</option>
+                            <option value="makeup">{{ __('label.makeup') }}</option>
+                            <option value="dropped">{{ __('label.dropped') }}</option>
                         </select>
                     </div>
                   
@@ -149,6 +151,7 @@
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
+                        <option value="">{{ __('label.all') }}</option>
                     </select>
                     <span>{{ __('label.entries') }}</span>
                 </div>
@@ -184,6 +187,10 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="phone_no">
                                 {{ __('label.phone_no') }}
                             </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="father_no">
+                                {{ __('label.father_no') }}
+                            </th>
 
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="program_id">
@@ -198,11 +205,14 @@
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="shift_id">
                                 {{ __('label.shift') }}
                             </th>
-                         
+                           <th>
+                                {{ __('label.comments') }}
+                            </th>
                             <th>
                                 <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="status">
                                 {{ __('label.status') }}
                             </th>
+                          
                             <th>
                                 {{ __('label.add_to_course') }}
                             </th>
@@ -227,17 +237,25 @@
                             <td>{{ $waiting->student?->last_name }}</td>
                             <td>{{ $waiting->student?->father_name }}</td>
                             <td>{{ $waiting->student?->phone_no }}</td>
+                            <td>{{ $waiting->student?->father_whats_app }}</td>
                             <td>{{ $waiting->program?->name }}</td>
                             <td>{{ $waiting->book?->name }}</td>
                             <td>{{ $waiting->shift?->name }}</td>
-
+                            <td>
+                                <a class="btn btn-primary btn-icon rounded-pill"
+                                href="javascript:void(0);"
+                                wire:click="showComments({{ $waiting->id }})">
+                                    <i class="bx bx-message-detail text-white"></i>
+                                </a>
+                            </td>
                             <td>
                                 <span class="badge rounded-pill {{ $waiting->status_badge_class }}">
                                     {{ __('label.' . $waiting->status) }}
                                 </span>
                             </td>
+                           
                             <td>
-                                @if($waiting->status=='waiting')
+                                @if($waiting->status=='placement')
                                 <a class="btn btn-success"
                                     href="{{ route('special-course-list', [
                                             'menu_id'   => $this->active_menu_id,
@@ -297,7 +315,7 @@
 
                         <div class="row">
                             @if(!$editMode)
-                             <div class="row" wire:ignore>
+                             <div class="" wire:ignore>
                                 <div class="col mb-3">
                                     <label for="nameBasic" class="form-label">{{ __('label.student') }} </label>
                                     <select id="student_id" class="form-select select2 @error('student_id') is-invalid @enderror" wire:model.lazy ="student_id">
@@ -306,7 +324,7 @@
                                    
                                 </div>
                             </div>
-                            @endif
+                            
                             @error('student_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
 
                             @if(!auth()->user()->branch_id)
@@ -369,16 +387,130 @@
                                 @error('shift_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                            </div>
                         </div>
+                        @endif
+                        @if($editMode)
+                         <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.comment') }}</label>
+                                <textarea type="text" id="nameBasic" class="form-control @error('comment') is-invalid @enderror" wire:model.lazy="comment"></textarea>
+                                @error('comment') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        @endif
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
                         <button type="submit" class="btn btn-primary">@if($editMode) {{ __('label.update') }}  @else {{ __('label.save') }} @endif</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >{{ __('label.close') }}</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-   
+
+
+    <div class="modal fade" id="show_comments_modal" tabindex="-1" aria-hidden="true" wire:ignore.self> 
+        <div class="modal-dialog modal-lg" branch="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    
+                    <h5 class="modal-title">{{__('label.comments')}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                    
+                </div>
+                
+                <div class="modal-body">
+                    @if(add(Auth::user()->role_ids,$active_menu_id))
+                     <div class="text-end">
+                        <button
+                            class="btn btn-primary btn-sm mb-2"
+                            wire:click="openNewCommentModal({{ $selected_waiting_id }})">
+                            <i class="bx bx-x"></i> {{ __('label.add_new_record') }}
+                        </button>
+                    </div>
+                    @endif
+                    <div class="table-responsive text-nowrap">
+                        <table class="table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>
+                                        {{ __('label.NO') }}
+                                    </th>
+
+                                    <th>
+                                        {{ __('label.comment') }}
+                                    </th>
+                                    <th>
+                                        {{ __('label.date') }}
+                                    </th>
+                                    <th>
+                                        {{ __('label.delete') }}
+                                    </th>
+                                </tr>
+
+                            </thead>
+                            <tbody class="table-border-bottom-0">
+                                @if(count($show_comments) > 0)
+                                @foreach($show_comments as $i => $comm)
+                                <tr>
+                                    <td>{{ $i + 1 }}</td>
+
+                                    <td>{{ $comm->comment }}</td>
+                                    <td>{{ $comm->created_at->format('Y/m/d') }}</td>
+                                    <td>
+                                        @if(delete(Auth::user()->role_ids,$active_menu_id))
+                                            @if(Auth::user()->isAdmin() || Auth::user()->isDeveloper())
+                                            <a class="dropdown-item " href="javascript:void(0);"  onclick="confirmDelete({{ $comm->id }},'course_waiting_list_comments')"
+                                            ><i class="bx bx-trash me-1 text-danger"></i></a>
+                                            @endif
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('label.close') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="add_comments_modal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('label.add') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form  wire:submit.prevent="storeNewComment">
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="nameBasic" class="form-label">{{ __('label.new_comment') }} <span style="color:red">*</span></label>
+                                <textarea type="text" id="nameBasic" class="form-control @error('new_comment') is-invalid @enderror" wire:model.lazy="new_comment"></textarea>
+                                @error('new_comment') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success" >
+                            {{ __('label.save') }}
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('label.close')}}</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 @script
@@ -446,7 +578,7 @@ document.addEventListener("livewire:initialized", function () {
             width: '100%',
             minimumInputLength: 2,
             ajax: {
-                url: '/search-students' + menuId,
+                url: '/search-students',
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {

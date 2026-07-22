@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('book_inventories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('warehouse_id')->constrained();
-            $table->foreignId('book_id')->constrained();
+             $table->foreignId('book_id')->constrained('physical_books');
             $table->integer('quantity')->default(0);
             $table->timestamps();
 

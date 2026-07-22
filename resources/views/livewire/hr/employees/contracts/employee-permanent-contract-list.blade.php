@@ -208,7 +208,7 @@
                             <div class="col mb-3">
                                 <label>{{ __('label.position') }}<span style="color:red;">*</span></label>
                                 <div wire:ignore>
-                                <select  class="form-control select2" id="permanet_form_position_id" wire:model.lazy ="position_id">
+                                <select  class="form-control select2"  wire:model.lazy ="position_id" id="permanet_form_position_id">
                                     <option value="">{{ __('label.select') }}</option>
                                     @foreach($positions as $position)
                                     <option value="{{ $position->id }}" wire:key="position-section">
@@ -225,7 +225,7 @@
                             <div class="col mb-3">
                                 <label>{{ __('label.section') }}<span style="color:red;">*</span></label>
                                 <div wire:ignore>
-                                <select  class="form-control select2" id="permanet_form_section_id" wire:model.lazy ="section_id">
+                                <select  class="form-control" id="permanet_form_section_id" wire:model.lazy ="section_id">
                                     <option value="">{{ __('label.select') }}</option>
                                     @foreach($sections as $section)
                                     <option value="{{ $section->id }}" wire:key="section-section">
@@ -253,6 +253,21 @@
                                 <input type="number" wire:model.lazy="credit_card" class="form-control" min="0">
                                 @error('credit_card') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
+                            
+                        </div>
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label>{{ __('label.security_saving_amount') }}</label>
+                                <input type="number" wire:model.lazy="security_saving_amount" class="form-control" min="0">
+                                @error('security_saving_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col mb-3">
+                                <label>{{ __('label.security_saving_monthly_amount') }}</label>
+                                <input type="number" wire:model.lazy="security_saving_monthly_amount" class="form-control" min="0">
+                                @error('security_saving_monthly_amount') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+                            
                         </div>
                         
                          <div class="row">
@@ -328,6 +343,7 @@ document.addEventListener("livewire:initialized", function () {
         $('#permanet_form_position_id').off('change').on('change', function () {
             @this.set('position_id', $(this).val());
         });
+        
         $('#permanet_form_section_id').off('change').on('change', function () {
             @this.set('section_id', $(this).val());
         });

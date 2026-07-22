@@ -657,36 +657,11 @@ class CourseEnrollments extends Component
                 ], false);
             }
 
+            $source_course->status= 'archived';
+            $source_course->save();
+
             $target_course->status = 'ongoing';
             $target_course->save();
-
-            // --------------اضافه نمودن دانشجویانی ناکام در لیست انتظار -------------------------
-                $failed_students = CourseStudent::where('course_id', $source_course->id)
-                ->where(function ($q) {
-                    $q->where('status', 'dropped')
-                    ->orWhereHas('courseResult', function ($query) {
-                        $query->where('status', 'failed');
-                    });
-                })
-                ->get();
-
-                foreach ($failed_students as $student) {
-
-                    CourseWaitingList::firstOrCreate(
-                        [
-                            'student_id' => $student->student_id,
-                            'branch_id' => $source_course->branch_id,
-                            'program_id' => $source_course->program_id,
-                            'book_id' => $source_course->book_id,
-                            'shift_id' => $source_course->shift_id,
-                        ],
-                        [
-                            'status' => 'waiting',
-                            'user_id' => Auth::id(),
-                        ]
-                    );
-                }
-            // --------------اضافه نمودن دانشجویانی ناکام در لیست انتظار-------------------------
 
             $this->dispatch('reset-select2');
             $this->target_course_id = null;

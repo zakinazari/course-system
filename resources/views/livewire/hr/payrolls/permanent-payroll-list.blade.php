@@ -72,12 +72,12 @@
         <hr>
         <div class=" text-nowrap">
  
-            <div class="mb-3 px-3">
+            <div class="mb-3 px-3 mb-5">
                 <form wire:submit.prevent="applySearch" class="row g-3 align-items-end">
 
                     <div class="col-md-2 d-flex flex-column">
                         <label class="form-label">{{ __('label.year') }}</label>
-                        <select  class="form-select" wire:model ="year">
+                        <select  class="form-select" wire:model.lazy ="year">
                             <option value="">{{ __('label.select') }}</option>
                            @foreach($years as $year)
                                  <option value="{{ $year->year }}"  wire:key="year-search-{{ $year->year }}">
@@ -89,7 +89,7 @@
                     </div>
                     <div class="col-md-2 d-flex flex-column">
                         <label class="form-label">{{ __('label.month') }}</label>
-                        <select  class="form-select" wire:model ="month">
+                        <select  class="form-select" wire:model.lazy ="month">
                             <option value="">{{ __('label.select') }}</option>
                            @foreach($months as $month)
                                  <option value="{{ $month->number }}"  wire:key="month-search-{{ $month->number }}">
@@ -175,8 +175,12 @@
                                 {{ __('label.gross_salary') }}
                             </th>
                             <th>
-                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="total_present_days">
-                                {{ __('label.total_present_days') }}
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="absent_days">
+                                {{ __('label.absent_days') }}
+                            </th>
+                            <th>
+                                <input class="form-check-input" type="checkbox" wire:model="selectedFields" value="unpaid_leave_days">
+                                {{ __('label.unpaid_leave_days') }}
                             </th>
                      
                             <th>
@@ -230,7 +234,8 @@
                                 @endif
                             </td>
                             <td>{{ $employee?->payroll?->gross_salary }}</td>
-                            <td>{{ $employee?->payroll?->total_present_days }}</td>
+                            <td>{{ $employee?->payroll?->absent_days }}</td>
+                            <td>{{ $employee?->payroll?->unpaid_leave_days }}</td>
                             <td>{{ $employee?->payroll?->taxi_fare }}</td>
                             <td>{{ $employee?->payroll?->credit_card }}</td>
                             <td>{{ $employee?->payroll?->tax }}</td>
@@ -257,10 +262,18 @@
                         @if($has_any_payroll && $has_unpaid_payroll)
 
                             <button type="button"
-                                    class="btn btn-success"
-                                    wire:click="payPayroll"
-                                    wire:confirm="Are you sure you want to pay all payrolls? This action cannot be undone.">
-                                <i class="bi bi-cash-coin me-1"></i> {{ __('label.pay_all') }}
+                                class="btn btn-success"
+                                wire:click="payPayroll"
+                                wire:confirm="{{ count($selected_employees) == 1 
+                                    ? __('label.confirm_pay_payroll') 
+                                    : __('label.confirm_pay_all_payrolls') }}">
+
+                                <i class="bi bi-cash-coin me-1"></i>
+
+                                {{ count($selected_employees) == 1 
+                                    ? __('label.pay') 
+                                    : __('label.pay_all') }}
+
                             </button>
 
                         @endif
